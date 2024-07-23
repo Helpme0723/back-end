@@ -7,6 +7,13 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { typeOrmModuleOptions } from './configs/database.config';
 import { UserModule } from './user/user.module';
 import { PostModule } from './post/post.module';
+import { AuthModule } from './auth/auth.module';
+import { ChannelModule } from './channel/channel.module';
+import { SeriesModule } from './series/series.module';
+import { CommentModule } from './comment/comment.module';
+import { SubscribeModule } from './subscribe/subscribe.module';
+import { PointModule } from './point/point.module';
+import { PurchaseModule } from './purchase/purchase.module';
 
 @Module({
   imports: [
@@ -16,7 +23,14 @@ import { PostModule } from './post/post.module';
     }),
     TypeOrmModule.forRootAsync(typeOrmModuleOptions),
     UserModule,
-    PostModule
+    PostModule,
+    AuthModule,
+    ChannelModule,
+    SeriesModule,
+    CommentModule,
+    SubscribeModule,
+    PointModule,
+    PurchaseModule
   ],
   controllers: [AppController],
   providers: [AppService],
