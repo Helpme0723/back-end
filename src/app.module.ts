@@ -18,8 +18,8 @@ import { PurchaseModule } from './purchase/purchase.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
-      isGlobal:true,
-      validationSchema: configModuleValidationSchema
+      isGlobal: true,
+      validationSchema: configModuleValidationSchema,
     }),
     TypeOrmModule.forRootAsync(typeOrmModuleOptions),
     UserModule,
@@ -30,7 +30,7 @@ import { PurchaseModule } from './purchase/purchase.module';
     CommentModule,
     SubscribeModule,
     PointModule,
-    PurchaseModule
+    PurchaseModule,
   ],
   controllers: [AppController],
   providers: [AppService],
