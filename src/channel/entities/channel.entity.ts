@@ -57,6 +57,7 @@ export class Channel {
   description: string;
 
   @IsOptional()
+  @IsString()
   @Column()
   imageUrl: string;
 

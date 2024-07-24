@@ -1,9 +1,10 @@
-import { Body, Controller, Delete, Get, Param, Post } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post } from '@nestjs/common';
 import { ChannelService } from './channel.service';
 import { FindAllChannelsDto } from './dtos/find-all-channels.dto';
 import { ApiTags } from '@nestjs/swagger';
 import { ChannelIdDto } from './dtos/channel-id.dto';
 import { CreateChannelDto } from './dtos/create-channel.dto';
+import { UpdateChannelDto } from './dtos/update-channel.dto';
 
 @ApiTags('채널')
 @Controller('channels')
@@ -61,6 +62,16 @@ export class ChannelController {
   @Get(':id')
   async findOneChannel(@Param() channelIdDto: ChannelIdDto) {
     const data = await this.channelService.findOneChannel(channelIdDto.id);
+
+    return data;
+  }
+
+  //채널 수정
+  @Patch(':id')
+  async updateChannel(@Param() channelIdDto: ChannelIdDto, @Body() updateChannelDto: UpdateChannelDto) {
+    const userId = 1;
+
+    const data = this.channelService.updateChannel(userId, channelIdDto.id, updateChannelDto);
 
     return data;
   }
