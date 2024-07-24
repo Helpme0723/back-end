@@ -1,5 +1,5 @@
 import { Type } from 'class-transformer';
-import { IsNotEmpty, IsNumber } from 'class-validator';
+import { IsNotEmpty, IsNumber, IsOptional, IsString, MaxLength } from 'class-validator';
 import { Post } from 'src/post/entities/post.entity';
 import { Series } from 'src/series/entities/series.entity';
 import { Subscribe } from 'src/subscribe/entities/subscribe.entity';
@@ -36,16 +36,31 @@ export class Channel {
   @Column({ unsigned: true })
   userId: number;
 
+  /**
+   * 채널명
+   * @example "채널 생성 테스트"
+   */
+  @IsNotEmpty({ message: '채널명을 입력해주세요.' })
+  @MaxLength(30, { message: '채널명을 최대 30글자까지 입력 가능합니다.' })
+  @IsString()
   @Column()
   title: string;
 
+  /**
+   * 채널 소개
+   * @example "채널 생성 테스트입니다."
+   */
+  @IsNotEmpty({ message: '채널 소개를 입력해 주세요.' })
+  @MaxLength(200, { message: '채널 소개는 최대 200글자까지 입력 가능합니다.' })
+  @IsString()
   @Column()
   description: string;
 
+  @IsOptional()
   @Column()
   imageUrl: string;
 
-  @Column()
+  @Column({ default: 0 })
   subscribers: number;
 
   @CreateDateColumn()

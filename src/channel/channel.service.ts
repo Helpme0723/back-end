@@ -2,6 +2,7 @@ import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/commo
 import { InjectRepository } from '@nestjs/typeorm';
 import { Channel } from './entities/channel.entity';
 import { Repository } from 'typeorm';
+import { CreateChannelDto } from './dtos/create-channel.dto';
 
 @Injectable()
 export class ChannelService {
@@ -9,6 +10,13 @@ export class ChannelService {
     @InjectRepository(Channel)
     private readonly channelRepository: Repository<Channel>
   ) {}
+
+  //채널 생성
+  async createChannel(userId: number, createChannelDto: CreateChannelDto) {
+    const channel = await this.channelRepository.save({ userId, ...createChannelDto });
+
+    return channel;
+  }
 
   // 채널 모두 조회
   async findAllChannels(userId: number) {
