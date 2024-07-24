@@ -1,12 +1,16 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
+import { UtilsService } from 'src/utils/utils.service';
 
 @Injectable()
 export class AwsService {
   s3Client: S3Client;
 
-  constructor(private configService: ConfigService) {
+  constructor(
+    private configService: ConfigService,
+    private utilsService: UtilsService
+  ) {
     this.s3Client = new S3Client({
       region: this.configService.get<string>('AWS_REGION'),
       credentials: {
@@ -14,6 +18,28 @@ export class AwsService {
         secretAccessKey: this.configService.get<string>('AWS_SECRET_KEY'),
       },
     });
+  }
+  /**
+   * S3 이미지 업로드
+   * @param file
+   * @returns 이미지 업로드 실행 결과
+   */
+  async saveImage(file: Express.Multer.File) {
+    return await this.imageUpload(file);
+  }
+
+  /**
+   * S3 이미지 업로드
+   * @param file 객체
+   * @returns 파일url
+   */
+  async imageUpload(file: Express.Multer.File) {
+    const imageName = this.utilsService.getUUID();
+    const ext = file.originalname.split('.').pop();
+
+    const imageUrl = await this.imageUploadToS3(`${imageName}.${ext}`, file, ext);
+
+    return { imageUrl };
   }
 
   async imageUploadToS3(
