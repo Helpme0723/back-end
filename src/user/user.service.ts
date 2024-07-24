@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { User } from './entities/user.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -7,11 +7,11 @@ import { Repository } from 'typeorm';
 export class UserService {
   constructor(
     @InjectRepository(User)
-    private readonly userRepository: Repository<User>,
+    private readonly userRepository: Repository<User>
   ) {}
 
   /**
-   * 사용자 정보 조회
+   * 사용자 정보 조회 메서드
    * @param user 사용자
    * @returns 유저 정보 객체
    */
@@ -21,7 +21,21 @@ export class UserService {
   }
 
   /**
-   * 이메일로 회원 찾기
+   * userId로 회원정보 조회 메서드
+   * @param id 유저ID
+   * @returns 회원객체
+   */
+  async findUserById(id: number) {
+    const userInfo = await this.userRepository.findOneBy({ id });
+
+    if (!userInfo) {
+      throw new NotFoundException('');
+    }
+    return userInfo;
+  }
+
+  /**
+   * 이메일로 회원 찾기 메서드
    * @param email 이메일
    * @returns 회원 객체
    */
