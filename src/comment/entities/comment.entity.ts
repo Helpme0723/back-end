@@ -11,21 +11,34 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 import { CommentLike } from './comment-like.entity';
+import { IsNotEmpty, IsNumber, IsString } from 'class-validator';
 
 @Entity('comments')
 export class Comment {
   @PrimaryGeneratedColumn({ unsigned: true })
   id: number;
 
+  @IsNotEmpty({ message: '유저id를 입력해 주세요.' })
+  @IsNumber()
   @Column({ unsigned: true })
   userId: number;
 
+  @IsNotEmpty({ message: '포스트id를 입력해 주세요.' })
+  @IsNumber()
   @Column({ unsigned: true })
   postId: number;
 
+
+  /**
+   * 댓글 내용
+   * @example "이것은 테스트 댓글입니다."
+   */
+  @IsNotEmpty({ message: '컨텐츠를 입력해 주세요.' })
+  @IsString()
   @Column()
   content: string;
 
+  @IsNumber()
   @Column({ default: 0 })
   likeCount: number;
 
