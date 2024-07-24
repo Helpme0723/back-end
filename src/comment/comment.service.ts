@@ -16,7 +16,7 @@ export class CommentService {
   ) {}
 
   //댓글 생성 api
-  async create(createCommentDto: CreateCommentDto): Promise<Comment> {
+  async createComment(createCommentDto: CreateCommentDto): Promise<Comment> {
     // 포스트가 존재하는지 확인
     const post = await this.postRepository.findOne({ where: { id: createCommentDto.postId } });
     if (!post) {
@@ -29,7 +29,7 @@ export class CommentService {
 
 
   //댓글 수정 api
-  async update(commentId: number, updateCommentDto: UpdateCommentDto): Promise<Comment> {
+  async updateComment(commentId: number, updateCommentDto: UpdateCommentDto): Promise<Comment> {
     const comment = await this.commentRepository.findOne({ where: { id: commentId } });
     if (!comment) {
       throw new NotFoundException('댓글을 찾을 수 없습니다.');
@@ -37,5 +37,16 @@ export class CommentService {
 
     Object.assign(comment, updateCommentDto);
     return this.commentRepository.save(comment);
+  }
+
+  //댓글 삭제 api
+  async deleteComment(commentId: number): Promise<void> {
+    const comment = await this.commentRepository.findOne({ where: { id: commentId } });
+    if (!comment) {
+      throw new NotFoundException('댓글을 찾을 수 없습니다.');
+    }
+
+    comment.deletedAt = new Date();
+    await this.commentRepository.save(comment);
   }
 }

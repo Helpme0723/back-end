@@ -1,4 +1,4 @@
-import { Controller, Post, Body, HttpStatus, Patch, Param } from '@nestjs/common';
+import { Controller, Post, Body, HttpStatus, Patch, Param, Delete } from '@nestjs/common';
 import { CommentService } from './comment.service';
 import { CreateCommentDto } from './dto/create-comment.dto';
 import { ApiTags } from '@nestjs/swagger';
@@ -16,7 +16,7 @@ export class CommentController {
 
   @Post()
   async create(@Body() createCommentDto: CreateCommentDto): Promise<any> {
-    const data = await this.commentService.create(createCommentDto);
+    const data = await this.commentService.createComment(createCommentDto);
     return {
       status: HttpStatus.OK,
       message: '댓글을 생성하였습니다.',
@@ -24,22 +24,32 @@ export class CommentController {
     };
   }
 
-
   /**
- * 댓글 수정
- * @param updateCommentDto 
- * @returns 수정 댓글 정보와 상태 메시지
- * */
+   * 댓글 수정
+   * @param updateCommentDto
+   * @returns 수정 댓글 정보와 상태 메시지
+   * */
   @Patch(':commentId')
-  async update(
-    @Param('commentId') commentId: number,
-    @Body() updateCommentDto: UpdateCommentDto,
-  ): Promise<any> {
-    const data = await this.commentService.update(commentId, updateCommentDto);
+  async update(@Param('commentId') commentId: number, @Body() updateCommentDto: UpdateCommentDto): Promise<any> {
+    const data = await this.commentService.updateComment(commentId, updateCommentDto);
     return {
       status: HttpStatus.OK,
-      message: "댓글을 수정하였습니다.",
+      message: '댓글을 수정하였습니다.',
       data,
+    };
+  }
+
+  /**
+   * 댓글 삭제
+   * @param commentId 댓글 ID
+   * @returns 상태 메시지
+   * */
+  @Delete(':commentId')
+  async delete(@Param('commentId') commentId: number): Promise<any> {
+    await this.commentService.deleteComment(commentId);
+    return {
+      status: HttpStatus.OK,
+      message: '댓글을 삭제하였습니다.',
     };
   }
 }
