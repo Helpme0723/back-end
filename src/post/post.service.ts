@@ -42,6 +42,8 @@ export class PostService {
       where: { id },
     });
 
+    //추가해야할거 : 내 포스트 전체조회
+
     if (!post) {
       throw new NotFoundException('포스트를 찾을수 없습니다.');
     }
