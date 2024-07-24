@@ -42,18 +42,34 @@ export class Post {
   @Column({ unsigned: true })
   categoryId: number;
 
+  /**
+   * 포스트 제목
+   * @example "포스트제목1"
+   */
   @IsString()
   @Column()
   title: number;
 
+  /**
+   * 포스트프리뷰
+   * @example "프리뷰1"
+   */
   @IsString()
   @Column({ type: 'text' })
   preview: string;
 
+  /**
+   * 포스트컨텐츠
+   * @example "내용1"
+   */
   @IsString()
   @Column({ type: 'text' })
   content: string;
 
+  /**
+   * 포스트 가격
+   * @example 30000
+   */
   @IsNumber()
   @Column({ default: 0 })
   price: number;
