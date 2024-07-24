@@ -38,7 +38,7 @@ export class ChannelService {
     }));
   }
 
-  // 채널 상세 조회
+  // 타 유저 채널 상세 조회
   async findOneChannel(channelId: number) {
     const channel = await this.channelRepository.findOne({
       where: { id: channelId },
@@ -56,6 +56,7 @@ export class ChannelService {
       createdAt: series.createdAt,
     }));
 
+    // 비공개 포스트 조회 못하게 설정
     const posts = channel.posts
       .filter((post) => post.visibility === VisibilityType.PUBLIC)
       .map((post) => ({
@@ -69,6 +70,53 @@ export class ChannelService {
         likeCount: post.likeCount,
         createdAt: post.createdAt,
       }));
+
+    const data = {
+      id: channel.id,
+      userId: channel.userId,
+      nickname: channel.user.nickname,
+      title: channel.title,
+      description: channel.description,
+      imageUrl: channel.imageUrl,
+      subscribers: channel.subscribers,
+      series: series,
+      posts: posts,
+    };
+
+    return data;
+  }
+
+  // 내 채널 상세 조회
+  async findOneMyChannel(userId: number, channelId: number) {
+    const channel = await this.channelRepository.findOne({
+      where: { id: channelId, userId },
+      relations: ['user', 'series', 'posts', 'posts.category', 'posts.tags'],
+    });
+
+    if (!channel) {
+      throw new NotFoundException('해당 아이디의 채널이 존재하지 않습니다.');
+    }
+
+    const series = channel.series.map((series) => ({
+      id: series.id,
+      title: series.title,
+      description: series.description,
+      createdAt: series.createdAt,
+    }));
+
+    // 공개 포스트도 조회 가능
+    const posts = channel.posts.map((post) => ({
+      id: post.id,
+      seriesId: post.seriesId,
+      category: post.category.category,
+      tags: post.tags,
+      title: post.title,
+      price: post.price !== 0 ? post.price : '무료',
+      visibility: post.visibility,
+      viewCount: post.viewCount,
+      likeCount: post.likeCount,
+      createdAt: post.createdAt,
+    }));
 
     const data = {
       id: channel.id,
@@ -114,7 +162,7 @@ export class ChannelService {
     const channel = await this.channelRepository.findOneBy({ id: channelId });
 
     if (!channel) {
-      throw new NotFoundException('해당 아이디의 채널이 없습니다.');
+      throw new NotFoundException('해당 아이디의 내 채널이 존재하지 않습니다.');
     }
 
     if (channel.userId !== userId) {

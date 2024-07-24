@@ -69,7 +69,7 @@ export class ChannelController {
   }
 
   /**
-   * 채널 상세 조회
+   * 타 유저 채널 상세 조회
    * @param findOneChannelDto
    * @returns
    */
@@ -81,6 +81,25 @@ export class ChannelController {
     return {
       statusCode: HttpStatus.OK,
       message: `${channelIdDto.id}번 채널을 조회했습니다.`,
+      data,
+    };
+  }
+
+  /**
+   * 내 채널 상세 조회
+   * @param channelIdDto
+   * @returns
+   */
+  //내 채널 상세 조회
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard('jwt'))
+  @Get(':id/me')
+  async findOneMyChannel(@UserInfo() user: User, @Param() channelIdDto: ChannelIdDto) {
+    const data = await this.channelService.findOneMyChannel(user.id, channelIdDto.id);
+
+    return {
+      statusCode: HttpStatus.OK,
+      message: `내 ${channelIdDto.id}번 채널을 조회했습니다.`,
       data,
     };
   }
