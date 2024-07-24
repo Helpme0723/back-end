@@ -19,42 +19,70 @@ import { Comment } from 'src/comment/entities/comment.entity';
 import { Channel } from 'src/channel/entities/channel.entity';
 import { Series } from 'src/series/entities/series.entity';
 import { VisibilityType } from '../types/visibility.type';
+import { IsEnum, IsNumber, IsString } from 'class-validator';
 
 @Entity('posts')
 export class Post {
   @PrimaryGeneratedColumn({ unsigned: true })
   id: number;
 
+  @IsNumber()
   @Column({ unsigned: true })
   userId: number;
 
+  @IsNumber()
   @Column({ unsigned: true })
   channelId: number;
 
+  @IsNumber()
   @Column({ nullable: true, unsigned: true })
   seriesId: number;
 
+  @IsNumber()
   @Column({ unsigned: true })
   categoryId: number;
 
+  /**
+   * 포스트이름
+   * @example "포스트1번입니다"
+   */
+  @IsString()
   @Column()
-  title: number;
+  title: string;
 
+  /**
+   * 프리뷰이름
+   * @example "프리뷰1번입니다"
+   */
+  @IsString()
   @Column({ type: 'text' })
   preview: string;
 
+  /**
+   * 내용
+   * @example "내용1번입니다"
+   */
+  @IsString()
   @Column({ type: 'text' })
   content: string;
 
+  /**
+   * 가격
+   * @example 30000
+   */
+  @IsNumber()
   @Column({ default: 0 })
   price: number;
 
+  @IsEnum({ enum: VisibilityType })
   @Column({ type: 'enum', enum: VisibilityType, default: VisibilityType.PUBLIC })
   visibility: VisibilityType;
 
+  @IsNumber()
   @Column({ default: 0 })
   viewCount: number;
 
+  @IsNumber()
   @Column({ default: 0 })
   likeCount: number;
 
