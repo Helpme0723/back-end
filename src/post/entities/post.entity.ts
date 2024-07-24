@@ -18,7 +18,7 @@ import { PurchaseList } from 'src/purchase/entities/purchase-list.entity';
 import { Comment } from 'src/comment/entities/comment.entity';
 import { Channel } from 'src/channel/entities/channel.entity';
 import { Series } from 'src/series/entities/series.entity';
-import { VisibiltyType } from '../types/post.type';
+import { VisibilityType } from '../types/visibility.type';
 
 @Entity('posts')
 export class Post {
@@ -49,8 +49,8 @@ export class Post {
   @Column({ default: 0 })
   price: number;
 
-  @Column({ type: 'enum', enum: VisibiltyType, default: VisibiltyType.PUBLIC })
-  visibility: VisibiltyType;
+  @Column({ type: 'enum', enum: VisibilityType, default: VisibilityType.PUBLIC })
+  visibility: VisibilityType;
 
   @Column({ default: 0 })
   viewCount: number;
