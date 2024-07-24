@@ -1,17 +1,29 @@
-import { Body, Controller, Delete, Get, Param, ParseIntPipe, Post } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post } from '@nestjs/common';
 import { ChannelService } from './channel.service';
 import { FindAllChannelsDto } from './dtos/find-all-channels.dto';
 import { ApiTags } from '@nestjs/swagger';
 import { ChannelIdDto } from './dtos/channel-id.dto';
+import { CreateChannelDto } from './dtos/create-channel.dto';
 
 @ApiTags('채널')
 @Controller('channels')
 export class ChannelController {
   constructor(private readonly channelService: ChannelService) {}
 
+  /**
+   * 채널 생성
+   * @param createChannelDto
+   * @returns
+   */
   // 채널 생성
   @Post()
-  async createChannel() {}
+  async createChannel(@Body() createChannelDto: CreateChannelDto) {
+    const userId = 1;
+
+    const data = await this.channelService.createChannel(userId, createChannelDto);
+
+    return data;
+  }
 
   /**
    * 타 유저의 채널 모두 조회
