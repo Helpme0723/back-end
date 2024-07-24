@@ -1,7 +1,8 @@
-import { Body, Controller, Get } from '@nestjs/common';
+import { Body, Controller, Get, Param, ParseIntPipe } from '@nestjs/common';
 import { ChannelService } from './channel.service';
 import { FindAllChannelsDto } from './dtos/find-all-channels.dto';
 import { ApiTags } from '@nestjs/swagger';
+import { FindOneChannelDto } from './dtos/find-one-channel.dto';
 
 @ApiTags('채널')
 @Controller('channels')
@@ -31,6 +32,19 @@ export class ChannelController {
     const userId = 9;
 
     const data = await this.channelService.findAllChannels(userId);
+
+    return data;
+  }
+
+  /**
+   * 채널 상세 조회
+   * @param findOneChannelDto
+   * @returns
+   */
+  //채널 상세 조회
+  @Get(':id')
+  async findOneChannel(@Param() findOneChannelDto: FindOneChannelDto) {
+    const data = await this.channelService.findOneChannel(findOneChannelDto.id);
 
     return data;
   }
