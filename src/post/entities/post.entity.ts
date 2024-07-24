@@ -19,42 +19,54 @@ import { Comment } from 'src/comment/entities/comment.entity';
 import { Channel } from 'src/channel/entities/channel.entity';
 import { Series } from 'src/series/entities/series.entity';
 import { VisibiltyType } from '../types/post.type';
+import { IsEnum, IsNumber, IsString } from 'class-validator';
 
 @Entity('posts')
 export class Post {
   @PrimaryGeneratedColumn({ unsigned: true })
   id: number;
 
+  @IsNumber()
   @Column({ unsigned: true })
   userId: number;
 
+  @IsNumber()
   @Column({ unsigned: true })
   channelId: number;
 
+  @IsNumber()
   @Column({ nullable: true, unsigned: true })
   seriesId: number;
 
+  @IsNumber()
   @Column({ unsigned: true })
   categoryId: number;
 
+  @IsString()
   @Column()
   title: number;
 
+  @IsString()
   @Column({ type: 'text' })
   preview: string;
 
+  @IsString()
   @Column({ type: 'text' })
   content: string;
 
+  @IsNumber()
   @Column({ default: 0 })
   price: number;
 
+  @IsEnum({ enum: VisibiltyType })
   @Column({ type: 'enum', enum: VisibiltyType, default: VisibiltyType.PUBLIC })
   visibility: VisibiltyType;
 
+  @IsNumber()
   @Column({ default: 0 })
   viewCount: number;
 
+  @IsNumber()
   @Column({ default: 0 })
   likeCount: number;
 
