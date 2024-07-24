@@ -19,6 +19,10 @@ export class Channel {
   @PrimaryGeneratedColumn({ unsigned: true })
   id: number;
 
+  /**
+   * 유저 아이디
+   * @example 1
+   */
   @IsNotEmpty({ message: '채널을 조회할 유저의 아이디를 입력해 주세요.' })
   @IsNumber()
   @Column({ unsigned: true })
