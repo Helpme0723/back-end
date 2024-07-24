@@ -1,8 +1,9 @@
-import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Channel } from './entities/channel.entity';
 import { Repository } from 'typeorm';
 import { CreateChannelDto } from './dtos/create-channel.dto';
+import { UpdateChannelDto } from './dtos/update-channel.dto';
 
 @Injectable()
 export class ChannelService {
@@ -34,6 +35,21 @@ export class ChannelService {
     }
 
     return channel;
+  }
+
+  // 채널 수정
+  async updateChannel(userId: number, channelId: number, updateChannelDto: UpdateChannelDto) {
+    const { title, description, imageUrl } = updateChannelDto;
+
+    const channel = await this.validateChannelOwner(userId, channelId);
+
+    if (!title && !description && !imageUrl) {
+      throw new BadRequestException('수정된 내용이 없습니다.');
+    }
+
+    const updatedChannel = await this.channelRepository.save({ id: channel.id, ...updateChannelDto });
+
+    return updatedChannel;
   }
 
   // 채널 삭제
