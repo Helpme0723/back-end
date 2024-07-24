@@ -12,7 +12,6 @@ export class ChannelService {
   ) {}
 
   async createChannel(userId: number, createChannelDto: CreateChannelDto, imageUrl?: string) {
-    console.log('sargjklagljfal', imageUrl);
     const { title, description } = createChannelDto;
     const channel = await this.channelRepository.save({ userId, title, description, imageUrl });
 

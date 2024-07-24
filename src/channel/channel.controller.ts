@@ -9,9 +9,9 @@ export class ChannelController {
 
   @Post()
   @UseInterceptors(FileInterceptor('imageUrl'))
-  async createChannel(@Body() createChannelDto: CreateChannelDto, @UploadedFile() file?: any) {
+  async createChannel(@Body() createChannelDto: CreateChannelDto, @UploadedFile() file?: Express.MulterS3.File) {
     const userId = 1;
-    console.log('akshfksdhfkdskhfkshdkfhkshdfkhk', file);
+
     const data = await this.channelService.createChannel(userId, createChannelDto, file?.location);
 
     return data;
