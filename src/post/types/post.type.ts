@@ -1,4 +1,4 @@
-export enum VisibiltyType {
+export enum VisibilityType {
   PUBLIC = 'PUBLIC',
   PRIVATE = 'PRIVATE',
 }
