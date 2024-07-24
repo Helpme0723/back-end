@@ -1,3 +1,4 @@
+import { IsNotEmpty, IsNumber } from 'class-validator';
 import { Post } from 'src/post/entities/post.entity';
 import { Series } from 'src/series/entities/series.entity';
 import { Subscribe } from 'src/subscribe/entities/subscribe.entity';
@@ -18,6 +19,8 @@ export class Channel {
   @PrimaryGeneratedColumn({ unsigned: true })
   id: number;
 
+  @IsNotEmpty({ message: '채널을 조회할 유저의 아이디를 입력해 주세요.' })
+  @IsNumber()
   @Column({ unsigned: true })
   userId: number;
 
