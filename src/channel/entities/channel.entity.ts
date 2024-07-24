@@ -36,13 +36,21 @@ export class Channel {
   @Column({ unsigned: true })
   userId: number;
 
+  /**
+   * 채널명
+   * @example "채널 생성 테스트"
+   */
   @IsNotEmpty({ message: '채널명을 입력해주세요.' })
   @MaxLength(30, { message: '채널명을 최대 30글자까지 입력 가능합니다.' })
   @IsString()
   @Column()
   title: string;
 
-  @IsNotEmpty({ message: '채널 소개 입력해 주세요.' })
+  /**
+   * 채널 소개
+   * @example "채널 생성 테스트입니다."
+   */
+  @IsNotEmpty({ message: '채널 소개를 입력해 주세요.' })
   @MaxLength(200, { message: '채널 소개는 최대 200글자까지 입력 가능합니다.' })
   @IsString()
   @Column()
