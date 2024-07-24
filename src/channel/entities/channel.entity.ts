@@ -33,6 +33,7 @@ export class Channel {
    */
   @IsNotEmpty({ message: '채널을 조회할 유저의 아이디를 입력해 주세요.' })
   @IsNumber()
+  @Type(() => Number)
   @Column({ unsigned: true })
   userId: number;
 

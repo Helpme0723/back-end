@@ -1,10 +1,13 @@
-import { Body, Controller, Delete, Get, HttpStatus, Param, Patch, Post } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpStatus, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
 import { ChannelService } from './channel.service';
 import { FindAllChannelsDto } from './dtos/find-all-channels.dto';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { ChannelIdDto } from './dtos/channel-id.dto';
 import { CreateChannelDto } from './dtos/create-channel.dto';
 import { UpdateChannelDto } from './dtos/update-channel.dto';
+import { AuthGuard } from '@nestjs/passport';
+import { UserInfo } from 'src/util/user-info.decorator';
+import { User } from 'src/user/entities/user.entity';
 
 @ApiTags('채널')
 @Controller('channels')
@@ -17,11 +20,11 @@ export class ChannelController {
    * @returns
    */
   // 채널 생성
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard('jwt'))
   @Post()
-  async createChannel(@Body() createChannelDto: CreateChannelDto) {
-    const userId = 1;
-
-    const data = await this.channelService.createChannel(userId, createChannelDto);
+  async createChannel(@UserInfo() user: User, @Body() createChannelDto: CreateChannelDto) {
+    const data = await this.channelService.createChannel(user.id, createChannelDto);
 
     return {
       statusCode: HttpStatus.CREATED,
@@ -37,7 +40,7 @@ export class ChannelController {
    */
   // 타 유저의 채널 모두 조회
   @Get()
-  async findAllChannels(@Body() findAllChannelsDto: FindAllChannelsDto) {
+  async findAllChannels(@Query() findAllChannelsDto: FindAllChannelsDto) {
     const data = await this.channelService.findAllChannels(findAllChannelsDto.userId);
 
     return {
@@ -52,11 +55,11 @@ export class ChannelController {
    * @returns
    */
   // 내 채널 모두 조회
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard('jwt'))
   @Get('me')
-  async findAllMyChannels() {
-    const userId = 9;
-
-    const data = await this.channelService.findAllChannels(userId);
+  async findAllMyChannels(@UserInfo() user: User) {
+    const data = await this.channelService.findAllChannels(user.id);
 
     return {
       statusCode: HttpStatus.OK,
@@ -70,7 +73,7 @@ export class ChannelController {
    * @param findOneChannelDto
    * @returns
    */
-  //채널 상세 조회
+  //타 유저 채널 상세 조회
   @Get(':id')
   async findOneChannel(@Param() channelIdDto: ChannelIdDto) {
     const data = await this.channelService.findOneChannel(channelIdDto.id);
@@ -82,12 +85,22 @@ export class ChannelController {
     };
   }
 
+  /**
+   * 채널 수정
+   * @param channelIdDto
+   * @param updateChannelDto
+   * @returns
+   */
   //채널 수정
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard('jwt'))
   @Patch(':id')
-  async updateChannel(@Param() channelIdDto: ChannelIdDto, @Body() updateChannelDto: UpdateChannelDto) {
-    const userId = 1;
-
-    const data = this.channelService.updateChannel(userId, channelIdDto.id, updateChannelDto);
+  async updateChannel(
+    @UserInfo() user: User,
+    @Param() channelIdDto: ChannelIdDto,
+    @Body() updateChannelDto: UpdateChannelDto
+  ) {
+    const data = await this.channelService.updateChannel(user.id, channelIdDto.id, updateChannelDto);
 
     return {
       statusCode: HttpStatus.OK,
@@ -102,10 +115,11 @@ export class ChannelController {
    * @returns
    */
   //채널 삭제
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard('jwt'))
   @Delete(':id')
-  async deleteChannel(@Param() channelIdDto: ChannelIdDto) {
-    const userId = 1;
-    await this.channelService.deleteChannel(userId, channelIdDto.id);
+  async deleteChannel(@UserInfo() user: User, @Param() channelIdDto: ChannelIdDto) {
+    await this.channelService.deleteChannel(user.id, channelIdDto.id);
 
     return {
       statusCode: HttpStatus.OK,
