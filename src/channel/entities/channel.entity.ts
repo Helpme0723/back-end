@@ -1,3 +1,5 @@
+import { Type } from 'class-transformer';
+import { IsNotEmpty, IsNumber } from 'class-validator';
 import { Post } from 'src/post/entities/post.entity';
 import { Series } from 'src/series/entities/series.entity';
 import { Subscribe } from 'src/subscribe/entities/subscribe.entity';
@@ -15,9 +17,22 @@ import {
 
 @Entity('channels')
 export class Channel {
+  /**
+   * 채널 아이디
+   * @example 1
+   */
+  @IsNotEmpty({ message: '조회할 채널의 아이디를 입력해 주세요.' })
+  @IsNumber()
+  @Type(() => Number)
   @PrimaryGeneratedColumn({ unsigned: true })
   id: number;
 
+  /**
+   * 유저 아이디
+   * @example 1
+   */
+  @IsNotEmpty({ message: '채널을 조회할 유저의 아이디를 입력해 주세요.' })
+  @IsNumber()
   @Column({ unsigned: true })
   userId: number;
 
