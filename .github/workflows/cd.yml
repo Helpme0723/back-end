@@ -1,4 +1,4 @@
-name: trello CD
+name: talentVerse CD
 
 on:
   workflow_dispatch: # 수동 실행
