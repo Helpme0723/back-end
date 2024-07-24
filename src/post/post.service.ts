@@ -31,7 +31,9 @@ export class PostService {
 
   async findAll() {
     const posts = await this.postRepository.find();
-
+    if (!posts) {
+      throw new NotFoundException('포스트를 찾을수 없습니다.');
+    }
     return posts;
   }
 
@@ -57,8 +59,19 @@ export class PostService {
       ...post,
       ...updatePostDto,
     };
-    console.log(newPost);
     const data = await this.postRepository.save(newPost);
     return data;
+  }
+
+  async delete(id: number) {
+    const post = await this.postRepository.findOne({
+      where: { id },
+    });
+    if (!post) {
+      throw new NotFoundException('포스트 를 찾지못했습니다.');
+    }
+    if (post) {
+      await this.postRepository.softDelete({ id });
+    }
   }
 }

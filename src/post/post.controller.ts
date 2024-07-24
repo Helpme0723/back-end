@@ -1,4 +1,4 @@
-import { Controller, Post, Body, HttpStatus, Get, Param, ParseIntPipe, Patch, Request } from '@nestjs/common';
+import { Controller, Post, Body, HttpStatus, Get, Param, ParseIntPipe, Patch, Request, Delete } from '@nestjs/common';
 import { PostService } from './post.service';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
@@ -23,7 +23,7 @@ export class PostController {
     const data = await this.postService.create(userId, seriesId, channelId, categoryId, createPostDto);
     return {
       statusCode: HttpStatus.CREATED,
-      message: '',
+      message: '포스트를 생성하였습니다.',
       data,
     };
   }
@@ -37,7 +37,7 @@ export class PostController {
     const data = await this.postService.findAll();
     return {
       statusCode: HttpStatus.OK,
-      message: '',
+      message: '포스트 전체조회를 성공하였습니다.',
       data,
     };
   }
@@ -53,7 +53,7 @@ export class PostController {
     const data = await this.postService.findOne(id);
     return {
       statusCode: HttpStatus.OK,
-      message: '',
+      message: '포스트 상세조회에 성공하였습니다.',
       data,
     };
   }
@@ -69,7 +69,22 @@ export class PostController {
     const data = await this.postService.update(id, updatePostDto);
     return {
       statusCode: HttpStatus.OK,
-      message: '',
+      message: '포스트를 수정하였습니다.',
+      data,
+    };
+  }
+
+  /**
+   * 포스트 삭제
+   * @param id
+   * @returns
+   */
+  @Delete(':id')
+  async delete(@Param('id', ParseIntPipe) id: number) {
+    const data = await this.postService.delete(id);
+    return {
+      statusCode: HttpStatus.OK,
+      message: '포스트를 삭제하였습니다',
       data,
     };
   }

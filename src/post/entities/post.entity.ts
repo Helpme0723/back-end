@@ -43,31 +43,31 @@ export class Post {
   categoryId: number;
 
   /**
-   * 포스트 제목
-   * @example "포스트제목1"
+   * 포스트이름
+   * @example "포스트1번입니다"
    */
   @IsString()
   @Column()
-  title: number;
+  title: string;
 
   /**
-   * 포스트프리뷰
-   * @example "프리뷰1"
+   * 프리뷰이름
+   * @example "프리뷰1번입니다"
    */
   @IsString()
   @Column({ type: 'text' })
   preview: string;
 
   /**
-   * 포스트컨텐츠
-   * @example "내용1"
+   * 내용
+   * @example "내용1번입니다"
    */
   @IsString()
   @Column({ type: 'text' })
   content: string;
 
   /**
-   * 포스트 가격
+   * 가격
    * @example 30000
    */
   @IsNumber()
