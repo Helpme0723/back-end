@@ -7,7 +7,7 @@ import { faker } from '@faker-js/faker';
 export default class UserSeeder implements Seeder {
   public async run(dataSource: DataSource, factoryManager: SeederFactoryManager): Promise<any> {
     const userFactory = factoryManager.get(User);
-    const users = await userFactory.saveMany(5);
+    const users = await userFactory.saveMany(10);
     const refreshTokenFactory = factoryManager.get(RefreshToken);
 
     for (const user of users) {

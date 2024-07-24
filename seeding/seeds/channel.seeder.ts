@@ -12,7 +12,7 @@ export default class ChannelSeeder implements Seeder {
     const channels = await channelFactory.saveMany(10);
 
     for (const channel of channels) {
-      for (let i = 1; i < 11; i++) {
+      for (let i = 0; i < 10; i++) {
         channel.userId = users[i].id;
         await dataSource.getRepository(Channel).save(channel);
       }

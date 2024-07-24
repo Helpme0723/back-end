@@ -23,8 +23,8 @@ export default class CommentSeeder implements Seeder {
           comment.post = post;
           await dataSource.getRepository(Comment).save(comment);
           const commentLike = new CommentLike();
-          commentLike.user = user;
-          commentLike.comment = comment;
+          commentLike.userId = user.id;
+          commentLike.commentId = comment.id;
           await commentLikeRepository.save(commentLike);
         }
       }

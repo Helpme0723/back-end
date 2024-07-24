@@ -38,7 +38,7 @@ export class Post {
   categoryId: number;
 
   @Column()
-  title: number;
+  title: string;
 
   @Column({ type: 'text' })
   preview: string;

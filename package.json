@@ -6,7 +6,7 @@
   "private": true,
   "license": "UNLICENSED",
   "scripts": {
-    "seed:run": "ts-node ./node_modules/typeorm-extension/bin/cli.cjs seed:run -d ./seeding/seeds.ts",
+    "seed:run": "node  -r tsconfig-paths/register -r ts-node/register ./node_modules/typeorm-extension/bin/cli.cjs seed:run -d ./seeding/seeds.ts",
     "build": "nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "nest start",

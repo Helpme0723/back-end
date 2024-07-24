@@ -8,6 +8,5 @@ export default setSeederFactory(Channel, async (faker: Faker) => {
   channel.description = faker.lorem.sentence(2);
   channel.imageUrl = faker.image.url();
   channel.subscribers = faker.number.int(10);
-
   return channel;
 });
