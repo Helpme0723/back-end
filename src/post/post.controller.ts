@@ -59,6 +59,22 @@ export class PostController {
   }
 
   /**
+   * 내포스트 전체조회
+   * @param req 
+   * @returns 
+   */
+  @Get('me')
+  async findMy(@Request() req){
+    const userId =1
+    const data = await this.postService.findMy(userId)
+    return{
+      statusCode: HttpStatus.OK,
+      message: '내 포스트들 조회에 성공하였습니다',
+      data
+    }
+  }
+
+  /**
    * 포스트 수정
    * @param id
    * @param updatePostDto
