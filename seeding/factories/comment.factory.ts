@@ -4,6 +4,7 @@ import { setSeederFactory } from 'typeorm-extension';
 
 export default setSeederFactory(Comment, async (faker: Faker) => {
   const comment = new Comment();
+  console.log('되니 제발?4');
   comment.content = faker.lorem.paragraph(1);
   comment.likeCount = faker.number.int();
 

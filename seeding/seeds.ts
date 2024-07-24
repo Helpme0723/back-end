@@ -37,6 +37,9 @@ import PurchaseListSeeder from './seeds/purchase-list.seeder';
 import SeriesSeeder from './seeds/series.seeder';
 import SubscribeSeeder from './seeds/subscribe.seeder';
 import TagSeeder from './seeds/tag.seeder';
+import { PostLike } from 'src/post/entities/post-like.entity';
+import PostLikeSeeder from './seeds/post-like.seeder';
+import postLikeFactory from './factories/post-like.factory';
 
 dotenv.config();
 
@@ -58,9 +61,10 @@ dotenv.config();
       CommentLike,
       Comment,
       PointHistory,
-      Post,
-      PurchaseList,
       Series,
+      Post,
+      PostLike,
+      PurchaseList,
       Subscribe,
       Tag,
     ],
@@ -70,9 +74,10 @@ dotenv.config();
       ChannelSeeder,
       CommentSeeder,
       PointHistorySeeder,
-      PostSeeder,
-      PurchaseListSeeder,
       SeriesSeeder,
+      PostSeeder,
+      PostLikeSeeder,
+      PurchaseListSeeder,
       SubscribeSeeder,
       TagSeeder,
     ],
@@ -84,9 +89,10 @@ dotenv.config();
       commentLikeFactory,
       commentFactory,
       pointFactory,
-      postFactory,
-      purchaseFactory,
       seriesFactory,
+      postFactory,
+      postLikeFactory,
+      purchaseFactory,
       subscribeFactory,
       tagFactory,
     ],
