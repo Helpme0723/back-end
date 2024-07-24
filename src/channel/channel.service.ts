@@ -49,7 +49,28 @@ export class ChannelService {
       throw new NotFoundException('해당 아이디의 채널이 존재하지 않습니다.');
     }
 
-    return {
+    const series = channel.series.map((series) => ({
+      id: series.id,
+      title: series.title,
+      description: series.description,
+      createdAt: series.createdAt,
+    }));
+
+    const posts = channel.posts
+      .filter((post) => post.visibility === VisibilityType.PUBLIC)
+      .map((post) => ({
+        id: post.id,
+        seriesId: post.seriesId,
+        category: post.category.category,
+        tags: post.tags,
+        title: post.title,
+        price: post.price !== 0 ? post.price : '무료',
+        viewCount: post.viewCount,
+        likeCount: post.likeCount,
+        createdAt: post.createdAt,
+      }));
+
+    const data = {
       id: channel.id,
       userId: channel.userId,
       nickname: channel.user.nickname,
@@ -57,26 +78,11 @@ export class ChannelService {
       description: channel.description,
       imageUrl: channel.imageUrl,
       subscribers: channel.subscribers,
-      series: channel.series.map((series) => ({
-        id: series.id,
-        title: series.title,
-        description: series.description,
-        createdAt: series.createdAt,
-      })),
-      posts: channel.posts
-        .filter((post) => post.visibility === VisibilityType.PUBLIC)
-        .map((post) => ({
-          id: post.id,
-          seriesId: post.seriesId,
-          category: post.category.category,
-          tags: post.tags,
-          title: post.title,
-          price: post.price !== 0 ? post.price : '무료',
-          viewCount: post.viewCount,
-          likeCount: post.likeCount,
-          createdAt: post.createdAt,
-        })),
+      series: series,
+      posts: posts,
     };
+
+    return data;
   }
 
   // 채널 수정

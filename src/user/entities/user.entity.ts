@@ -40,7 +40,7 @@ export class User {
   nickname: string;
 
   @IsOptional()
-  @Column({ default: null })
+  @Column({ default: '기본 이미지.jpg' })
   profileUrl: string;
 
   @IsNotEmpty({ message: '자기 소개를 입력해주세요.' })
