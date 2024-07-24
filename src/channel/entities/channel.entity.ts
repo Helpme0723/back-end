@@ -58,7 +58,7 @@ export class Channel {
 
   @IsOptional()
   @IsString()
-  @Column()
+  @Column({ default: '임시 이미지.jpg' })
   imageUrl: string;
 
   @Column({ default: 0 })

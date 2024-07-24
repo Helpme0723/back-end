@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpStatus, Param, Patch, Post } from '@nestjs/common';
 import { ChannelService } from './channel.service';
 import { FindAllChannelsDto } from './dtos/find-all-channels.dto';
 import { ApiTags } from '@nestjs/swagger';
@@ -23,7 +23,11 @@ export class ChannelController {
 
     const data = await this.channelService.createChannel(userId, createChannelDto);
 
-    return data;
+    return {
+      statusCode: HttpStatus.CREATED,
+      message: '채널을 생성했습니다.',
+      data,
+    };
   }
 
   /**
@@ -36,7 +40,11 @@ export class ChannelController {
   async findAllChannels(@Body() findAllChannelsDto: FindAllChannelsDto) {
     const data = await this.channelService.findAllChannels(findAllChannelsDto.userId);
 
-    return data;
+    return {
+      statusCode: HttpStatus.OK,
+      message: `${findAllChannelsDto.userId}의 채널 목록을 조회했습니다.`,
+      data,
+    };
   }
 
   /**
@@ -50,7 +58,11 @@ export class ChannelController {
 
     const data = await this.channelService.findAllChannels(userId);
 
-    return data;
+    return {
+      statusCode: HttpStatus.OK,
+      message: '내 채널 목록을 조회했습니다.',
+      data,
+    };
   }
 
   /**
@@ -63,7 +75,11 @@ export class ChannelController {
   async findOneChannel(@Param() channelIdDto: ChannelIdDto) {
     const data = await this.channelService.findOneChannel(channelIdDto.id);
 
-    return data;
+    return {
+      statusCode: HttpStatus.OK,
+      message: `${channelIdDto.id}번 채널을 조회했습니다.`,
+      data,
+    };
   }
 
   //채널 수정
@@ -73,7 +89,11 @@ export class ChannelController {
 
     const data = this.channelService.updateChannel(userId, channelIdDto.id, updateChannelDto);
 
-    return data;
+    return {
+      statusCode: HttpStatus.OK,
+      message: `${channelIdDto.id}번 채널을 수정했습니다.`,
+      data,
+    };
   }
 
   /**
@@ -87,6 +107,10 @@ export class ChannelController {
     const userId = 1;
     await this.channelService.deleteChannel(userId, channelIdDto.id);
 
-    return true;
+    return {
+      statusCode: HttpStatus.OK,
+      message: `${channelIdDto.id}번 채널을 삭제했습니다.`,
+      data: true,
+    };
   }
 }
