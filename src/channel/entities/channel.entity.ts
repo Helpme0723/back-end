@@ -1,5 +1,5 @@
 import { Type } from 'class-transformer';
-import { IsNotEmpty, IsNumber, IsOptional, IsString, Max } from 'class-validator';
+import { IsNotEmpty, IsNumber, IsOptional, IsString, MaxLength } from 'class-validator';
 import { Post } from 'src/post/entities/post.entity';
 import { Series } from 'src/series/entities/series.entity';
 import { Subscribe } from 'src/subscribe/entities/subscribe.entity';
@@ -37,13 +37,13 @@ export class Channel {
   userId: number;
 
   @IsNotEmpty({ message: '채널명을 입력해주세요.' })
-  @Max(30, { message: '채널명을 최대 30글자까지 입력 가능합니다.' })
+  @MaxLength(30, { message: '채널명을 최대 30글자까지 입력 가능합니다.' })
   @IsString()
   @Column()
   title: string;
 
   @IsNotEmpty({ message: '채널 소개 입력해 주세요.' })
-  @Max(200, { message: '채널 소개는 최대 200글자까지 입력 가능합니다.' })
+  @MaxLength(200, { message: '채널 소개는 최대 200글자까지 입력 가능합니다.' })
   @IsString()
   @Column()
   description: string;

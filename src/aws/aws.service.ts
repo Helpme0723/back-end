@@ -8,8 +8,8 @@ export class AwsService {
   s3Client: S3Client;
 
   constructor(
-    private configService: ConfigService,
-    private utilsService: UtilsService
+    private readonly configService: ConfigService,
+    private readonly utilsService: UtilsService
   ) {
     this.s3Client = new S3Client({
       region: this.configService.get<string>('AWS_REGION'),

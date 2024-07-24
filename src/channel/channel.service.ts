@@ -3,14 +3,12 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Channel } from './entities/channel.entity';
 import { Repository } from 'typeorm';
 import { CreateChannelDto } from './dtos/create-channel.dto';
-import { AwsService } from 'src/aws/aws.service';
 
 @Injectable()
 export class ChannelService {
   constructor(
     @InjectRepository(Channel)
-    private readonly channelRepository: Repository<Channel>,
-    private readonly awsService: AwsService
+    private readonly channelRepository: Repository<Channel>
   ) {}
 
   //채널 생성
