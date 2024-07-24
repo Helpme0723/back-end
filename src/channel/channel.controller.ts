@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, ParseIntPipe } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, ParseIntPipe, Post } from '@nestjs/common';
 import { ChannelService } from './channel.service';
 import { FindAllChannelsDto } from './dtos/find-all-channels.dto';
 import { ApiTags } from '@nestjs/swagger';
@@ -8,6 +8,10 @@ import { ChannelIdDto } from './dtos/channel-id.dto';
 @Controller('channels')
 export class ChannelController {
   constructor(private readonly channelService: ChannelService) {}
+
+  // 채널 생성
+  @Post()
+  async createChannel() {}
 
   /**
    * 타 유저의 채널 모두 조회

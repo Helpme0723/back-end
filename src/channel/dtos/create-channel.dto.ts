@@ -1,9 +1,4 @@
-import { IsString } from 'class-validator';
+import { PickType } from '@nestjs/swagger';
+import { Channel } from '../entities/channel.entity';
 
-export class CreateChannelDto {
-  @IsString()
-  title: string;
-
-  @IsString()
-  description: string;
-}
+export class CreateChannelDto extends PickType(Channel, ['title', 'description', 'imageUrl']) {}
