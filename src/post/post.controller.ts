@@ -1,4 +1,4 @@
-import { Controller, Post, Body, HttpStatus, Get } from '@nestjs/common';
+import { Controller, Post, Body, HttpStatus, Get, Param, ParseIntPipe } from '@nestjs/common';
 import { PostService } from './post.service';
 import { CreatePostDto } from './dto/create-post.dto';
 
@@ -19,6 +19,16 @@ export class PostController {
   @Get()
   async findAll() {
     const data = await this.postService.findAll();
+    return {
+      statusCode: HttpStatus.OK,
+      message: '',
+      data,
+    };
+  }
+
+  @Get(':id ')
+  async findOne(@Param('id', ParseIntPipe) id: number) {
+    const data = await this.postService.findOne(id);
     return {
       statusCode: HttpStatus.OK,
       message: '',

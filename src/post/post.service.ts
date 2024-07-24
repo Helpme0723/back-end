@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Post } from './entities/post.entity';
 import { Repository } from 'typeorm';
@@ -27,5 +27,16 @@ export class PostService {
     const posts = await this.postRepository.find();
 
     return posts;
+  }
+
+  async findOne(id: number) {
+    const post = await this.postRepository.findOne({
+      where: { id },
+    });
+
+    if (!post) {
+      throw new NotFoundException('포스트를 찾을수 없습니다.');
+    }
+    return post;
   }
 }
