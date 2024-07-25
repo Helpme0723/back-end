@@ -4,7 +4,7 @@ import { Post } from './entities/post.entity';
 import { Repository } from 'typeorm';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
-import { VisibilityType } from './types/post.type';
+import { VisibilityType } from './types/visibility.type';
 
 @Injectable()
 export class PostService {
@@ -13,7 +13,7 @@ export class PostService {
     private readonly postRepository: Repository<Post>
   ) {}
 
-  async create(userId: number, seriesId: number, channelId: number, categoryId: number, createPostDto: CreatePostDto) {
+  async create(userId: number, channelId: number, categoryId: number, createPostDto: CreatePostDto) {
     const { title, preview, content, price } = createPostDto;
 
     const post = this.postRepository.create({
@@ -22,7 +22,6 @@ export class PostService {
       content,
       price,
       userId,
-      seriesId,
       channelId,
       categoryId,
     });
