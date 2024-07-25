@@ -9,6 +9,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Subscribe } from './entities/subscribe.entity';
 import { DataSource, Repository } from 'typeorm';
 import { Channel } from 'src/channel/entities/channel.entity';
+import { CHANNEL_LIMIT } from 'src/constants/page.constant';
 
 @Injectable()
 export class SubscribeService {
@@ -95,5 +96,41 @@ export class SubscribeService {
     } finally {
       await queryRunner.release();
     }
+  }
+
+  // 내 구독 목록 조회
+  async findAllSubsCribe(userId: number, page: number) {
+    const offset = (page - 1) * CHANNEL_LIMIT;
+
+    const [subscribes, total] = await this.subscribeRepository.findAndCount({
+      where: { userId },
+      relations: {
+        channel: {
+          user: true,
+        },
+      },
+      skip: offset,
+      take: CHANNEL_LIMIT,
+    });
+
+    if (page !== 1 && page > Math.ceil(total / CHANNEL_LIMIT)) {
+      throw new NotFoundException('존재하지 않는 페이지입니다.');
+    }
+
+    return {
+      subscribes: subscribes.map((subscribe) => ({
+        id: subscribe.id,
+        ownerId: subscribe.channel.user.id,
+        ownerNickname: subscribe.channel.user.nickname,
+        ownerProfileUrl: subscribe.channel.user.profileUrl,
+        channelId: subscribe.channelId,
+        title: subscribe.channel.title,
+        description: subscribe.channel.description,
+        imageUrl: subscribe.channel.imageUrl,
+        subscribers: subscribe.channel.subscribers,
+      })),
+      total,
+      page,
+    };
   }
 }
