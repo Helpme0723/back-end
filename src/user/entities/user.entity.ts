@@ -19,32 +19,44 @@ import { Subscribe } from 'src/subscribe/entities/subscribe.entity';
 import { PointHistory } from 'src/point/entities/point-history.entity';
 import { PurchaseList } from 'src/purchase/entities/purchase-list.entity';
 import { UserRole } from '../types/user-role.type';
-import { IsEmail, IsNotEmpty, IsOptional } from 'class-validator';
+import { IsEmail, IsNotEmpty, IsString } from 'class-validator';
 
 @Entity('users')
 export class User {
   @PrimaryGeneratedColumn({ unsigned: true })
   id: number;
 
+  /**
+   * 이메일
+   * @example "email@domain.com"
+   */
   @IsNotEmpty({ message: '이메일을 입력해주세요.' })
   @IsEmail({}, { message: '이메일 형식이 올바르지 않습니다.' })
   @Column({ unique: true })
   email: string;
 
+  /**
+   * 비밀번호
+   * @example "qwer1234"
+   */
+  @IsString()
   @IsNotEmpty({ message: '비밀번호를 입력해주세요.' })
   @Column({ select: false })
   password: string;
 
+  /**
+   * 닉네임
+   * @example "닉네임"
+   */
+  @IsString()
   @IsNotEmpty({ message: '닉네임을 입력해주세요.' })
   @Column()
   nickname: string;
 
-  @IsOptional()
-  @Column({ default: null })
+  @Column({ default: '기본 이미지.jpg' })
   profileUrl: string;
 
-  @IsNotEmpty({ message: '자기 소개를 입력해주세요.' })
-  @Column()
+  @Column({ default: '안녕하세요.' })
   description: string;
 
   @Column()
