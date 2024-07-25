@@ -62,18 +62,10 @@ export class UserService {
       user.profileUrl = uploadResult.imageUrl;
     }
 
-    const { nickname, password, passwordConfirm, profileUrl, description } = updateUserDto;
+    const { nickname, profileUrl, description } = updateUserDto;
 
     if (nickname) {
       user.nickname = nickname;
-    }
-
-    if (password) {
-      // 비밀번호와 비밀번호 확인 값이 다를 경우 예외 처리
-      if (password !== passwordConfirm) {
-        throw new BadRequestException('비밀번호와 비밀번호 확인이 일치하지 않습니다.');
-      }
-      user.password = bcrypt.hashSync(password, 10);
     }
 
     // 파일이아닌 주소로 제공될 경우
