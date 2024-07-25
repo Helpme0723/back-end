@@ -94,14 +94,6 @@ export class UserController {
           type: 'string',
           example: 'new_nickname',
         },
-        password: {
-          type: 'string',
-          example: 'new_password',
-        },
-        passwordConfirm: {
-          type: 'string',
-          example: 'new_password',
-        },
         profileUrl: {
           type: 'string',
           example: 'https://example.com/profile.jpg',
