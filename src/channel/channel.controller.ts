@@ -95,7 +95,7 @@ export class ChannelController {
   @UseGuards(AuthGuard('jwt'))
   @Get(':id/me')
   async findOneMyChannel(@UserInfo() user: User, @Param() channelIdDto: ChannelIdDto) {
-    const data = await this.channelService.findOneMyChannel(user.id, channelIdDto.id);
+    const data = await this.channelService.findOneChannel(channelIdDto.id, user.id);
 
     return {
       statusCode: HttpStatus.OK,
