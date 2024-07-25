@@ -56,4 +56,21 @@ export class SeriesService {
 
     return newSeries;
   }
+
+  async delete(id: number, userId: number) {
+    const series = await this.seriesRepository.findOne({
+      where: { id, userId },
+    });
+    if (!series) {
+      throw new NotFoundException('시리즈를 찾아올수없습니다');
+    }
+    await this.seriesRepository.softDelete(id);
+  }
+
+  async findAllMySeries(userId: number) {
+    const mySeries = await this.seriesRepository.find({
+      where: { userId },
+    });
+    return mySeries;
+  }
 }
