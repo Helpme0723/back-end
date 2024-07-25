@@ -26,19 +26,35 @@ export class ChannelService {
   }
 
   // 채널 모두 조회
-  async findAllChannels(userId: number) {
-    const channels = await this.channelRepository.find({ where: { userId } });
+  async findAllChannels(userId: number, page: number) {
+    const offset = (page - 1) * 10; //상수로 만들어주기
 
-    return channels.map((channel) => ({
-      id: channel.id,
-      title: channel.title,
-      description: channel.description,
-      imageUrl: channel.imageUrl,
-      subscribers: channel.subscribers,
-    }));
+    // const channels = await this.channelRepository.find({ where: { userId } });
+
+    const [channels, total] = await this.channelRepository.findAndCount({
+      where: { userId },
+      skip: offset,
+      take: 10,
+    });
+
+    if (page > Math.ceil(total / 10)) {
+      throw new NotFoundException('존재하지 않는 페이지입니다.');
+    }
+
+    return {
+      channels: channels.map((channel) => ({
+        id: channel.id,
+        title: channel.title,
+        description: channel.description,
+        imageUrl: channel.imageUrl,
+        subscribers: channel.subscribers,
+      })),
+      total,
+      page,
+    };
   }
 
-  // 타 유저 채널 상세 조회
+  // 채널 상세 조회
   async findOneChannel(channelId: number, userId?: number) {
     let whereCondition: FindOptionsWhere<Channel> = { id: channelId };
 

@@ -8,6 +8,7 @@ import { UpdateChannelDto } from './dtos/update-channel.dto';
 import { AuthGuard } from '@nestjs/passport';
 import { UserInfo } from 'src/auth/decorators/user-info.decorator';
 import { User } from 'src/user/entities/user.entity';
+import { FindAllMyChannelsDto } from './dtos/find-all-my-channels.dto';
 
 @ApiTags('채널')
 @Controller('channels')
@@ -41,7 +42,7 @@ export class ChannelController {
   // 타 유저의 채널 모두 조회
   @Get()
   async findAllChannels(@Query() findAllChannelsDto: FindAllChannelsDto) {
-    const data = await this.channelService.findAllChannels(findAllChannelsDto.userId);
+    const data = await this.channelService.findAllChannels(findAllChannelsDto.userId, findAllChannelsDto.page);
 
     return {
       statusCode: HttpStatus.OK,
@@ -58,8 +59,8 @@ export class ChannelController {
   @ApiBearerAuth()
   @UseGuards(AuthGuard('jwt'))
   @Get('me')
-  async findAllMyChannels(@UserInfo() user: User) {
-    const data = await this.channelService.findAllChannels(user.id);
+  async findAllMyChannels(@UserInfo() user: User, @Query() findAllMyChannelsDto: FindAllMyChannelsDto) {
+    const data = await this.channelService.findAllChannels(user.id, findAllMyChannelsDto.page);
 
     return {
       statusCode: HttpStatus.OK,
