@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Comment } from './entities/comment.entity';
@@ -17,7 +17,6 @@ export class CommentService {
 
   //댓글 생성 api
   async createComment(createCommentDto: CreateCommentDto): Promise<Comment> {
-    // 포스트가 존재하는지 확인
     const post = await this.postRepository.findOne({ where: { id: createCommentDto.postId } });
     if (!post) {
       throw new NotFoundException('포스트를 찾을 수 없습니다.');
@@ -29,24 +28,30 @@ export class CommentService {
 
 
   //댓글 수정 api
-  async updateComment(commentId: number, updateCommentDto: UpdateCommentDto): Promise<Comment> {
-    const comment = await this.commentRepository.findOne({ where: { id: commentId } });
+  async updateComment(userId: number, commentId: number, updateCommentDto: UpdateCommentDto): Promise<Comment> {
+    const comment = await this.commentRepository.findOne({ where: { id: commentId, userId: userId } });
     if (!comment) {
       throw new NotFoundException('댓글을 찾을 수 없습니다.');
     }
 
-    Object.assign(comment, updateCommentDto);
-    return this.commentRepository.save(comment);
+    const { content } = updateCommentDto;
+    if (!content) {
+      throw new BadRequestException('수정된 내용이 없습니다.');
+    }
+
+    const updatedComment = await this.commentRepository.save({ id: comment.id, ...updateCommentDto });
+    return updatedComment;
   }
 
   //댓글 삭제 api
-  async deleteComment(commentId: number): Promise<void> {
-    const comment = await this.commentRepository.findOne({ where: { id: commentId } });
+  async deleteComment(userId: number, commentId: number): Promise<boolean> {
+    const comment = await this.commentRepository.findOne({ where: { id: commentId, userId: userId } });
     if (!comment) {
       throw new NotFoundException('댓글을 찾을 수 없습니다.');
     }
 
-    comment.deletedAt = new Date();
-    await this.commentRepository.save(comment);
+    await this.commentRepository.softDelete({ id: comment.id });
+
+    return true;
   }
 }
