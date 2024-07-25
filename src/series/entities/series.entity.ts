@@ -54,7 +54,7 @@ export class Series {
   @UpdateDateColumn()
   updatedAt: Date;
 
-  @DeleteDateColumn()
+  @DeleteDateColumn({ select: false })
   deletedAt: Date;
 
   @ManyToOne(() => User, (user) => user.series)

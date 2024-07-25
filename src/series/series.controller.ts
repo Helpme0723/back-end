@@ -1,12 +1,13 @@
-import { Body, Controller, Get, HttpStatus, Param, ParseIntPipe, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, HttpStatus, Param, ParseIntPipe, Patch, Post, UseGuards } from '@nestjs/common';
 import { SeriesService } from './series.service';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { UserInfo } from 'src/auth/decorators/user-info.decorator';
 import { User } from 'src/user/entities/user.entity';
 import { CreateSeriesDto } from './dtos/create-series-dto';
 import { AuthGuard } from '@nestjs/passport';
+import { UpdateSeriesDto } from './dtos/update-series-dto';
 
-@ApiTags('시리즈')
+@ApiTags('6.시리즈')
 @Controller('series')
 export class SeriesController {
   constructor(private readonly seriesService: SeriesService) {}
@@ -57,6 +58,24 @@ export class SeriesController {
     return {
       status: HttpStatus.OK,
       message: '시리즈 불러오기를 성공했습니다',
+      data,
+    };
+  }
+
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard('jwt'))
+  @Patch(':id')
+  async update(
+    @UserInfo() user: User,
+    @Param('id', ParseIntPipe) id: number,
+    @Body() updateSeriesDto: UpdateSeriesDto
+  ) {
+    const userId = user.id;
+    const data = await this.seriesService.update(id, userId, updateSeriesDto);
+
+    return {
+      status: HttpStatus.OK,
+      message: '시리즈를 수정하였습니다',
       data,
     };
   }

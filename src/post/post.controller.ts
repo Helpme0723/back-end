@@ -7,7 +7,7 @@ import { AuthGuard } from '@nestjs/passport';
 import { UserInfo } from 'src/auth/decorators/user-info.decorator';
 import { User } from 'src/user/entities/user.entity';
 
-@ApiTags('포스트')
+@ApiTags('5.포스트')
 @Controller('post')
 export class PostController {
   constructor(private readonly postService: PostService) {}
