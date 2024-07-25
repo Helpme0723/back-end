@@ -63,12 +63,8 @@ export class ChannelService {
       whereCondition.userId = userId;
     }
 
-    // 채널 주인이 아닐 때
-    if (!userId) {
-      whereCondition.posts = { visibility: VisibilityType.PUBLIC };
-    }
-
     const channel = await this.channelRepository.findOne({
+      where: whereCondition,
       relations: {
         user: true,
         series: true,
@@ -77,13 +73,18 @@ export class ChannelService {
           tags: true,
         },
       },
-      where: whereCondition,
     });
 
     if (!channel) {
       throw new NotFoundException('해당 아이디의 채널이 존재하지 않습니다.');
     }
 
+    let filteredPosts = channel.posts;
+    if (!userId || channel.userId !== userId) {
+      filteredPosts = filteredPosts.filter((post) => post.visibility === VisibilityType.PUBLIC);
+    }
+
+    // 반환할 데이터 평탄화
     const series = channel.series.map((series) => ({
       id: series.id,
       title: series.title,
@@ -91,7 +92,7 @@ export class ChannelService {
       createdAt: series.createdAt,
     }));
 
-    const posts = channel.posts.map((post) => ({
+    const posts = filteredPosts.map((post) => ({
       id: post.id,
       seriesId: post.seriesId,
       category: post.category.category,
