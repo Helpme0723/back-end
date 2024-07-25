@@ -1,7 +1,7 @@
 import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Channel } from './entities/channel.entity';
-import { Repository } from 'typeorm';
+import { FindOptionsWhere, Repository } from 'typeorm';
 import { CreateChannelDto } from './dtos/create-channel.dto';
 import { UpdateChannelDto } from './dtos/update-channel.dto';
 import { VisibilityType } from 'src/post/types/visibility.type';
@@ -38,18 +38,57 @@ export class ChannelService {
     }));
   }
 
-  // 채널 상세 조회
-  async findOneChannel(channelId: number) {
+  // 타 유저 채널 상세 조회
+  async findOneChannel(channelId: number, userId?: number) {
+    let whereCondition: FindOptionsWhere<Channel> = { id: channelId };
+
+    // 채널 주인일 때
+    if (userId) {
+      whereCondition.userId = userId;
+    }
+
+    // 채널 주인이 아닐 때
+    if (!userId) {
+      whereCondition.posts = { visibility: VisibilityType.PUBLIC };
+    }
+
     const channel = await this.channelRepository.findOne({
-      where: { id: channelId },
-      relations: ['user', 'series', 'posts', 'posts.category', 'posts.tags'],
+      relations: {
+        user: true,
+        series: true,
+        posts: {
+          category: true,
+          tags: true,
+        },
+      },
+      where: whereCondition,
     });
 
     if (!channel) {
       throw new NotFoundException('해당 아이디의 채널이 존재하지 않습니다.');
     }
 
-    return {
+    const series = channel.series.map((series) => ({
+      id: series.id,
+      title: series.title,
+      description: series.description,
+      createdAt: series.createdAt,
+    }));
+
+    const posts = channel.posts.map((post) => ({
+      id: post.id,
+      seriesId: post.seriesId,
+      category: post.category.category,
+      tags: post.tags,
+      title: post.title,
+      price: post.price !== 0 ? post.price : '무료',
+      visibility: post.visibility,
+      viewCount: post.viewCount,
+      likeCount: post.likeCount,
+      createdAt: post.createdAt,
+    }));
+
+    const data = {
       id: channel.id,
       userId: channel.userId,
       nickname: channel.user.nickname,
@@ -57,26 +96,11 @@ export class ChannelService {
       description: channel.description,
       imageUrl: channel.imageUrl,
       subscribers: channel.subscribers,
-      series: channel.series.map((series) => ({
-        id: series.id,
-        title: series.title,
-        description: series.description,
-        createdAt: series.createdAt,
-      })),
-      posts: channel.posts
-        .filter((post) => post.visibility === VisibilityType.PUBLIC)
-        .map((post) => ({
-          id: post.id,
-          seriesId: post.seriesId,
-          category: post.category.category,
-          tags: post.tags,
-          title: post.title,
-          price: post.price !== 0 ? post.price : '무료',
-          viewCount: post.viewCount,
-          likeCount: post.likeCount,
-          createdAt: post.createdAt,
-        })),
+      series: series,
+      posts: posts,
     };
+
+    return data;
   }
 
   // 채널 수정
@@ -108,7 +132,7 @@ export class ChannelService {
     const channel = await this.channelRepository.findOneBy({ id: channelId });
 
     if (!channel) {
-      throw new NotFoundException('해당 아이디의 채널이 없습니다.');
+      throw new NotFoundException('해당 아이디의 내 채널이 존재하지 않습니다.');
     }
 
     if (channel.userId !== userId) {
