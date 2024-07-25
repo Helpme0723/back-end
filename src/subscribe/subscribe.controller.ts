@@ -1,10 +1,11 @@
-import { Body, Controller, Delete, HttpStatus, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpStatus, Post, Query, UseGuards } from '@nestjs/common';
 import { SubscribeService } from './subscribe.service';
 import { AuthGuard } from '@nestjs/passport';
 import { UserInfo } from 'src/auth/decorators/user-info.decorator';
 import { User } from 'src/user/entities/user.entity';
 import { SubscribeDto } from './dtos/subscribe.dto';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { FindAllSubscribesDto } from './dtos/find-all-subscribes.dto';
 
 @ApiTags('구독')
 @Controller('subscribes')
@@ -45,6 +46,25 @@ export class SubscribeController {
     return {
       status: HttpStatus.OK,
       message: `${subscribeDto.channelId}번 채널의 구독을 취소했습니다.`,
+      data,
+    };
+  }
+
+  /**
+   * 내 구독 목록 조회
+   * @param findAllSubscribesDto
+   * @returns
+   */
+  // 내 구독 목록 조회
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard('jwt'))
+  @Get()
+  async findAllSubscribe(@UserInfo() user: User, @Query() findAllSubscribesDto: FindAllSubscribesDto) {
+    const data = await this.subscribeService.findAllSubsCribe(user.id, findAllSubscribesDto.page);
+
+    return {
+      status: HttpStatus.OK,
+      message: '내 구독 목록을 조회했습니다.',
       data,
     };
   }

@@ -49,7 +49,7 @@ export class ChannelService {
     const [channels, total] = await this.channelRepository.findAndCount({
       where: { userId },
       skip: offset,
-      take: 10,
+      take: CHANNEL_LIMIT,
     });
 
     if (page !== 1 && page > Math.ceil(total / CHANNEL_LIMIT)) {
