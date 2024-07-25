@@ -1,3 +1,5 @@
+import { Type } from 'class-transformer';
+import { IsNotEmpty, IsNumber } from 'class-validator';
 import { Channel } from 'src/channel/entities/channel.entity';
 import { User } from 'src/user/entities/user.entity';
 import { Column, CreateDateColumn, Entity, ManyToOne, PrimaryGeneratedColumn, Unique } from 'typeorm';
@@ -11,6 +13,13 @@ export class Subscribe {
   @Column({ unsigned: true })
   userId: number;
 
+  /**
+   * 구독할 채널 아이디
+   * @example 1
+   */
+  @IsNotEmpty({ message: '구독할 체널의 아이디를 입력해 주세요.' })
+  @IsNumber()
+  @Type(() => Number)
   @Column({ unsigned: true })
   channelId: number;
 
