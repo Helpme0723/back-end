@@ -1,7 +1,7 @@
 import { Body, Controller, Get, HttpStatus, Post, UseGuards } from '@nestjs/common';
 import { SeriesService } from './series.service';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
-import { UserInfo } from 'src/util/user-info.decorator';
+import { UserInfo } from 'src/auth/decorators/user-info.decorator';
 import { User } from 'src/user/entities/user.entity';
 import { CreateSeriesDto } from './dtos/create-series-dto';
 import { AuthGuard } from '@nestjs/passport';
@@ -19,7 +19,7 @@ export class SeriesController {
   async findAll() {
     const data = await this.seriesService.findAll();
     return {
-      statusCode: HttpStatus.OK,
+      status: HttpStatus.OK,
       message: '시리즈를 조회하였습니다.',
       data,
     };
@@ -39,7 +39,7 @@ export class SeriesController {
 
     const data = await this.seriesService.create(userId, createSeriesDto);
     return {
-      statusCode: HttpStatus.CREATED,
+      status: HttpStatus.CREATED,
       message: '시리즈를 생성하였습니다.',
       data,
     };
