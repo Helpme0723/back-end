@@ -7,7 +7,7 @@ import { SignInDto } from './dtos/sign-in.dto';
 import { JwtService } from '@nestjs/jwt';
 import { LocalAuthGuard } from './guards/local-auth.guard';
 import { User } from 'src/user/entities/user.entity';
-import { UserInfo } from 'src/util/user-info.decorator';
+import { UserInfo } from 'src/auth/decorators/user-info.decorator';
 
 @ApiTags('1.auth')
 @Controller('auth')

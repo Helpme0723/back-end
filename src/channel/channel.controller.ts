@@ -6,7 +6,7 @@ import { ChannelIdDto } from './dtos/channel-id.dto';
 import { CreateChannelDto } from './dtos/create-channel.dto';
 import { UpdateChannelDto } from './dtos/update-channel.dto';
 import { AuthGuard } from '@nestjs/passport';
-import { UserInfo } from 'src/util/user-info.decorator';
+import { UserInfo } from 'src/auth/decorators/user-info.decorator';
 import { User } from 'src/user/entities/user.entity';
 
 @ApiTags('채널')
