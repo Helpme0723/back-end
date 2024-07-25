@@ -111,7 +111,11 @@ export class ChannelService {
       take: TAKE_COUNT,
     });
 
-    // 반환할 데이터 평탄화
+    return this.mapChannelData(channel, series, posts);
+  }
+
+  // 채널 상세 조회 반환값 평탄화
+  mapChannelData(channel: Channel, series: Series[], posts: Post[]) {
     const mappedSeries = series.map((series) => ({
       id: series.id,
       title: series.title,
