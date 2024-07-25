@@ -4,6 +4,7 @@ import { Post } from './entities/post.entity';
 import { Repository } from 'typeorm';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
+import { VisibilityType } from './types/visibility.type';
 
 @Injectable()
 export class PostService {
@@ -12,7 +13,7 @@ export class PostService {
     private readonly postRepository: Repository<Post>
   ) {}
 
-  async create(userId: number, seriesId: number, channelId: number, categoryId: number, createPostDto: CreatePostDto) {
+  async create(userId: number, channelId: number, categoryId: number, createPostDto: CreatePostDto) {
     const { title, preview, content, price } = createPostDto;
 
     const post = this.postRepository.create({
@@ -21,7 +22,6 @@ export class PostService {
       content,
       price,
       userId,
-      seriesId,
       channelId,
       categoryId,
     });
@@ -30,8 +30,10 @@ export class PostService {
   }
 
   async findAll() {
-    const posts = await this.postRepository.find();
-    if (!posts) {
+    const posts = await this.postRepository.find({
+      where: { visibility: VisibilityType.PUBLIC },
+    });
+    if (posts.length === 0) {
       throw new NotFoundException('포스트를 찾을수 없습니다.');
     }
     return posts;
@@ -42,11 +44,21 @@ export class PostService {
       where: { id },
     });
 
-    //추가해야할거 : 내 포스트 전체조회
-
     if (!post) {
       throw new NotFoundException('포스트를 찾을수 없습니다.');
     }
+    return post;
+  }
+
+  async findMy(userId: number) {
+    const post = await this.postRepository.find({
+      where: { userId: userId },
+    });
+
+    if (!post) {
+      throw new NotFoundException('포스트가 존재하지 않습니다.');
+    }
+
     return post;
   }
 
