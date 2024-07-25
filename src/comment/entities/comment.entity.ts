@@ -18,7 +18,6 @@ export class Comment {
   @PrimaryGeneratedColumn({ unsigned: true })
   id: number;
 
-  @IsNotEmpty({ message: '유저id를 입력해 주세요.' })
   @IsNumber()
   @Column({ unsigned: true })
   userId: number;
