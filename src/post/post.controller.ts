@@ -101,10 +101,12 @@ export class PostController {
    * @param id
    * @returns
    */
+  @ApiBearerAuth()
   @UseGuards(AuthGuard('jwt'))
   @Delete(':id')
-  async delete(@Param('id', ParseIntPipe) id: number) {
-    const data = await this.postService.delete(id);
+  async delete(@UserInfo() user: User, @Param('id', ParseIntPipe) id: number) {
+    const userId = user.id;
+    const data = await this.postService.delete(userId, id);
     return {
       status: HttpStatus.OK,
       message: '포스트를 삭제하였습니다',

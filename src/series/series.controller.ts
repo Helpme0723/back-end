@@ -1,4 +1,4 @@
-import { Body, Controller, Get, HttpStatus, Param, ParseIntPipe, Patch, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpStatus, Param, ParseIntPipe, Patch, Post, UseGuards } from '@nestjs/common';
 import { SeriesService } from './series.service';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { UserInfo } from 'src/auth/decorators/user-info.decorator';
@@ -62,6 +62,13 @@ export class SeriesController {
     };
   }
 
+  /**
+   * 시리즈 수정
+   * @param user
+   * @param id
+   * @param updateSeriesDto
+   * @returns
+   */
   @ApiBearerAuth()
   @UseGuards(AuthGuard('jwt'))
   @Patch(':id')
@@ -76,6 +83,45 @@ export class SeriesController {
     return {
       status: HttpStatus.OK,
       message: '시리즈를 수정하였습니다',
+      data,
+    };
+  }
+
+  /**
+   * 시리즈삭제
+   * @param user
+   * @param id
+   * @returns
+   */
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard('jwt'))
+  @Delete(':id')
+  async delete(@UserInfo() user: User, @Param('id', ParseIntPipe) id: number) {
+    const userId = user.id;
+    const data = await this.seriesService.delete(id, userId);
+
+    return {
+      status: HttpStatus.OK,
+      message: '시리즈를 삭제하였습니다',
+      data,
+    };
+  }
+
+  /**
+   * 내시리즈 조회
+   * @param user
+   * @returns
+   */
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard('jwt'))
+  @Get('my/:id')
+  async findAllMySeries(@UserInfo() user: User) {
+    const userId = user.id;
+    const data = await this.seriesService.findAllMySeries(userId);
+
+    return {
+      status: HttpStatus.OK,
+      message: '내 시리즈 들을 조회하였습니다',
       data,
     };
   }
