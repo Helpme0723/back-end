@@ -14,6 +14,8 @@ import { CommentModule } from './comment/comment.module';
 import { SubscribeModule } from './subscribe/subscribe.module';
 import { PointModule } from './point/point.module';
 import { PurchaseModule } from './purchase/purchase.module';
+import { AwsModule } from './aws/aws.module';
+import { UtilsModule } from './utils/utils.module';
 
 @Module({
   imports: [
@@ -31,6 +33,8 @@ import { PurchaseModule } from './purchase/purchase.module';
     SubscribeModule,
     PointModule,
     PurchaseModule,
+    AwsModule,
+    UtilsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
