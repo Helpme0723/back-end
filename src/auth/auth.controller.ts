@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { Body, Controller, HttpStatus, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, HttpStatus, Post, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { SignUpDto } from './dtos/sign-up.dto';
 import { ApiTags } from '@nestjs/swagger';
@@ -8,6 +8,7 @@ import { JwtService } from '@nestjs/jwt';
 import { LocalAuthGuard } from './guards/local-auth.guard';
 import { User } from 'src/user/entities/user.entity';
 import { UserInfo } from 'src/auth/decorators/user-info.decorator';
+import { AuthGuard } from '@nestjs/passport';
 
 @ApiTags('1.auth')
 @Controller('auth')
@@ -47,6 +48,21 @@ export class AuthController {
     return {
       status: HttpStatus.OK,
       message: '로그인에 성공했습니다.',
+      data: data,
+    };
+  }
+  /**
+   * 회원 탈퇴
+   * @param user
+   * @returns
+   */
+  @UseGuards(AuthGuard('jwt'))
+  @Delete('/resign')
+  async reSign(@UserInfo() user: User) {
+    const data = await this.authService.reSign(user.id);
+    return {
+      status: HttpStatus.OK,
+      message: '삭제에 성공했습니다.',
       data: data,
     };
   }

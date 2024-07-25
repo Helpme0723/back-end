@@ -11,13 +11,13 @@ export class LocalStrategy extends PassportStrategy(Strategy) {
   // body로 들어온 email, password 값 검증
   async validate(email: string, password: string) {
     // user = { id: user.id }
-    const user = await this.authService.validateUser({ email, password });
+    const userId = await this.authService.validateUser({ email, password });
 
     // 예외 처리
-    if (!user) {
+    if (!userId) {
       throw new UnauthorizedException('일치하는 인증 정보가 없습니다.');
     }
 
-    return { id: user.id };
+    return userId;
   }
 }
