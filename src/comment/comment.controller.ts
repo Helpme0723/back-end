@@ -6,7 +6,6 @@ import { UpdateCommentDto } from './dto/update-comment.dto';
 import { AuthGuard } from '@nestjs/passport';
 import { UserInfo } from 'src/auth/decorators/user-info.decorator';
 import { User } from 'src/user/entities/user.entity';
-import { CreateCommentLikeDto } from './dto/create-comment-like.dto';
 
 @ApiTags('6.댓글')
 @Controller('comments')
@@ -80,8 +79,7 @@ export class CommentController {
   @Post(':commentId/likes')
   async createLike(@UserInfo() user: User, @Param('commentId') commentId: number) {
     const userId = user.id; // 인증된 사용자의 ID를 가져옴
-    const createCommentLikeDto: CreateCommentLikeDto = { commentId }; // DTO 객체 생성
-    const data = await this.commentService.createCommentLike(userId, createCommentLikeDto);
+    const data = await this.commentService.createCommentLike(userId, commentId);
     return {
       status: HttpStatus.OK,
       message: '댓글에 좋아요를 눌렀습니다.',
