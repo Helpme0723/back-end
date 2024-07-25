@@ -20,6 +20,7 @@ export class SubscribeService {
     private readonly dataSource: DataSource
   ) {}
 
+  // 채널 구독
   async createSubscribe(userId: number, channelId: number) {
     // 해당 채널이 있는지 확인
     const channel = await this.channelRepository.findOneBy({ id: channelId });
@@ -52,7 +53,38 @@ export class SubscribeService {
 
       // subscribe에 구독 정보 저장
       const subscribeData = this.subscribeRepository.create({ userId, channelId });
-      await queryRunner.manager.save(subscribeData);
+      await queryRunner.manager.save(Subscribe, subscribeData);
+
+      await queryRunner.commitTransaction();
+
+      return true;
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw new InternalServerErrorException('인터넷 서버 에러');
+    } finally {
+      await queryRunner.release();
+    }
+  }
+
+  // 채널 구독 취소
+  async deleteSubscribe(userId: number, channelId: number) {
+    const subscribe = await this.subscribeRepository.findOneBy({ userId, channelId });
+
+    if (!subscribe) {
+      throw new BadRequestException('구독하지 않은 채널입니다.');
+    }
+
+    //여기부터 트랜잭션 시작
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      // 채널의 subscribers에 -1 해서 저장
+      await queryRunner.manager.decrement(Channel, { id: channelId }, 'subscribers', 1);
+
+      // subscribe에서 구독 정보 삭제
+      await queryRunner.manager.delete(Subscribe, { id: subscribe.id });
 
       await queryRunner.commitTransaction();
 
