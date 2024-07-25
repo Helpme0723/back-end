@@ -1,9 +1,7 @@
-import { PickType } from '@nestjs/swagger';
-import { Channel } from '../entities/channel.entity';
 import { IsNumber, IsOptional } from 'class-validator';
 import { Type } from 'class-transformer';
 
-export class FindAllChannelsDto extends PickType(Channel, ['userId']) {
+export class FindAllMyChannelsDto {
   @IsNumber()
   @IsOptional()
   @Type(() => Number)

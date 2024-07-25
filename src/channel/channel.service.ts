@@ -26,19 +26,35 @@ export class ChannelService {
   }
 
   // 채널 모두 조회
-  async findAllChannels(userId: number) {
-    const channels = await this.channelRepository.find({ where: { userId } });
+  async findAllChannels(userId: number, page: number) {
+    // 존재하는 유저인지 확인해주기
 
-    return channels.map((channel) => ({
-      id: channel.id,
-      title: channel.title,
-      description: channel.description,
-      imageUrl: channel.imageUrl,
-      subscribers: channel.subscribers,
-    }));
+    const offset = (page - 1) * 10; //10 상수로 만들어주기
+
+    const [channels, total] = await this.channelRepository.findAndCount({
+      where: { userId },
+      skip: offset,
+      take: 10,
+    });
+
+    if (page !== 1 && page > Math.ceil(total / 10)) {
+      throw new NotFoundException('존재하지 않는 페이지입니다.');
+    }
+
+    return {
+      channels: channels.map((channel) => ({
+        id: channel.id,
+        title: channel.title,
+        description: channel.description,
+        imageUrl: channel.imageUrl,
+        subscribers: channel.subscribers,
+      })),
+      total,
+      page,
+    };
   }
 
-  // 타 유저 채널 상세 조회
+  // 채널 상세 조회
   async findOneChannel(channelId: number, userId?: number) {
     let whereCondition: FindOptionsWhere<Channel> = { id: channelId };
 
@@ -47,12 +63,8 @@ export class ChannelService {
       whereCondition.userId = userId;
     }
 
-    // 채널 주인이 아닐 때
-    if (!userId) {
-      whereCondition.posts = { visibility: VisibilityType.PUBLIC };
-    }
-
     const channel = await this.channelRepository.findOne({
+      where: whereCondition,
       relations: {
         user: true,
         series: true,
@@ -61,13 +73,18 @@ export class ChannelService {
           tags: true,
         },
       },
-      where: whereCondition,
     });
 
     if (!channel) {
       throw new NotFoundException('해당 아이디의 채널이 존재하지 않습니다.');
     }
 
+    let filteredPosts = channel.posts;
+    if (!userId || channel.userId !== userId) {
+      filteredPosts = filteredPosts.filter((post) => post.visibility === VisibilityType.PUBLIC);
+    }
+
+    // 반환할 데이터 평탄화
     const series = channel.series.map((series) => ({
       id: series.id,
       title: series.title,
@@ -75,7 +92,7 @@ export class ChannelService {
       createdAt: series.createdAt,
     }));
 
-    const posts = channel.posts.map((post) => ({
+    const posts = filteredPosts.map((post) => ({
       id: post.id,
       seriesId: post.seriesId,
       category: post.category.category,
