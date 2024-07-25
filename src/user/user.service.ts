@@ -15,7 +15,7 @@ export class UserService {
   ) {}
 
   /**
-   * 사용자 정보 조회 메서드
+   * 사용자 조회
    * @param user 유저정보
    * @returns 유저 정보 객체
    */
@@ -26,7 +26,7 @@ export class UserService {
   }
 
   /**
-   * userId로 회원정보 조회 메서드
+   * id값을 이용한 회원정보 조회 메서드
    * @param id 유저ID
    * @returns 회원객체
    */

@@ -1,8 +1,21 @@
-import { Body, Controller, Get, HttpStatus, Param, Patch, UploadedFile } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  HttpStatus,
+  Param,
+  Patch,
+  UploadedFile,
+  UseGuards,
+  UseInterceptors,
+} from '@nestjs/common';
 import { UserService } from './user.service';
-import { ApiBearerAuth, ApiConsumes, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiBody, ApiConsumes, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { User } from './entities/user.entity';
 import { UpdateUserDto } from './dtos/update-user.dto';
+import { UserInfo } from 'src/auth/decorators/user-info.decorator';
+import { AuthGuard } from '@nestjs/passport';
+import { FileInterceptor } from '@nestjs/platform-express';
 
 @ApiTags('2. User API')
 @Controller('users')
@@ -10,63 +23,99 @@ export class UserController {
   constructor(private readonly userService: UserService) {}
 
   /**
-   * 내 정보 조회
-   * @param user 데코레이터에서 가저온 사용자 정보
-   * @returns 내 정보 조회완료 메시지, data (패스워드 미포함)
+   * 내정보 조회
+   * @param user 유저정보
+   * @returns 조회된 정보
    */
-  // @UserGuards
   @ApiBearerAuth()
+  @ApiOperation({ summary: '내 정보 조회', description: '사용자의 정보를 조회합니다.' })
   @ApiResponse({
     status: HttpStatus.OK,
-    description: '',
+    description: '내 정보 조회 성공',
   })
+  @UseGuards(AuthGuard('jwt'))
   @Get('me')
-  async findUserInfo(/* 데코레이터 필요 */ user: User) {
+  async findUserInfo(@UserInfo() user: User) {
     const data = await this.userService.findUserInfo(user);
     return {
       status: HttpStatus.OK,
-      message: '',
+      message: '내 정보 조회 성공.',
       data: data,
     };
   }
 
   /**
-   * 다른 사용자 정보 조회
-   * @param id 해당 유저의 id값
-   * @returns 유저의 정보 조회완료 메시지, data (패스워드 미포함)
+   * 사용자 정보 조회
+   * @param id userId
+   * @returns 조회된 정보
    */
-  // @UserGuards
   @ApiBearerAuth()
+  @ApiOperation({ summary: '사용자 정보 조회', description: '특정 사용자의 정보를 조회합니다.' })
   @ApiResponse({
     status: HttpStatus.OK,
-    description: '',
+    description: '사용자 정보 조회 성공.',
   })
   @Get(':id')
   async findUserInfoById(@Param('id') id: string) {
     const data = await this.userService.findUserById(+id);
     return {
       status: HttpStatus.OK,
-      message: '',
+      message: '사용자 정보 조회 성공.',
       data: data,
     };
   }
 
   /**
    * 내 정보 수정
-   * @param user 사용자 정보
-   * @param updateUserDto 변경할 정보
-   * @param file 파일
-   * @returns 성공와뇰 메시지
+   * @param user 유저정보
+   * @param updateUserDto 수정할 정보
+   * @param file 파일 입력
+   * @returns 결과
    */
   @ApiBearerAuth()
+  @ApiOperation({ summary: '내 정보 수정', description: '사용자의 정보를 수정합니다.' })
+  @UseGuards(AuthGuard('jwt'))
   @ApiConsumes('multipart/form-data')
+  @UseInterceptors(FileInterceptor('file'))
   @ApiResponse({
     status: HttpStatus.OK,
-    description: '',
+    description: '내 정보 수정 성공.',
+  })
+  @ApiBody({
+    description: 'Update User DTO',
+    schema: {
+      type: 'object',
+      properties: {
+        file: {
+          type: 'string',
+          format: 'binary',
+        },
+        nickname: {
+          type: 'string',
+          example: 'new_nickname',
+        },
+        password: {
+          type: 'string',
+          example: 'new_password',
+        },
+        passwordConfirm: {
+          type: 'string',
+          example: 'new_password',
+        },
+        profileUrl: {
+          type: 'string',
+          example: 'https://example.com/profile.jpg',
+        },
+        description: {
+          type: 'string',
+          example: 'New description',
+        },
+      },
+    },
   })
   @Patch('me')
   async updateUserInfo(
-    /* 데코레이터 */ user: User,
+    @UserInfo() user: User,
     @Body() updateUserDto: UpdateUserDto,
     @UploadedFile() file?: Express.Multer.File
   ) {
@@ -74,7 +123,7 @@ export class UserController {
 
     return {
       status: HttpStatus.OK,
-      message: '',
+      message: '내 정보 수정 성공.',
       data: userInfo,
     };
   }
