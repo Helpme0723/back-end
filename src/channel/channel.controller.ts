@@ -28,7 +28,7 @@ export class ChannelController {
     const data = await this.channelService.createChannel(user.id, createChannelDto);
 
     return {
-      statusCode: HttpStatus.CREATED,
+      status: HttpStatus.CREATED,
       message: '채널을 생성했습니다.',
       data,
     };
@@ -45,7 +45,7 @@ export class ChannelController {
     const data = await this.channelService.findAllChannels(findAllChannelsDto.userId, findAllChannelsDto.page);
 
     return {
-      statusCode: HttpStatus.OK,
+      status: HttpStatus.OK,
       message: `${findAllChannelsDto.userId}의 채널 목록을 조회했습니다.`,
       data,
     };
@@ -63,7 +63,7 @@ export class ChannelController {
     const data = await this.channelService.findAllChannels(user.id, findAllMyChannelsDto.page);
 
     return {
-      statusCode: HttpStatus.OK,
+      status: HttpStatus.OK,
       message: '내 채널 목록을 조회했습니다.',
       data,
     };
@@ -80,7 +80,7 @@ export class ChannelController {
     const data = await this.channelService.findOneChannel(channelIdDto.id);
 
     return {
-      statusCode: HttpStatus.OK,
+      status: HttpStatus.OK,
       message: `${channelIdDto.id}번 채널을 조회했습니다.`,
       data,
     };
@@ -99,7 +99,7 @@ export class ChannelController {
     const data = await this.channelService.findOneChannel(channelIdDto.id, user.id);
 
     return {
-      statusCode: HttpStatus.OK,
+      status: HttpStatus.OK,
       message: `내 ${channelIdDto.id}번 채널을 조회했습니다.`,
       data,
     };
@@ -123,7 +123,7 @@ export class ChannelController {
     const data = await this.channelService.updateChannel(user.id, channelIdDto.id, updateChannelDto);
 
     return {
-      statusCode: HttpStatus.OK,
+      status: HttpStatus.OK,
       message: `${channelIdDto.id}번 채널을 수정했습니다.`,
       data,
     };
@@ -142,7 +142,7 @@ export class ChannelController {
     await this.channelService.deleteChannel(user.id, channelIdDto.id);
 
     return {
-      statusCode: HttpStatus.OK,
+      status: HttpStatus.OK,
       message: `${channelIdDto.id}번 채널을 삭제했습니다.`,
       data: true,
     };

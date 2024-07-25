@@ -27,9 +27,9 @@ export class ChannelService {
 
   // 채널 모두 조회
   async findAllChannels(userId: number, page: number) {
-    const offset = (page - 1) * 10; //상수로 만들어주기
+    // 존재하는 유저인지 확인해주기
 
-    // const channels = await this.channelRepository.find({ where: { userId } });
+    const offset = (page - 1) * 10; //10 상수로 만들어주기
 
     const [channels, total] = await this.channelRepository.findAndCount({
       where: { userId },
@@ -37,7 +37,7 @@ export class ChannelService {
       take: 10,
     });
 
-    if (page > Math.ceil(total / 10)) {
+    if (page !== 1 && page > Math.ceil(total / 10)) {
       throw new NotFoundException('존재하지 않는 페이지입니다.');
     }
 
