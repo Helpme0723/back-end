@@ -116,7 +116,6 @@ export class UserController {
     return {
       status: HttpStatus.OK,
       message: '내 정보 수정 성공.',
-      data: userInfo,
     };
   }
 }
