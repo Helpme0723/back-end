@@ -1,13 +1,25 @@
-import { PickType } from '@nestjs/swagger';
+import { ApiProperty, PickType } from '@nestjs/swagger';
 import { User } from '../entities/user.entity';
-import { IsNotEmpty, ValidateIf } from 'class-validator';
+import { IsOptional, IsString } from 'class-validator';
 
-export class UpdateUserDto extends PickType(User, ['nickname', 'password', 'profileUrl', 'description']) {
-  /**
-   * 비밀번호 확인
-   * 비밀번호가 입력됬을경우 조건부 동작
-   */
-  @ValidateIf((o) => o.password)
-  @IsNotEmpty({ message: '비밀번호 확인을 입력해주세요.' })
-  passwordConfirm: string;
+export class UpdateUserDto {
+  
+  @ApiProperty({ example: 'nickname' })
+  @IsString()
+  @IsOptional()
+  nickname?: string;
+
+  @ApiProperty({ example: '안녕하세요.' })
+  @IsString()
+  @IsOptional()
+  description?: string;
+
+  @ApiProperty({ type: 'string', format: 'binary', required: false })
+  @IsOptional()
+  file?: any;
+
+  @ApiProperty({ example: '기본 이미지.jpg' })
+  @IsString()
+  @IsOptional()
+  profileUrl?: string;
 }

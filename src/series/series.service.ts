@@ -2,7 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Series } from './entities/series.entity';
 import { Repository } from 'typeorm';
-import { CreateSeriesDto } from './dtos/create-series-dto';
+import { CreateSeriesDto } from './dtos//create-series-dto';
 
 @Injectable()
 export class SeriesService {
@@ -22,13 +22,19 @@ export class SeriesService {
   async create(userId: number, createSeriesDto: CreateSeriesDto) {
     const { title, description, channelId } = createSeriesDto;
 
-    const series = await this.seriesRepository.create({
+    const series = this.seriesRepository.create({
       userId,
       title,
       description,
       channelId,
     });
     await this.seriesRepository.save(series);
+    return series;
+  }
+
+  async findOne(id: number) {
+    const series = await this.seriesRepository.findOne({ where: { id } });
+
     return series;
   }
 }

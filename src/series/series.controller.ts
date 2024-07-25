@@ -1,4 +1,4 @@
-import { Body, Controller, Get, HttpStatus, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, HttpStatus, Param, ParseIntPipe, Post, UseGuards } from '@nestjs/common';
 import { SeriesService } from './series.service';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { UserInfo } from 'src/auth/decorators/user-info.decorator';
@@ -41,6 +41,22 @@ export class SeriesController {
     return {
       status: HttpStatus.CREATED,
       message: '시리즈를 생성하였습니다.',
+      data,
+    };
+  }
+
+  /**
+   * 시리즈 상세조회
+   * @param id
+   * @returns
+   */
+  @Get(':id')
+  async findOne(@Param('id', ParseIntPipe) id: number) {
+    const data = await this.seriesService.findOne(id);
+
+    return {
+      status: HttpStatus.OK,
+      message: '시리즈 불러오기를 성공했습니다',
       data,
     };
   }
