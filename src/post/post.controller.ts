@@ -70,7 +70,6 @@ export class PostController {
   @Get(':id')
   async findOne(@Param('id', ParseIntPipe) id: number) {
     const data = await this.postService.findOne(id);
-    await this.postService.incrementViewCount(id);
     return {
       status: HttpStatus.OK,
       message: '포스트 상세조회에 성공하였습니다.',
@@ -84,7 +83,6 @@ export class PostController {
    * @param updatePostDto
    * @returns
    */
-  @ApiBearerAuth()
   @UseGuards(AuthGuard('jwt'))
   @Patch(':id')
   async update(@UserInfo() user: User, @Param('id', ParseIntPipe) id: number, @Body() updatePostDto: UpdatePostDto) {
@@ -110,25 +108,6 @@ export class PostController {
     return {
       status: HttpStatus.OK,
       message: '포스트를 삭제하였습니다',
-      data,
-    };
-  }
-  /**
-   * 포스트시리즈 수정
-   * @param user
-   * @param id
-   * @param seriesId
-   * @returns
-   */
-  @ApiBearerAuth()
-  @UseGuards(AuthGuard('jwt'))
-  @Patch('move-series')
-  async changeSeries(@UserInfo() user: User, @Param('id', ParseIntPipe) id: number, @Body() seriesId: number) {
-    const userId = user.id;
-    const data = await this.postService.changeSeries(userId, id, seriesId);
-    return {
-      status: HttpStatus.OK,
-      message: '포스트의 시리즈를 변경하는대 성공하였습니다',
       data,
     };
   }
