@@ -1,6 +1,6 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { EntityManager, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
 import { Comment } from './entities/comment.entity';
 import { CreateCommentDto } from './dto/create-comment.dto';
 import { Post } from 'src/post/entities/post.entity';
@@ -15,8 +15,6 @@ export class CommentService {
     private readonly commentRepository: Repository<Comment>,
     @InjectRepository(Post)
     private readonly postRepository: Repository<Post>,
-    @InjectRepository(CommentLike)
-    private readonly commentLikeRepository: Repository<CommentLike>
   ) {}
 
   //댓글 생성 api
@@ -58,11 +56,16 @@ export class CommentService {
     return true;
   }
 
-  //댓글 좋아요 등록 api
-  async createCommentLike(userId: number, commentId: number){
-    return await this.commentRepository.manager.transaction(async (manager: EntityManager) => {
-      const comment = await manager.findOne(Comment, { where: { id: commentId } });
+   // 댓글 좋아요 등록 API
+  async createCommentLike(userId: number, commentId: number) {
+    const queryRunner = this.commentRepository.manager.connection.createQueryRunner();
+    //트랜젝션 시작
+    await queryRunner.startTransaction();
 
+    try {
+      const comment = await queryRunner.manager.findOne(Comment, { where: { id: commentId } });
+
+      //댓글이 없을시
       if (!comment) {
         throw new NotFoundException('댓글을 찾을 수 없습니다.');
       }
@@ -73,39 +76,56 @@ export class CommentService {
       }
 
       // 이미 좋아요를 눌렀는지 확인
-      const existingLike = await manager.findOne(CommentLike, { where: { userId, commentId } });
+      const existingLike = await queryRunner.manager.findOne(CommentLike, { where: { userId, commentId } });
       if (existingLike) {
         throw new BadRequestException('이미 이 댓글에 좋아요를 눌렀습니다.');
       }
 
-      const commentLike = manager.create(CommentLike, { userId, commentId });
+      const commentLike = queryRunner.manager.create(CommentLike, { userId, commentId });
 
       // likeCount 증가
       comment.likeCount += 1;
-      await manager.save(Comment, comment);
+      await queryRunner.manager.save(Comment, comment);
+      const savedCommentLike = await queryRunner.manager.save(CommentLike, commentLike);
 
-      return manager.save(CommentLike, commentLike);
-    });
+      await queryRunner.commitTransaction();
+      return savedCommentLike; // 생성된 CommentLike 엔티티 반환
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw error;
+    } finally {
+      await queryRunner.release();
+    }
   }
 
-  // 댓글 좋아요 삭제 api
-  async deleteCommentLike(userId: number, commentId: number){
-    return await this.commentRepository.manager.transaction(async (manager: EntityManager) => {
-      const comment = await manager.findOne(Comment, { where: { id: commentId } });
+  // 댓글 좋아요 삭제 API
+  async deleteCommentLike(userId: number, commentId: number) {
+    const queryRunner = this.commentRepository.manager.connection.createQueryRunner();
+
+    await queryRunner.startTransaction();
+
+    try {
+      const comment = await queryRunner.manager.findOne(Comment, { where: { id: commentId } });
       if (!comment) {
         throw new NotFoundException('댓글을 찾을 수 없습니다.');
       }
 
-      const commentLike = await manager.findOne(CommentLike, { where: { userId, commentId } });
+      const commentLike = await queryRunner.manager.findOne(CommentLike, { where: { userId, commentId } });
       if (!commentLike) {
         throw new NotFoundException('좋아요를 누르지 않았습니다.');
       }
 
       // likeCount 감소
       comment.likeCount -= 1;
-      await manager.save(Comment, comment);
+      await queryRunner.manager.save(Comment, comment);
+      await queryRunner.manager.remove(CommentLike, commentLike);
 
-      await manager.remove(CommentLike, commentLike);
-    });
+      await queryRunner.commitTransaction();
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw error;
+    } finally {
+      await queryRunner.release();
+    }
   }
 }
