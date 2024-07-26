@@ -14,7 +14,7 @@ export class PointHistory {
   amount: number;
 
   @Column({ type: 'enum', enum: PointHistoryType })
-  type: PointHistoryType; // 수정 필요
+  type: PointHistoryType;
 
   @Column()
   description: string;
