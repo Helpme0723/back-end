@@ -37,6 +37,7 @@ export class UserController {
   @Get('me')
   async findUserInfo(@UserInfo() user: User) {
     const data = await this.userService.findUserInfo(user);
+    console.log(user);
     return {
       status: HttpStatus.OK,
       message: '내 정보 조회 성공.',

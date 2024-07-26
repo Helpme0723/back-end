@@ -1,8 +1,7 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { User } from './entities/user.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import bcrypt from 'bcrypt';
 import { UpdateUserDto } from './dtos/update-user.dto';
 import { AwsService } from 'src/aws/aws.service';
 
