@@ -16,6 +16,8 @@ import { UpdateUserDto } from './dtos/update-user.dto';
 import { UserInfo } from 'src/auth/decorators/user-info.decorator';
 import { AuthGuard } from '@nestjs/passport';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { UpdateUserPasswordDto } from './dtos/update-user-password.dto';
+import { ReadUserInfoDto } from './dtos/read-user-info.dto';
 
 @ApiTags('2. User API')
 @Controller('users')
@@ -36,7 +38,7 @@ export class UserController {
   @UseGuards(AuthGuard('jwt'))
   @Get('me')
   async findUserInfo(@UserInfo() user: User) {
-    const data = await this.userService.findUserInfo(user);
+    const data = await this.userService.findUserById(user.id);
     return {
       status: HttpStatus.OK,
       message: '내 정보 조회 성공.',
@@ -49,15 +51,14 @@ export class UserController {
    * @param id userId
    * @returns 조회된 정보
    */
-  @ApiBearerAuth()
   @ApiOperation({ summary: '사용자 정보 조회', description: '특정 사용자의 정보를 조회합니다.' })
   @ApiResponse({
     status: HttpStatus.OK,
     description: '사용자 정보 조회 성공.',
   })
   @Get(':id')
-  async findUserInfoById(@Param('id') id: string) {
-    const data = await this.userService.findUserById(+id);
+  async findUserInfoById(@Body() readUserInfoDto: ReadUserInfoDto) {
+    const data = await this.userService.findUserById(readUserInfoDto.id);
     return {
       status: HttpStatus.OK,
       message: '사용자 정보 조회 성공.',
@@ -73,13 +74,13 @@ export class UserController {
    * @returns 결과
    */
   @ApiBearerAuth()
-  @ApiOperation({ summary: '내 정보 수정', description: '사용자의 정보를 수정합니다.' })
+  @ApiOperation({ summary: '내 정보 변경', description: '사용자의 정보를 변경합니다.' })
   @UseGuards(AuthGuard('jwt'))
   @ApiConsumes('multipart/form-data')
   @UseInterceptors(FileInterceptor('file'))
   @ApiResponse({
     status: HttpStatus.OK,
-    description: '내 정보 수정 성공.',
+    description: '내 정보 변경 성공.',
   })
   @ApiBody({
     description: 'Update User DTO',
@@ -111,11 +112,23 @@ export class UserController {
     @Body() updateUserDto: UpdateUserDto,
     @UploadedFile() file?: Express.Multer.File
   ) {
-    const userInfo = this.userService.updateUserInfo(user, updateUserDto, file);
+    await this.userService.updateUserInfo(user, updateUserDto, file);
 
     return {
       status: HttpStatus.OK,
-      message: '내 정보 수정 성공.',
+      message: '내 정보 변경 성공.',
+    };
+  }
+
+  @ApiBearerAuth()
+  @ApiOperation({ summary: '비밀번호 변경', description: '사용자의 비밀번호를 변경 합니다.' })
+  @UseGuards(AuthGuard('jwt'))
+  @Patch('me/password')
+  async updateUserPassword(@UserInfo() user: User, @Body() updateUserPasswordDto: UpdateUserPasswordDto) {
+    await this.userService.updateUserPassword(user.id, updateUserPasswordDto);
+    return {
+      status: HttpStatus.OK,
+      message: '비밀번호 변경 완료',
     };
   }
 }

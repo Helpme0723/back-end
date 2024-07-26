@@ -7,7 +7,7 @@ import { AuthGuard } from '@nestjs/passport';
 import { UserInfo } from 'src/auth/decorators/user-info.decorator';
 import { User } from 'src/user/entities/user.entity';
 
-@ApiTags('포스트')
+@ApiTags('5.포스트')
 @Controller('post')
 export class PostController {
   constructor(private readonly postService: PostService) {}
@@ -22,11 +22,9 @@ export class PostController {
   @Post()
   async create(@UserInfo() user: User, @Body() createPostDto: CreatePostDto) {
     const userId = user.id;
-    const channelId = 1;
-    const categoryId = 1;
-    const data = await this.postService.create(userId, channelId, categoryId, createPostDto);
+    const data = await this.postService.create(userId, createPostDto);
     return {
-      statusCode: HttpStatus.CREATED,
+      status: HttpStatus.CREATED,
       message: '포스트를 생성하였습니다.',
       data,
     };
@@ -40,7 +38,7 @@ export class PostController {
   async findAll() {
     const data = await this.postService.findAll();
     return {
-      statusCode: HttpStatus.OK,
+      status: HttpStatus.OK,
       message: '포스트 전체조회를 성공하였습니다.',
       data,
     };
@@ -59,7 +57,7 @@ export class PostController {
     const data = await this.postService.findMy(userId);
 
     return {
-      statusCode: HttpStatus.OK,
+      status: HttpStatus.OK,
       message: '내 포스트들 조회에 성공하였습니다',
       data,
     };
@@ -73,7 +71,7 @@ export class PostController {
   async findOne(@Param('id', ParseIntPipe) id: number) {
     const data = await this.postService.findOne(id);
     return {
-      statusCode: HttpStatus.OK,
+      status: HttpStatus.OK,
       message: '포스트 상세조회에 성공하였습니다.',
       data,
     };
@@ -87,10 +85,10 @@ export class PostController {
    */
   @UseGuards(AuthGuard('jwt'))
   @Patch(':id')
-  async update(@Param('id', ParseIntPipe) id: number, @Body() updatePostDto: UpdatePostDto) {
-    const data = await this.postService.update(id, updatePostDto);
+  async update(@UserInfo() user: User, @Param('id', ParseIntPipe) id: number, @Body() updatePostDto: UpdatePostDto) {
+    const data = await this.postService.update(user.id, id, updatePostDto);
     return {
-      statusCode: HttpStatus.OK,
+      status: HttpStatus.OK,
       message: '포스트를 수정하였습니다.',
       data,
     };
@@ -101,12 +99,14 @@ export class PostController {
    * @param id
    * @returns
    */
+  @ApiBearerAuth()
   @UseGuards(AuthGuard('jwt'))
   @Delete(':id')
-  async delete(@Param('id', ParseIntPipe) id: number) {
-    const data = await this.postService.delete(id);
+  async delete(@UserInfo() user: User, @Param('id', ParseIntPipe) id: number) {
+    const userId = user.id;
+    const data = await this.postService.delete(userId, id);
     return {
-      statusCode: HttpStatus.OK,
+      status: HttpStatus.OK,
       message: '포스트를 삭제하였습니다',
       data,
     };

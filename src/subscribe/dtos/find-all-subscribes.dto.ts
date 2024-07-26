@@ -1,7 +1,7 @@
-import { IsNumber, IsOptional } from 'class-validator';
 import { Type } from 'class-transformer';
+import { IsNumber, IsOptional } from 'class-validator';
 
-export class FindAllMyChannelsDto {
+export class FindAllSubscribesDto {
   @IsNumber()
   @IsOptional()
   @Type(() => Number)

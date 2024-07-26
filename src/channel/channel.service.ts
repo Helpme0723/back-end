@@ -8,7 +8,8 @@ import { VisibilityType } from 'src/post/types/visibility.type';
 import { User } from 'src/user/entities/user.entity';
 import { Series } from 'src/series/entities/series.entity';
 import { Post } from 'src/post/entities/post.entity';
-import { CHANNEL_LIMIT, TAKE_COUNT } from 'src/constants/page.constant';
+import { TAKE_COUNT } from 'src/constants/page.constant';
+import { paginate } from 'nestjs-typeorm-paginate';
 
 @Injectable()
 export class ChannelService {
@@ -36,7 +37,7 @@ export class ChannelService {
   }
 
   // 채널 모두 조회
-  async findAllChannels(userId: number, page: number) {
+  async findAllChannels(userId: number, page: number, limit: number) {
     // 존재하는 유저인지 확인해주기
     const user = await this.userRepository.findOneBy({ id: userId });
 
@@ -44,28 +45,17 @@ export class ChannelService {
       throw new NotFoundException('존재하지 않는 유저입니다.');
     }
 
-    const offset = (page - 1) * CHANNEL_LIMIT;
-
-    const [channels, total] = await this.channelRepository.findAndCount({
-      where: { userId },
-      skip: offset,
-      take: 10,
-    });
-
-    if (page !== 1 && page > Math.ceil(total / CHANNEL_LIMIT)) {
-      throw new NotFoundException('존재하지 않는 페이지입니다.');
-    }
+    const { items, meta } = await paginate<Channel>(this.channelRepository, { page, limit }, { where: { userId } });
 
     return {
-      channels: channels.map((channel) => ({
-        id: channel.id,
-        title: channel.title,
-        description: channel.description,
-        imageUrl: channel.imageUrl,
-        subscribers: channel.subscribers,
+      channels: items.map((item) => ({
+        id: item.id,
+        title: item.title,
+        description: item.description,
+        imageUrl: item.imageUrl,
+        subscribers: item.subscribers,
       })),
-      total,
-      page,
+      meta,
     };
   }
 
@@ -155,10 +145,18 @@ export class ChannelService {
   async updateChannel(userId: number, channelId: number, updateChannelDto: UpdateChannelDto) {
     const { title, description, imageUrl } = updateChannelDto;
 
-    const channel = await this.validateChannelOwner(userId, channelId);
-
     if (!title && !description && !imageUrl) {
       throw new BadRequestException('수정된 내용이 없습니다.');
+    }
+
+    const channel = await this.channelRepository.findOneBy({ id: channelId });
+
+    if (!channel) {
+      throw new NotFoundException('해당 아이디의 내 채널이 존재하지 않습니다.');
+    }
+
+    if (channel.userId !== userId) {
+      throw new ForbiddenException('수정 권한이 없는 채널입니다.');
     }
 
     const updatedChannel = await this.channelRepository.save({ id: channel.id, ...updateChannelDto });
@@ -168,25 +166,24 @@ export class ChannelService {
 
   // 채널 삭제
   async deleteChannel(userId: number, channelId: number) {
-    const channel = await this.validateChannelOwner(userId, channelId);
-
-    await this.channelRepository.softDelete({ id: channel.id });
-
-    return true;
-  }
-
-  // 채널 삭제 or 수정 권한 검사
-  async validateChannelOwner(userId: number, channelId: number) {
-    const channel = await this.channelRepository.findOneBy({ id: channelId });
+    const channel = await this.channelRepository.findOne({
+      where: { id: channelId },
+      relations: {
+        series: true,
+        posts: true,
+      },
+    });
 
     if (!channel) {
       throw new NotFoundException('해당 아이디의 내 채널이 존재하지 않습니다.');
     }
 
     if (channel.userId !== userId) {
-      throw new ForbiddenException('권한이 없는 채널입니다.');
+      throw new ForbiddenException('삭제 권한이 없는 채널입니다.');
     }
 
-    return channel;
+    await this.channelRepository.softRemove(channel);
+
+    return true;
   }
 }
