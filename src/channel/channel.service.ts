@@ -5,12 +5,22 @@ import { FindOptionsWhere, Repository } from 'typeorm';
 import { CreateChannelDto } from './dtos/create-channel.dto';
 import { UpdateChannelDto } from './dtos/update-channel.dto';
 import { VisibilityType } from 'src/post/types/visibility.type';
+import { User } from 'src/user/entities/user.entity';
+import { Series } from 'src/series/entities/series.entity';
+import { Post } from 'src/post/entities/post.entity';
+import { CHANNEL_LIMIT, TAKE_COUNT } from 'src/constants/page.constant';
 
 @Injectable()
 export class ChannelService {
   constructor(
     @InjectRepository(Channel)
-    private readonly channelRepository: Repository<Channel>
+    private readonly channelRepository: Repository<Channel>,
+    @InjectRepository(User)
+    private readonly userRepository: Repository<User>,
+    @InjectRepository(Series)
+    private readonly seriesRepository: Repository<Series>,
+    @InjectRepository(Post)
+    private readonly postRepository: Repository<Post>
   ) {}
 
   //채널 생성
@@ -28,8 +38,13 @@ export class ChannelService {
   // 채널 모두 조회
   async findAllChannels(userId: number, page: number) {
     // 존재하는 유저인지 확인해주기
+    const user = await this.userRepository.findOneBy({ id: userId });
 
-    const offset = (page - 1) * 10; //10 상수로 만들어주기
+    if (!user) {
+      throw new NotFoundException('존재하지 않는 유저입니다.');
+    }
+
+    const offset = (page - 1) * CHANNEL_LIMIT;
 
     const [channels, total] = await this.channelRepository.findAndCount({
       where: { userId },
@@ -37,7 +52,7 @@ export class ChannelService {
       take: 10,
     });
 
-    if (page !== 1 && page > Math.ceil(total / 10)) {
+    if (page !== 1 && page > Math.ceil(total / CHANNEL_LIMIT)) {
       throw new NotFoundException('존재하지 않는 페이지입니다.');
     }
 
@@ -56,7 +71,7 @@ export class ChannelService {
 
   // 채널 상세 조회
   async findOneChannel(channelId: number, userId?: number) {
-    let whereCondition: FindOptionsWhere<Channel> = { id: channelId };
+    const whereCondition: FindOptionsWhere<Channel> = { id: channelId };
 
     // 채널 주인일 때
     if (userId) {
@@ -67,11 +82,6 @@ export class ChannelService {
       where: whereCondition,
       relations: {
         user: true,
-        series: true,
-        posts: {
-          category: true,
-          tags: true,
-        },
       },
     });
 
@@ -79,20 +89,41 @@ export class ChannelService {
       throw new NotFoundException('해당 아이디의 채널이 존재하지 않습니다.');
     }
 
-    let filteredPosts = channel.posts;
+    const series = await this.seriesRepository.find({
+      where: { channelId },
+      order: { createdAt: 'DESC' },
+      take: TAKE_COUNT,
+    });
+
+    const postsWhereCondition: FindOptionsWhere<Post> = { channelId };
+
     if (!userId || channel.userId !== userId) {
-      filteredPosts = filteredPosts.filter((post) => post.visibility === VisibilityType.PUBLIC);
+      postsWhereCondition.visibility = VisibilityType.PUBLIC;
     }
 
-    // 반환할 데이터 평탄화
-    const series = channel.series.map((series) => ({
+    const posts = await this.postRepository.find({
+      where: postsWhereCondition,
+      relations: {
+        category: true,
+        tags: true,
+      },
+      order: { createdAt: 'DESC' },
+      take: TAKE_COUNT,
+    });
+
+    return this.mapChannelData(channel, series, posts);
+  }
+
+  // 채널 상세 조회 반환값 평탄화
+  mapChannelData(channel: Channel, series: Series[], posts: Post[]) {
+    const mappedSeries = series.map((series) => ({
       id: series.id,
       title: series.title,
       description: series.description,
       createdAt: series.createdAt,
     }));
 
-    const posts = filteredPosts.map((post) => ({
+    const mappedPosts = posts.map((post) => ({
       id: post.id,
       seriesId: post.seriesId,
       category: post.category.category,
@@ -113,8 +144,8 @@ export class ChannelService {
       description: channel.description,
       imageUrl: channel.imageUrl,
       subscribers: channel.subscribers,
-      series: series,
-      posts: posts,
+      series: mappedSeries,
+      posts: mappedPosts,
     };
 
     return data;

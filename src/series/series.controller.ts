@@ -1,7 +1,7 @@
 import { Body, Controller, Get, HttpStatus, Post, UseGuards } from '@nestjs/common';
 import { SeriesService } from './series.service';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
-import { UserInfo } from 'src/util/user-info.decorator';
+import { UserInfo } from 'src/auth/decorators/user-info.decorator';
 import { User } from 'src/user/entities/user.entity';
 import { CreateSeriesDto } from './dtos/create-series-dto';
 import { AuthGuard } from '@nestjs/passport';
