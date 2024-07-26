@@ -7,24 +7,24 @@ import { Post } from 'src/post/entities/post.entity';
 import { UpdateCommentDto } from './dto/update-comment.dto';
 import { CommentLike } from './entities/comment-like.entity';
 
-
 @Injectable()
 export class CommentService {
   constructor(
     @InjectRepository(Comment)
     private readonly commentRepository: Repository<Comment>,
     @InjectRepository(Post)
-    private readonly postRepository: Repository<Post>,
+    private readonly postRepository: Repository<Post>
   ) {}
 
   //댓글 생성 api
-  async createComment(createCommentDto: CreateCommentDto) {
+  async createComment(userId: number, createCommentDto: CreateCommentDto) {
     const post = await this.postRepository.findOne({ where: { id: createCommentDto.postId } });
     if (!post) {
       throw new NotFoundException('포스트를 찾을 수 없습니다.');
     }
 
-    const comment = this.commentRepository.create(createCommentDto);
+    const comment = this.commentRepository.create({ userId, ...createCommentDto });
+
     return this.commentRepository.save(comment);
   }
 
@@ -35,6 +35,7 @@ export class CommentService {
       throw new NotFoundException('댓글을 찾을 수 없습니다.');
     }
 
+    // TODO: dto에서 걸러줘서 빼도 됨
     const { content } = updateCommentDto;
     if (!content) {
       throw new BadRequestException('수정된 내용이 없습니다.');
@@ -56,7 +57,7 @@ export class CommentService {
     return true;
   }
 
-   // 댓글 좋아요 등록 API
+  // 댓글 좋아요 등록 API
   async createCommentLike(userId: number, commentId: number) {
     const queryRunner = this.commentRepository.manager.connection.createQueryRunner();
     //트랜젝션 시작
@@ -83,18 +84,21 @@ export class CommentService {
 
       const commentLike = queryRunner.manager.create(CommentLike, { userId, commentId });
 
+      // TODO: increment로 변경
       // likeCount 증가
       comment.likeCount += 1;
       await queryRunner.manager.save(Comment, comment);
       const savedCommentLike = await queryRunner.manager.save(CommentLike, commentLike);
 
       await queryRunner.commitTransaction();
+      await queryRunner.release();
+
       return savedCommentLike; // 생성된 CommentLike 엔티티 반환
     } catch (error) {
       await queryRunner.rollbackTransaction();
-      throw error;
-    } finally {
       await queryRunner.release();
+
+      throw error;
     }
   }
 
@@ -115,6 +119,7 @@ export class CommentService {
         throw new NotFoundException('좋아요를 누르지 않았습니다.');
       }
 
+      // TODO: decrement로 수정
       // likeCount 감소
       comment.likeCount -= 1;
       await queryRunner.manager.save(Comment, comment);

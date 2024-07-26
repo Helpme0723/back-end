@@ -79,7 +79,7 @@ export class UserService {
    * @param user 유저정보
    * @param updateUserPasswordDto 비밀번호, 비밀번호확인 값
    */
-  async updateUserPassword(user: User, updateUserPasswordDto: UpdateUserPasswordDto) {
+  async updateUserPassword(userId: number, updateUserPasswordDto: UpdateUserPasswordDto) {
     const { password, passwordConfirm } = updateUserPasswordDto;
 
     // 비밀번호와 비밀번호 확인 값이 다를 경우 예외 처리
@@ -88,7 +88,7 @@ export class UserService {
     }
 
     //패스워드 조회
-    const currentUserPassword = await this.findUserPasswordById(user.id);
+    const currentUserPassword = await this.findUserPasswordById(userId);
 
     const isPasswordValid = await bcrypt.compare(password, currentUserPassword.password);
 
@@ -98,6 +98,6 @@ export class UserService {
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    await this.userRepository.update({ id: user.id }, { password: hashedPassword });
+    await this.userRepository.update({ id: userId }, { password: hashedPassword });
   }
 }

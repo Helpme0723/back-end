@@ -124,7 +124,7 @@ export class UserController {
   @UseGuards(AuthGuard('jwt'))
   @Patch('me/password')
   async updateUserPassword(@UserInfo() user: User, @Body() updateUserPasswordDto: UpdateUserPasswordDto) {
-    await this.userService.updateUserPassword(user, updateUserPasswordDto);
+    await this.userService.updateUserPassword(user.id, updateUserPasswordDto);
     return {
       status: HttpStatus.OK,
       message: '비밀번호 변경 완료',

@@ -57,13 +57,14 @@ export class SubscribeService {
       await queryRunner.manager.save(Subscribe, subscribeData);
 
       await queryRunner.commitTransaction();
+      await queryRunner.release();
 
       return true;
     } catch (error) {
       await queryRunner.rollbackTransaction();
-      throw new InternalServerErrorException('인터넷 서버 에러');
-    } finally {
       await queryRunner.release();
+
+      throw new InternalServerErrorException('인터넷 서버 에러');
     }
   }
 
@@ -88,19 +89,20 @@ export class SubscribeService {
       await queryRunner.manager.delete(Subscribe, { id: subscribe.id });
 
       await queryRunner.commitTransaction();
+      await queryRunner.release();
 
       return true;
     } catch (error) {
       await queryRunner.rollbackTransaction();
-      throw new InternalServerErrorException('인터넷 서버 에러');
-    } finally {
       await queryRunner.release();
+
+      throw new InternalServerErrorException('인터넷 서버 에러');
     }
   }
 
   // 내 구독 목록 조회
   async findAllSubsCribe(userId: number, page: number) {
-    const offset = (page - 1) * CHANNEL_LIMIT;
+    const offset = (page - 1) * CHANNEL_LIMIT; // TODO: limit 사용자가 전달하는 걸로 변경
 
     const [subscribes, total] = await this.subscribeRepository.findAndCount({
       where: { userId },
