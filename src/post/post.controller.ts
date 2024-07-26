@@ -22,9 +22,7 @@ export class PostController {
   @Post()
   async create(@UserInfo() user: User, @Body() createPostDto: CreatePostDto) {
     const userId = user.id;
-    const channelId = 1;
-    const categoryId = 1;
-    const data = await this.postService.create(userId, channelId, categoryId, createPostDto);
+    const data = await this.postService.create(userId, createPostDto);
     return {
       status: HttpStatus.CREATED,
       message: '포스트를 생성하였습니다.',
@@ -72,6 +70,7 @@ export class PostController {
   @Get(':id')
   async findOne(@Param('id', ParseIntPipe) id: number) {
     const data = await this.postService.findOne(id);
+    await this.postService.incrementViewCount(id);
     return {
       status: HttpStatus.OK,
       message: '포스트 상세조회에 성공하였습니다.',
@@ -85,10 +84,11 @@ export class PostController {
    * @param updatePostDto
    * @returns
    */
+  @ApiBearerAuth()
   @UseGuards(AuthGuard('jwt'))
   @Patch(':id')
-  async update(@Param('id', ParseIntPipe) id: number, @Body() updatePostDto: UpdatePostDto) {
-    const data = await this.postService.update(id, updatePostDto);
+  async update(@UserInfo() user: User, @Param('id', ParseIntPipe) id: number, @Body() updatePostDto: UpdatePostDto) {
+    const data = await this.postService.update(user.id, id, updatePostDto);
     return {
       status: HttpStatus.OK,
       message: '포스트를 수정하였습니다.',
@@ -110,6 +110,25 @@ export class PostController {
     return {
       status: HttpStatus.OK,
       message: '포스트를 삭제하였습니다',
+      data,
+    };
+  }
+  /**
+   * 포스트시리즈 수정
+   * @param user
+   * @param id
+   * @param seriesId
+   * @returns
+   */
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard('jwt'))
+  @Patch('move-series')
+  async changeSeries(@UserInfo() user: User, @Param('id', ParseIntPipe) id: number, @Body() seriesId: number) {
+    const userId = user.id;
+    const data = await this.postService.changeSeries(userId, id, seriesId);
+    return {
+      status: HttpStatus.OK,
+      message: '포스트의 시리즈를 변경하는대 성공하였습니다',
       data,
     };
   }
