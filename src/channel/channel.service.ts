@@ -36,7 +36,7 @@ export class ChannelService {
   }
 
   // 채널 모두 조회
-  async findAllChannels(userId: number, page: number) {
+  async findAllChannels(userId: number, page: number, limit: number) {
     // 존재하는 유저인지 확인해주기
     const user = await this.userRepository.findOneBy({ id: userId });
 
@@ -44,15 +44,15 @@ export class ChannelService {
       throw new NotFoundException('존재하지 않는 유저입니다.');
     }
 
-    const offset = (page - 1) * CHANNEL_LIMIT;
+    const offset = (page - 1) * limit;
 
     const [channels, total] = await this.channelRepository.findAndCount({
       where: { userId },
       skip: offset,
-      take: CHANNEL_LIMIT,
+      take: limit,
     });
 
-    if (page !== 1 && page > Math.ceil(total / CHANNEL_LIMIT)) {
+    if (page !== 1 && page > Math.ceil(total / limit)) {
       throw new NotFoundException('존재하지 않는 페이지입니다.');
     }
 

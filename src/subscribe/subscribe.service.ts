@@ -101,8 +101,8 @@ export class SubscribeService {
   }
 
   // 내 구독 목록 조회
-  async findAllSubsCribe(userId: number, page: number) {
-    const offset = (page - 1) * CHANNEL_LIMIT; // TODO: limit 사용자가 전달하는 걸로 변경
+  async findAllSubsCribe(userId: number, page: number, limit: number) {
+    const offset = (page - 1) * limit; // TODO: limit 사용자가 전달하는 걸로 변경
 
     const [subscribes, total] = await this.subscribeRepository.findAndCount({
       where: { userId },
@@ -112,10 +112,10 @@ export class SubscribeService {
         },
       },
       skip: offset,
-      take: CHANNEL_LIMIT,
+      take: limit,
     });
 
-    if (page !== 1 && page > Math.ceil(total / CHANNEL_LIMIT)) {
+    if (page !== 1 && page > Math.ceil(total / limit)) {
       throw new NotFoundException('존재하지 않는 페이지입니다.');
     }
 

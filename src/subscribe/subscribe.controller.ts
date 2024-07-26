@@ -21,12 +21,12 @@ export class SubscribeController {
   @ApiBearerAuth()
   @UseGuards(AuthGuard('jwt'))
   @Post()
-  async createSubscribe(@UserInfo() user: User, @Body() subscribeDto: SubscribeDto) {
-    const data = await this.subscribeService.createSubscribe(user.id, subscribeDto.channelId);
+  async createSubscribe(@UserInfo() user: User, @Body() { channelId }: SubscribeDto) {
+    const data = await this.subscribeService.createSubscribe(user.id, channelId);
 
     return {
       status: HttpStatus.CREATED,
-      message: `${subscribeDto.channelId}번 채널을 구독했습니다.`,
+      message: `${channelId}번 채널을 구독했습니다.`,
       data,
     };
   }
@@ -40,12 +40,12 @@ export class SubscribeController {
   @ApiBearerAuth()
   @UseGuards(AuthGuard('jwt'))
   @Delete()
-  async deleteSubsCribe(@UserInfo() user: User, @Body() subscribeDto: SubscribeDto) {
-    const data = await this.subscribeService.deleteSubscribe(user.id, subscribeDto.channelId);
+  async deleteSubsCribe(@UserInfo() user: User, @Body() { channelId }: SubscribeDto) {
+    const data = await this.subscribeService.deleteSubscribe(user.id, channelId);
 
     return {
       status: HttpStatus.OK,
-      message: `${subscribeDto.channelId}번 채널의 구독을 취소했습니다.`,
+      message: `${channelId}번 채널의 구독을 취소했습니다.`,
       data,
     };
   }
@@ -59,8 +59,8 @@ export class SubscribeController {
   @ApiBearerAuth()
   @UseGuards(AuthGuard('jwt'))
   @Get()
-  async findAllSubscribe(@UserInfo() user: User, @Query() findAllSubscribesDto: FindAllSubscribesDto) {
-    const data = await this.subscribeService.findAllSubsCribe(user.id, findAllSubscribesDto.page);
+  async findAllSubscribe(@UserInfo() user: User, @Query() { page, limit }: FindAllSubscribesDto) {
+    const data = await this.subscribeService.findAllSubsCribe(user.id, page, limit);
 
     return {
       status: HttpStatus.OK,
