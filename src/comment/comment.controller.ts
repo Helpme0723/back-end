@@ -1,4 +1,4 @@
-import { Controller, Post, Body, HttpStatus, Patch, Param, Delete, UseGuards } from '@nestjs/common';
+import { Controller, Post, Body, HttpStatus, Patch, Param, Delete, UseGuards, ParseIntPipe } from '@nestjs/common';
 import { CommentService } from './comment.service';
 import { CreateCommentDto } from './dto/create-comment.dto';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
@@ -23,7 +23,9 @@ export class CommentController {
   async create(@UserInfo() user: User, @Body() createCommentDto: CreateCommentDto) {
     const userId = user.id; // 인증된 사용자의 ID를 가져옴
 
-    const data = await this.commentService.createComment(userId, createCommentDto);
+    // userId를 createCommentDto에 추가
+    const commentData = { ...createCommentDto, userId };
+    const data = await this.commentService.createComment(commentData);
 
     // `deletedAt` 속성을 제거
     delete data.deletedAt;
@@ -44,7 +46,7 @@ export class CommentController {
   @Patch(':commentId')
   async update(
     @UserInfo() user: User,
-    @Param('commentId') commentId: number, // TODO: 파이프나 dto 추가해주기
+    @Param('commentId', ParseIntPipe) commentId: number, // commentId에 ParseIntPipe 추가
     @Body() updateCommentDto: UpdateCommentDto
   ) {
     const userId = user.id; // 인증된 사용자의 ID를 가져옴
@@ -59,12 +61,12 @@ export class CommentController {
   /**
    * 댓글 삭제
    * @param commentId 댓글 ID
-   * @returns
+   * @returns 상태 메시지
    * */
   @ApiBearerAuth()
   @UseGuards(AuthGuard('jwt'))
   @Delete(':commentId')
-  async delete(@UserInfo() user: User, @Param('commentId') commentId: number) {
+  async delete(@UserInfo() user: User, @Param('commentId', ParseIntPipe) commentId: number) {
     const userId = user.id; // 인증된 사용자의 ID를 가져옴
     await this.commentService.deleteComment(userId, commentId);
     return {
@@ -81,7 +83,7 @@ export class CommentController {
   @ApiBearerAuth()
   @UseGuards(AuthGuard('jwt'))
   @Post(':commentId/likes')
-  async createLike(@UserInfo() user: User, @Param('commentId') commentId: number) {
+  async createLike(@UserInfo() user: User, @Param('commentId', ParseIntPipe) commentId: number) {
     const userId = user.id; // 인증된 사용자의 ID를 가져옴
     const data = await this.commentService.createCommentLike(userId, commentId);
     return {
@@ -99,7 +101,7 @@ export class CommentController {
   @ApiBearerAuth()
   @UseGuards(AuthGuard('jwt'))
   @Delete(':commentId/likes')
-  async deleteLike(@UserInfo() user: User, @Param('commentId') commentId: number) {
+  async deleteLike(@UserInfo() user: User, @Param('commentId', ParseIntPipe) commentId: number) {
     const userId = user.id; // 인증된 사용자의 ID를 가져옴
     await this.commentService.deleteCommentLike(userId, commentId);
     return {
