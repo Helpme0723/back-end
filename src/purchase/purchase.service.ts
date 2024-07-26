@@ -5,6 +5,8 @@ import { PurchaseList } from './entities/purchase-list.entity';
 import { Post } from 'src/post/entities/post.entity';
 import { User } from 'src/user/entities/user.entity';
 import { CreatePurchaseDto } from './dto/buy-post.dto';
+import { PointHistory } from 'src/point/entities/point-history.entity';
+import { PointHistoryType } from 'src/point/types/point-history.type';
 
 
 @Injectable()
@@ -16,6 +18,8 @@ export class PurchaseService {
     private readonly postRepository: Repository<Post>,
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
+    @InjectRepository(PointHistory)
+    private readonly pointHistoryRepository: Repository<PointHistory>,
     private readonly dataSource: DataSource,
   ) {}
 
@@ -58,12 +62,22 @@ export class PurchaseService {
       });
 
       user.point -= post.price;
-      await this.userRepository.save(user);
-      const savedPurchase = await this.purchaseRepository.save(purchase);
+      // 포인트 히스토리 생성
+      const pointHistory = this.pointHistoryRepository.create({
+        userId,
+        amount: post.price,
+        type: PointHistoryType.OUTGOING,
+        description: `포스트 구매 - ${post.title}`,
+      });
+
+      await queryRunner.manager.save(User, user);
+      await queryRunner.manager.save(PurchaseList, purchase);
+      await queryRunner.manager.save(PointHistory, pointHistory);
+
 
       await queryRunner.commitTransaction();
       await queryRunner.release();
-      return savedPurchase;
+      return purchase;
     } catch (error) {
       await queryRunner.rollbackTransaction();
       await queryRunner.release();
