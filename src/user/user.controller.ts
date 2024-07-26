@@ -17,6 +17,7 @@ import { UserInfo } from 'src/auth/decorators/user-info.decorator';
 import { AuthGuard } from '@nestjs/passport';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { UpdateUserPasswordDto } from './dtos/update-user-password.dto';
+import { ReadUserInfoDto } from './dtos/read-user-info.dto';
 
 @ApiTags('2. User API')
 @Controller('users')
@@ -56,8 +57,8 @@ export class UserController {
     description: '사용자 정보 조회 성공.',
   })
   @Get(':id')
-  async findUserInfoById(@Param('id') id: string) {
-    const data = await this.userService.findUserById(+id);
+  async findUserInfoById(@Body() readUserInfoDto: ReadUserInfoDto) {
+    const data = await this.userService.findUserById(readUserInfoDto.id);
     return {
       status: HttpStatus.OK,
       message: '사용자 정보 조회 성공.',
@@ -124,7 +125,7 @@ export class UserController {
   @UseGuards(AuthGuard('jwt'))
   @Patch('me/password')
   async updateUserPassword(@UserInfo() user: User, @Body() updateUserPasswordDto: UpdateUserPasswordDto) {
-    await this.userService.updateUserPassword(user, updateUserPasswordDto);
+    await this.userService.updateUserPassword(user.id, updateUserPasswordDto);
     return {
       status: HttpStatus.OK,
       message: '비밀번호 변경 완료',

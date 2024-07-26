@@ -41,12 +41,12 @@ export class ChannelController {
    */
   // 타 유저의 채널 모두 조회
   @Get()
-  async findAllChannels(@Query() findAllChannelsDto: FindAllChannelsDto) {
-    const data = await this.channelService.findAllChannels(findAllChannelsDto.userId, findAllChannelsDto.page);
+  async findAllChannels(@Query() { userId, page, limit }: FindAllChannelsDto) {
+    const data = await this.channelService.findAllChannels(userId, page, limit);
 
     return {
       status: HttpStatus.OK,
-      message: `${findAllChannelsDto.userId}의 채널 목록을 조회했습니다.`,
+      message: `${userId}의 채널 목록을 조회했습니다.`,
       data,
     };
   }
@@ -59,8 +59,8 @@ export class ChannelController {
   @ApiBearerAuth()
   @UseGuards(AuthGuard('jwt'))
   @Get('me')
-  async findAllMyChannels(@UserInfo() user: User, @Query() findAllMyChannelsDto: FindAllMyChannelsDto) {
-    const data = await this.channelService.findAllChannels(user.id, findAllMyChannelsDto.page);
+  async findAllMyChannels(@UserInfo() user: User, @Query() { page, limit }: FindAllMyChannelsDto) {
+    const data = await this.channelService.findAllChannels(user.id, page, limit);
 
     return {
       status: HttpStatus.OK,
@@ -76,12 +76,12 @@ export class ChannelController {
    */
   //타 유저 채널 상세 조회
   @Get(':id')
-  async findOneChannel(@Param() channelIdDto: ChannelIdDto) {
-    const data = await this.channelService.findOneChannel(channelIdDto.id);
+  async findOneChannel(@Param() { id }: ChannelIdDto) {
+    const data = await this.channelService.findOneChannel(id);
 
     return {
       status: HttpStatus.OK,
-      message: `${channelIdDto.id}번 채널을 조회했습니다.`,
+      message: `${id}번 채널을 조회했습니다.`,
       data,
     };
   }
@@ -95,12 +95,12 @@ export class ChannelController {
   @ApiBearerAuth()
   @UseGuards(AuthGuard('jwt'))
   @Get(':id/me')
-  async findOneMyChannel(@UserInfo() user: User, @Param() channelIdDto: ChannelIdDto) {
-    const data = await this.channelService.findOneChannel(channelIdDto.id, user.id);
+  async findOneMyChannel(@UserInfo() user: User, @Param() { id }: ChannelIdDto) {
+    const data = await this.channelService.findOneChannel(id, user.id);
 
     return {
       status: HttpStatus.OK,
-      message: `내 ${channelIdDto.id}번 채널을 조회했습니다.`,
+      message: `내 ${id}번 채널을 조회했습니다.`,
       data,
     };
   }
@@ -117,14 +117,14 @@ export class ChannelController {
   @Patch(':id')
   async updateChannel(
     @UserInfo() user: User,
-    @Param() channelIdDto: ChannelIdDto,
+    @Param() { id }: ChannelIdDto,
     @Body() updateChannelDto: UpdateChannelDto
   ) {
-    const data = await this.channelService.updateChannel(user.id, channelIdDto.id, updateChannelDto);
+    const data = await this.channelService.updateChannel(user.id, id, updateChannelDto);
 
     return {
       status: HttpStatus.OK,
-      message: `${channelIdDto.id}번 채널을 수정했습니다.`,
+      message: `${id}번 채널을 수정했습니다.`,
       data,
     };
   }
@@ -138,12 +138,12 @@ export class ChannelController {
   @ApiBearerAuth()
   @UseGuards(AuthGuard('jwt'))
   @Delete(':id')
-  async deleteChannel(@UserInfo() user: User, @Param() channelIdDto: ChannelIdDto) {
-    await this.channelService.deleteChannel(user.id, channelIdDto.id);
+  async deleteChannel(@UserInfo() user: User, @Param() { id }: ChannelIdDto) {
+    await this.channelService.deleteChannel(user.id, id);
 
     return {
       status: HttpStatus.OK,
-      message: `${channelIdDto.id}번 채널을 삭제했습니다.`,
+      message: `${id}번 채널을 삭제했습니다.`,
       data: true,
     };
   }

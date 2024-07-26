@@ -77,10 +77,10 @@ export class Channel {
   @OneToMany(() => Subscribe, (subscribe) => subscribe.channel)
   subscribes: Subscribe[];
 
-  @OneToMany(() => Post, (post) => post.channel, { cascade: ['soft-remove'] })
+  @OneToMany(() => Post, (post) => post.channel, { cascade: true })
   posts: Post[];
 
-  @OneToMany(() => Series, (series) => series.channel, { cascade: ['soft-remove'] })
+  @OneToMany(() => Series, (series) => series.channel, { cascade: true })
   series: Series[];
 
   @ManyToOne(() => User, (user) => user.channels)

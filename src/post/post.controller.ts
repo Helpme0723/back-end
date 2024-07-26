@@ -22,9 +22,7 @@ export class PostController {
   @Post()
   async create(@UserInfo() user: User, @Body() createPostDto: CreatePostDto) {
     const userId = user.id;
-    const channelId = 1;
-    const categoryId = 1;
-    const data = await this.postService.create(userId, channelId, categoryId, createPostDto);
+    const data = await this.postService.create(userId, createPostDto);
     return {
       status: HttpStatus.CREATED,
       message: '포스트를 생성하였습니다.',
@@ -87,8 +85,8 @@ export class PostController {
    */
   @UseGuards(AuthGuard('jwt'))
   @Patch(':id')
-  async update(@Param('id', ParseIntPipe) id: number, @Body() updatePostDto: UpdatePostDto) {
-    const data = await this.postService.update(id, updatePostDto);
+  async update(@UserInfo() user: User, @Param('id', ParseIntPipe) id: number, @Body() updatePostDto: UpdatePostDto) {
+    const data = await this.postService.update(user.id, id, updatePostDto);
     return {
       status: HttpStatus.OK,
       message: '포스트를 수정하였습니다.',
