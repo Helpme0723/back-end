@@ -19,7 +19,7 @@ import { Comment } from 'src/comment/entities/comment.entity';
 import { Channel } from 'src/channel/entities/channel.entity';
 import { Series } from 'src/series/entities/series.entity';
 import { VisibilityType } from '../types/visibility.type';
-import { IsEnum, IsNumber, IsString } from 'class-validator';
+import { IsEnum, IsNumber, IsOptional, IsString } from 'class-validator';
 
 @Entity('posts')
 export class Post {
@@ -34,6 +34,7 @@ export class Post {
   @Column({ unsigned: true })
   channelId: number;
 
+  @IsOptional()
   @IsNumber()
   @Column({ nullable: true, unsigned: true })
   seriesId: number;
@@ -86,13 +87,18 @@ export class Post {
   @Column({ default: 0 })
   likeCount: number;
 
+  @IsString()
+  @IsOptional()
+  @Column({ default: '기본이미지.jpg' })
+  imageUrl?: string;
+
   @CreateDateColumn()
   createdAt: Date;
 
   @UpdateDateColumn()
   updatedAt: Date;
 
-  @DeleteDateColumn()
+  @DeleteDateColumn({ select: false })
   deletedAt: Date;
 
   @ManyToOne(() => User, (user) => user.posts)
