@@ -2,7 +2,7 @@ import { BadRequestException, Injectable, NotFoundException, UnauthorizedExcepti
 import { User } from './entities/user.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import bcrypt, { hashSync } from 'bcrypt';
+import bcrypt from 'bcrypt';
 import { UpdateUserDto } from './dtos/update-user.dto';
 import { AwsService } from 'src/aws/aws.service';
 import { UpdateUserPasswordDto } from './dtos/update-user-password.dto';
