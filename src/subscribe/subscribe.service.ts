@@ -9,7 +9,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Subscribe } from './entities/subscribe.entity';
 import { DataSource, Repository } from 'typeorm';
 import { Channel } from 'src/channel/entities/channel.entity';
-import { CHANNEL_LIMIT } from 'src/constants/page.constant';
+import { paginate } from 'nestjs-typeorm-paginate';
 
 @Injectable()
 export class SubscribeService {
@@ -101,38 +101,33 @@ export class SubscribeService {
   }
 
   // 내 구독 목록 조회
-  async findAllSubsCribe(userId: number, page: number) {
-    const offset = (page - 1) * CHANNEL_LIMIT; // TODO: limit 사용자가 전달하는 걸로 변경
-
-    const [subscribes, total] = await this.subscribeRepository.findAndCount({
-      where: { userId },
-      relations: {
-        channel: {
-          user: true,
+  async findAllSubsCribe(userId: number, page: number, limit: number) {
+    const { items, meta } = await paginate<Subscribe>(
+      this.subscribeRepository,
+      { page, limit },
+      {
+        where: { userId },
+        relations: {
+          channel: {
+            user: true,
+          },
         },
-      },
-      skip: offset,
-      take: CHANNEL_LIMIT,
-    });
-
-    if (page !== 1 && page > Math.ceil(total / CHANNEL_LIMIT)) {
-      throw new NotFoundException('존재하지 않는 페이지입니다.');
-    }
+      }
+    );
 
     return {
-      subscribes: subscribes.map((subscribe) => ({
-        id: subscribe.id,
-        ownerId: subscribe.channel.user.id,
-        ownerNickname: subscribe.channel.user.nickname,
-        ownerProfileUrl: subscribe.channel.user.profileUrl,
-        channelId: subscribe.channelId,
-        title: subscribe.channel.title,
-        description: subscribe.channel.description,
-        imageUrl: subscribe.channel.imageUrl,
-        subscribers: subscribe.channel.subscribers,
+      subscribes: items.map((item) => ({
+        id: item.id,
+        ownerId: item.channel.user.id,
+        ownerNickname: item.channel.user.nickname,
+        ownerProfileUrl: item.channel.user.profileUrl,
+        channelId: item.channelId,
+        title: item.channel.title,
+        description: item.channel.description,
+        imageUrl: item.channel.imageUrl,
+        subscribers: item.channel.subscribers,
       })),
-      total,
-      page,
+      meta,
     };
   }
 }
