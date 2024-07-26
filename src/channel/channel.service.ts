@@ -1,7 +1,13 @@
-import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ForbiddenException,
+  Injectable,
+  NotAcceptableException,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Channel } from './entities/channel.entity';
-import { FindOptionsWhere, Repository } from 'typeorm';
+import { DataSource, FindOptionsWhere, Repository } from 'typeorm';
 import { CreateChannelDto } from './dtos/create-channel.dto';
 import { UpdateChannelDto } from './dtos/update-channel.dto';
 import { VisibilityType } from 'src/post/types/visibility.type';
@@ -155,10 +161,18 @@ export class ChannelService {
   async updateChannel(userId: number, channelId: number, updateChannelDto: UpdateChannelDto) {
     const { title, description, imageUrl } = updateChannelDto;
 
-    const channel = await this.validateChannelOwner(userId, channelId);
-
     if (!title && !description && !imageUrl) {
       throw new BadRequestException('수정된 내용이 없습니다.');
+    }
+
+    const channel = await this.channelRepository.findOneBy({ id: channelId });
+
+    if (!channel) {
+      throw new NotFoundException('해당 아이디의 내 채널이 존재하지 않습니다.');
+    }
+
+    if (channel.userId !== userId) {
+      throw new ForbiddenException('수정 권한이 없는 채널입니다.');
     }
 
     const updatedChannel = await this.channelRepository.save({ id: channel.id, ...updateChannelDto });
@@ -168,25 +182,24 @@ export class ChannelService {
 
   // 채널 삭제
   async deleteChannel(userId: number, channelId: number) {
-    const channel = await this.validateChannelOwner(userId, channelId);
-
-    await this.channelRepository.softDelete({ id: channel.id });
-
-    return true;
-  }
-
-  // 채널 삭제 or 수정 권한 검사
-  async validateChannelOwner(userId: number, channelId: number) {
-    const channel = await this.channelRepository.findOneBy({ id: channelId });
+    const channel = await this.channelRepository.findOne({
+      where: { id: channelId },
+      relations: {
+        series: true,
+        posts: true,
+      },
+    });
 
     if (!channel) {
-      throw new NotFoundException('해당 아이디의 내 채널이 존재하지 않습니다.');
+      throw new NotAcceptableException('해당 아이디의 내 채널이 존재하지 않습니다.');
     }
 
     if (channel.userId !== userId) {
-      throw new ForbiddenException('권한이 없는 채널입니다.');
+      throw new ForbiddenException('삭제 권한이 없는 채널입니다.');
     }
 
-    return channel;
+    await this.channelRepository.softRemove(channel);
+
+    return true;
   }
 }
