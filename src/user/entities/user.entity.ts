@@ -86,7 +86,7 @@ export class User {
   @OneToMany(() => Post, (post) => post.user, { cascade: ['soft-remove'] })
   posts: Post[];
 
-  @OneToMany(() => Comment, (commnet) => commnet.user, { cascade: ['soft-remove'] })
+  @OneToMany(() => Comment, (comment) => comment.user, { cascade: ['soft-remove'] })
   comments: Comment[];
 
   @OneToMany(() => PostLike, (postLike) => postLike.user)
