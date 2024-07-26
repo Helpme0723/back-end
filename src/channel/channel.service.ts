@@ -1,13 +1,7 @@
-import {
-  BadRequestException,
-  ForbiddenException,
-  Injectable,
-  NotAcceptableException,
-  NotFoundException,
-} from '@nestjs/common';
+import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Channel } from './entities/channel.entity';
-import { DataSource, FindOptionsWhere, Repository } from 'typeorm';
+import { FindOptionsWhere, Repository } from 'typeorm';
 import { CreateChannelDto } from './dtos/create-channel.dto';
 import { UpdateChannelDto } from './dtos/update-channel.dto';
 import { VisibilityType } from 'src/post/types/visibility.type';
@@ -191,7 +185,7 @@ export class ChannelService {
     });
 
     if (!channel) {
-      throw new NotAcceptableException('해당 아이디의 내 채널이 존재하지 않습니다.');
+      throw new NotFoundException('해당 아이디의 내 채널이 존재하지 않습니다.');
     }
 
     if (channel.userId !== userId) {
