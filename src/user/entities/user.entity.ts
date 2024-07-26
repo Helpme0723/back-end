@@ -77,16 +77,16 @@ export class User {
   @OneToOne(() => RefreshToken, (refreshToken) => refreshToken.user)
   refreshToken: RefreshToken;
 
-  @OneToMany(() => Channel, (channel) => channel.user, { cascade: ['soft-remove'] })
+  @OneToMany(() => Channel, (channel) => channel.user, { cascade: true })
   channels: Channel[];
 
-  @OneToMany(() => Series, (series) => series.user, { cascade: ['soft-remove'] })
+  @OneToMany(() => Series, (series) => series.user, { cascade: true })
   series: Series[];
 
-  @OneToMany(() => Post, (post) => post.user, { cascade: ['soft-remove'] })
+  @OneToMany(() => Post, (post) => post.user, { cascade: true })
   posts: Post[];
 
-  @OneToMany(() => Comment, (commnet) => commnet.user, { cascade: ['soft-remove'] })
+  @OneToMany(() => Comment, (comment) => comment.user, { cascade: true })
   comments: Comment[];
 
   @OneToMany(() => PostLike, (postLike) => postLike.user)
@@ -98,9 +98,9 @@ export class User {
   @OneToMany(() => Subscribe, (subscribe) => subscribe.user)
   subscribes: Subscribe[];
 
-  @OneToMany(() => PointHistory, (pointHistory) => pointHistory.user, { cascade: ['soft-remove'] })
+  @OneToMany(() => PointHistory, (pointHistory) => pointHistory.user, { cascade: true })
   pointHistories: PointHistory[];
 
-  @OneToMany(() => PurchaseList, (purchaseList) => purchaseList.user, { cascade: ['soft-remove'] })
+  @OneToMany(() => PurchaseList, (purchaseList) => purchaseList.user, { cascade: true })
   purchaseLists: PurchaseList[];
 }
