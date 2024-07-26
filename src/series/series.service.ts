@@ -2,7 +2,8 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Series } from './entities/series.entity';
 import { Repository } from 'typeorm';
-import { CreateSeriesDto } from './dtos/create-series-dto';
+import { CreateSeriesDto } from './dtos//create-series-dto';
+import { UpdateSeriesDto } from './dtos/update-series-dto';
 
 @Injectable()
 export class SeriesService {
@@ -22,7 +23,7 @@ export class SeriesService {
   async create(userId: number, createSeriesDto: CreateSeriesDto) {
     const { title, description, channelId } = createSeriesDto;
 
-    const series = await this.seriesRepository.create({
+    const series = this.seriesRepository.create({
       userId,
       title,
       description,
@@ -30,5 +31,46 @@ export class SeriesService {
     });
     await this.seriesRepository.save(series);
     return series;
+  }
+
+  async findOne(id: number) {
+    const series = await this.seriesRepository.findOne({ where: { id } });
+    if (!series) {
+      throw new NotFoundException('해당시리즈가 존재하지 않습니다');
+    }
+    return series;
+  }
+
+  async update(id: number, userId: number, updateSeriesDto: UpdateSeriesDto) {
+    const series = await this.seriesRepository.findOne({
+      where: { id, userId },
+    });
+    if (!series) {
+      throw new NotFoundException('시리즈를 찾을수 없습니다.');
+    }
+    const newSeries = {
+      ...series,
+      ...updateSeriesDto,
+    };
+    await this.seriesRepository.save(newSeries);
+
+    return newSeries;
+  }
+
+  async delete(id: number, userId: number) {
+    const series = await this.seriesRepository.findOne({
+      where: { id, userId },
+    });
+    if (!series) {
+      throw new NotFoundException('시리즈를 찾아올수없습니다');
+    }
+    await this.seriesRepository.softDelete(id);
+  }
+
+  async findAllMySeries(userId: number) {
+    const mySeries = await this.seriesRepository.find({
+      where: { userId },
+    });
+    return mySeries;
   }
 }

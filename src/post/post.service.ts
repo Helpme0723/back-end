@@ -77,9 +77,9 @@ export class PostService {
     return data;
   }
 
-  async delete(id: number) {
+  async delete(userId: number, id: number) {
     const post = await this.postRepository.findOne({
-      where: { id },
+      where: { id, userId },
     });
     if (!post) {
       throw new NotFoundException('포스트 를 찾지못했습니다.');
