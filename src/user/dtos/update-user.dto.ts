@@ -1,5 +1,4 @@
 import { ApiProperty, PickType } from '@nestjs/swagger';
-import { User } from '../entities/user.entity';
 import { IsOptional, IsString } from 'class-validator';
 
 export class UpdateUserDto {
