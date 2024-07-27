@@ -111,4 +111,44 @@ export class PostController {
       data,
     };
   }
+
+  /**
+   * 포스트 좋아요 등록
+   * @param user
+   * @param id
+   * @returns
+   */
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard('jwt'))
+  @Post(':id/postlike')
+  async createLike(@UserInfo() user: User, @Param('id', ParseIntPipe) id: number) {
+    const userId = user.id;
+    const data = await this.postService.createPostLike(userId, id);
+
+    return {
+      status: HttpStatus.OK,
+      message: '좋아요 를 등록하였습니다',
+      data,
+    };
+  }
+
+  /**
+   * 좋아요 취소
+   * @param user
+   * @param id
+   * @returns
+   */
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard('jwt'))
+  @Delete(':id/postlike')
+  async deleteLike(@UserInfo() user: User, @Param('id', ParseIntPipe) id: number) {
+    const userId = user.id;
+    const data = await this.postService.deletePostLike(userId, id);
+
+    return {
+      status: HttpStatus.OK,
+      message: '좋아요를 취소하였습니다',
+      data,
+    };
+  }
 }
