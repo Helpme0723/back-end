@@ -37,7 +37,7 @@ export class Post {
   @IsOptional()
   @IsNumber()
   @Column({ nullable: true, unsigned: true })
-  seriesId: number;
+  seriesId?: number;
 
   @IsNumber()
   @Column({ unsigned: true })
@@ -75,7 +75,11 @@ export class Post {
   @Column({ default: 0 })
   price: number;
 
-  @IsEnum({ enum: VisibilityType })
+  /**
+   * 공개여부 설정
+   * @example "PUBLIC"
+   */
+  @IsEnum(Object.values(VisibilityType))
   @Column({ type: 'enum', enum: VisibilityType, default: VisibilityType.PUBLIC })
   visibility: VisibilityType;
 

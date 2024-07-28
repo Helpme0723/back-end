@@ -8,6 +8,7 @@ export class CreatePostDto extends PickType(Post, [
   'price',
   'imageUrl',
   'channelId',
+  'visibility',
   'seriesId',
   'categoryId',
 ]) {}

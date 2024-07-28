@@ -70,6 +70,7 @@ export class PostController {
   @Get(':id')
   async findOne(@Param('id', ParseIntPipe) id: number) {
     const data = await this.postService.findOne(id);
+    await this.postService.incrementViewCount(id);
     return {
       status: HttpStatus.OK,
       message: '포스트 상세조회에 성공하였습니다.',

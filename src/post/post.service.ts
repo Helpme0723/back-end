@@ -32,22 +32,18 @@ export class PostService {
 
   async create(userId: number, createPostDto: CreatePostDto) {
     const { channelId, seriesId, ...postData } = createPostDto;
-
     const channel = await this.channelRepository.findOne({
       where: { userId },
     });
-
     if (channelId !== channel.id) {
       throw new UnauthorizedException('채널접근 권한이없습니다');
     }
-
     const series = await this.seriesRepository.findOne({
       where: { userId },
     });
-    if (seriesId !== series.id) {
+    if (seriesId && seriesId !== series.id) {
       throw new UnauthorizedException('시리즈에 접근 권한이 없습니다');
     }
-
     const post = this.postRepository.create({
       userId,
       channelId,
@@ -81,7 +77,6 @@ export class PostService {
     if (post.visibility === VisibilityType.PRIVATE) {
       throw new NotFoundException('비공개 처리된 포스트입니다.');
     }
-
     return post;
   }
 
@@ -106,7 +101,6 @@ export class PostService {
     const post = await this.postRepository.findOne({
       where: { id, userId },
     });
-    console.log(post);
     if (!post) {
       throw new NotFoundException('포스트를 찾을수 없습니다.');
     }
@@ -114,7 +108,6 @@ export class PostService {
       where: { userId },
     });
 
-    console.log(channel);
     if (channelId !== channel.id) {
       throw new UnauthorizedException('채널접근 권한이없습니다');
     }
