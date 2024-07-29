@@ -3,7 +3,7 @@ import { AwsService } from './aws.service';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiBody, ApiConsumes, ApiTags } from '@nestjs/swagger';
 
-@ApiTags('Aws API')
+@ApiTags('8.Aws API')
 @Controller('images')
 export class AwsController {
   constructor(private readonly awsService: AwsService) {}
@@ -14,8 +14,8 @@ export class AwsController {
     description: 'file',
     schema: {
       type: 'object',
-      properties:{
-        file:{
+      properties: {
+        file: {
           type: 'string',
           format: 'binary',
         },
