@@ -45,7 +45,7 @@ export class PostController {
 
   /**
    *
-   * @param id
+   * @param findAllPostDto
    * @returns
    */
   @Get()
