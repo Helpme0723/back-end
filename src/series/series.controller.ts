@@ -114,7 +114,7 @@ export class SeriesController {
    */
   @ApiBearerAuth()
   @UseGuards(AuthGuard('jwt'))
-  @Get('my/:id')
+  @Get('my')
   async findAllMySeries(@UserInfo() user: User) {
     const userId = user.id;
     const data = await this.seriesService.findAllMySeries(userId);
