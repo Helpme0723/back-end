@@ -9,9 +9,23 @@ import { Series } from 'src/series/entities/series.entity';
 import { Post } from 'src/post/entities/post.entity';
 import { DailyInsight } from 'src/insight/entities/daily-insight.entity';
 import { MonthlyInsight } from 'src/insight/entities/monthly-insight.entity';
+import { ChannelDailyInsight } from 'src/insight/entities/channel-daily-insight.entity';
+import { ChannelMonthlyInsight } from 'src/insight/entities/channel-monthly-insight.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Channel, User, Series, Post, DailyInsight, MonthlyInsight]), AwsModule],
+  imports: [
+    TypeOrmModule.forFeature([
+      Channel,
+      User,
+      Series,
+      Post,
+      DailyInsight,
+      MonthlyInsight,
+      ChannelDailyInsight,
+      ChannelMonthlyInsight,
+    ]),
+    AwsModule,
+  ],
   controllers: [ChannelController],
   providers: [ChannelService],
 })

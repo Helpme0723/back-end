@@ -1,18 +1,14 @@
 import { Column, Entity, ManyToOne, PrimaryGeneratedColumn, Unique } from 'typeorm';
 import { Channel } from '../../channel/entities/channel.entity';
-import { Post } from 'src/post/entities/post.entity';
 
-@Entity('daily_insights')
-@Unique(['postId', 'date'])
-export class DailyInsight {
+@Entity('channel_monthly_insights')
+@Unique(['channelId', 'date'])
+export class ChannelMonthlyInsight {
   @PrimaryGeneratedColumn({ unsigned: true })
   id: number;
 
   @Column({ unsigned: true })
   channelId: number;
-
-  @Column({ unsigned: true })
-  postId: number;
 
   @Column()
   viewCount: number;
@@ -29,9 +25,6 @@ export class DailyInsight {
   @Column()
   date: string;
 
-  @ManyToOne(() => Channel, (channel) => channel.dailyInsights)
+  @ManyToOne(() => Channel, (channel) => channel.channelMonthlyInsights)
   channel: Channel;
-
-  @ManyToOne(() => Post, (post) => post.dailyInsights)
-  post: Post;
 }
