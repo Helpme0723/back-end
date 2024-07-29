@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { Body, Controller, Delete, HttpStatus, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpStatus, Post, Query, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { SignUpDto } from './dtos/sign-up.dto';
 import { ApiTags } from '@nestjs/swagger';
@@ -26,6 +26,16 @@ export class AuthController {
     return {
       status: HttpStatus.CREATED,
       message: '회원가입에 성공했습니다.',
+      data: data,
+    };
+  }
+  @Get('/existed-email')
+  async existedEmail(@Query() email: string) {
+    const data = await this.authService.existedEmail(email);
+
+    return {
+      status: HttpStatus.OK,
+      message: 'true',
       data: data,
     };
   }
