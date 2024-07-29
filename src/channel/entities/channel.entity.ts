@@ -14,6 +14,8 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { DailyInsight } from '../../insight/entities/daily-insight.entity';
+import { MonthlyInsight } from '../../insight/entities/monthly-insight.entity';
 
 @Entity('channels')
 export class Channel {
@@ -82,6 +84,12 @@ export class Channel {
 
   @OneToMany(() => Series, (series) => series.channel, { cascade: true })
   series: Series[];
+
+  @OneToMany(() => DailyInsight, (dailyInsight) => dailyInsight.channel)
+  dailyInsights: DailyInsight[];
+
+  @OneToMany(() => MonthlyInsight, (monthlyInsights) => monthlyInsights.channel)
+  monthlyInsights: MonthlyInsight[];
 
   @ManyToOne(() => User, (user) => user.channels)
   user: User;

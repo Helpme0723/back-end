@@ -15,6 +15,8 @@ import { PointModule } from './point/point.module';
 import { PurchaseModule } from './purchase/purchase.module';
 import { AwsModule } from './aws/aws.module';
 import { UtilsModule } from './utils/utils.module';
+import { ScheduleModule } from '@nestjs/schedule';
+import { InsightModule } from './insight/insight.module';
 
 @Module({
   imports: [
@@ -23,6 +25,7 @@ import { UtilsModule } from './utils/utils.module';
       validationSchema: configModuleValidationSchema,
     }),
     TypeOrmModule.forRootAsync(typeOrmModuleOptions),
+    ScheduleModule.forRoot(),
     UserModule,
     PostModule,
     AuthModule,
@@ -34,6 +37,7 @@ import { UtilsModule } from './utils/utils.module';
     PurchaseModule,
     AwsModule,
     UtilsModule,
+    InsightModule,
   ],
   controllers: [AppController],
   providers: [],

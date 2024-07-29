@@ -10,6 +10,10 @@ import { Series } from 'src/series/entities/series.entity';
 import { Post } from 'src/post/entities/post.entity';
 import { TAKE_COUNT } from 'src/constants/page.constant';
 import { paginate } from 'nestjs-typeorm-paginate';
+import { DailyInsight } from 'src/insight/entities/daily-insight.entity';
+import { MonthlyInsight } from 'src/insight/entities/monthly-insight.entity';
+import { format, isValid } from 'date-fns';
+import { InsightSort } from './types/insight-sort.type';
 
 @Injectable()
 export class ChannelService {
@@ -21,7 +25,11 @@ export class ChannelService {
     @InjectRepository(Series)
     private readonly seriesRepository: Repository<Series>,
     @InjectRepository(Post)
-    private readonly postRepository: Repository<Post>
+    private readonly postRepository: Repository<Post>,
+    @InjectRepository(DailyInsight)
+    private readonly dailyInsightRepository: Repository<DailyInsight>,
+    @InjectRepository(MonthlyInsight)
+    private readonly monthlyInsightRepository: Repository<MonthlyInsight>
   ) {}
 
   //채널 생성
@@ -185,5 +193,108 @@ export class ChannelService {
     await this.channelRepository.softRemove(channel);
 
     return true;
+  }
+
+  // 채널 통계 조회
+  async findInsights(userId: number, channelId: number) {
+    const channel = await this.channelRepository.findOneBy({ id: channelId, userId });
+
+    if (!channel) {
+      throw new NotFoundException('해당 아이디의 내 채널이 존재하지 않습니다.');
+    }
+
+    const oneDayAgo = new Date().getTime() - 60 * 60 * 24 * 1000;
+    const daily = format(new Date(oneDayAgo), 'yyyy-MM-dd');
+
+    const oneMonthAgo = new Date().getTime() - 60 * 60 * 24 * 30 * 1000;
+    const monthly = format(new Date(oneMonthAgo), 'yyyy-MM');
+
+    // 일별 포스트 전체 합산
+    const dailyInsights = await this.dailyInsightRepository
+      .createQueryBuilder('insight')
+      .select('SUM(insight.viewCount)', 'totalViews')
+      .addSelect('SUM(insight.likeCount)', 'totalLikes')
+      .addSelect('SUM(insight.commentCount)', 'totalComments')
+      .addSelect('SUM(insight.salesCount)', 'totalSales')
+      .where('insight.channelId = :channelId', { channelId })
+      .andWhere('insight.date = :daily', { daily })
+      .getRawOne();
+
+    // 월별 포스트 전체 합산
+    const monthlyInsights = await this.monthlyInsightRepository
+      .createQueryBuilder('insight')
+      .select('SUM(insight.viewCount)', 'totalViews')
+      .addSelect('SUM(insight.likeCount)', 'totalLikes')
+      .addSelect('SUM(insight.commentCount)', 'totalComments')
+      .addSelect('SUM(insight.salesCount)', 'totalSales')
+      .where('insight.channelId = :channelId', { channelId })
+      .andWhere('insight.date LIKE :monthly', { monthly })
+      .getRawOne();
+
+    return { dailyInsights, monthlyInsights };
+  }
+
+  // 일별 포스트 통계 전체 조회
+  async findDailyInsights(userId: number, channelId: number, date?: string, sort?: InsightSort) {
+    const oneDayAgo = new Date().getTime() - 60 * 60 * 24 * 1000;
+    const dateTime = date ? `${date}` : undefined;
+
+    const validDate = isValid(new Date(dateTime));
+
+    if (date && !validDate) {
+      throw new BadRequestException('유효하지 않은 날짜입니다.');
+    }
+
+    if (date && new Date(dateTime).getTime() > oneDayAgo) {
+      throw new BadRequestException('아직 통계가 계산되지 않은 날짜입니다.');
+    }
+
+    const channel = await this.channelRepository.findOneBy({ id: channelId, userId });
+
+    if (!channel) {
+      throw new NotFoundException('해당 아이디의 내 채널이 없습니다.');
+    }
+
+    const dailyInsights = await this.dailyInsightRepository.find({
+      where: {
+        channelId,
+        date: date ?? format(new Date(oneDayAgo), 'yyyy-MM-dd'),
+      },
+      order: { [sort]: 'DESC' },
+    });
+
+    return dailyInsights;
+  }
+
+  // 월별 포스트 통계 전체 조회
+  async findMonthlyInsights(userId: number, channelId: number, date?: string, sort?: InsightSort) {
+    const oneMonthAgo = new Date().getTime() - 60 * 60 * 24 * 30 * 1000;
+    const dateTime = date ? `${date}-01` : undefined;
+
+    const validDate = isValid(new Date(dateTime));
+
+    if (date && !validDate) {
+      throw new BadRequestException('유효하지 않은 날짜입니다.');
+    }
+
+    if (date && new Date(dateTime).getTime() > oneMonthAgo) {
+      throw new BadRequestException('아직 통계가 계산되지 않은 달입니다.');
+    }
+
+    const channel = await this.channelRepository.findOneBy({ id: channelId, userId });
+
+    if (!channel) {
+      throw new NotFoundException('해당 아이디의 내 채널이 없습니다.');
+    }
+
+    const monthlyInsights = await this.monthlyInsightRepository.find({
+      where: {
+        channelId,
+        date: date ?? format(oneMonthAgo, 'yyyy-MM'),
+      },
+      order: { [sort]: 'DESC' },
+    });
+
+    return monthlyInsights;
   }
 }
