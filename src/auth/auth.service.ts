@@ -2,23 +2,30 @@ import {
   BadRequestException,
   ConflictException,
   Injectable,
+  InternalServerErrorException,
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from 'src/user/entities/user.entity';
-import { Repository } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 import { SignUpDto } from './dtos/sign-up.dto';
 import bcrypt from 'bcrypt';
 import { SignInDto } from './dtos/sign-in.dto';
 import { JwtService } from '@nestjs/jwt';
+import { ConfigService } from '@nestjs/config';
+import { RefreshToken } from './entities/refresh-token.entity';
 
 @Injectable()
 export class AuthService {
   constructor(
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
-    private readonly jwtService: JwtService
+    private readonly jwtService: JwtService,
+    private readonly configService: ConfigService,
+    private readonly dataSource: DataSource,
+    @InjectRepository(RefreshToken)
+    private readonly refreshTokenRepository: Repository<RefreshToken>
   ) {}
 
   /**
@@ -71,10 +78,29 @@ export class AuthService {
   async signIn(userId: number) {
     const payload = { id: userId };
 
-    // JWT 토큰 생성
-    const accessToken = this.jwtService.sign(payload);
+    // 엑세스 토큰 생성
+    const accessToken = this.jwtService.sign(payload, {
+      secret: this.configService.get<string>('ACCESS_TOKEN_SECRET'),
+      expiresIn: this.configService.get<string>('ACCESS_TOKEN_EXPIRES'),
+    });
+    // 리프레쉬 토큰 생성
+    const refreshToken = this.jwtService.sign(payload, {
+      secret: this.configService.get<string>('REFRESH_TOKEN_SECRET'),
+      expiresIn: this.configService.get<string>('REFRESH_TOKEN_EXPIRES'),
+    });
+    const hashedRefreshToken = bcrypt.hashSync(refreshToken, 10);
+    // 리프레쉬토큰이 이미 있는지 조회
+    const existedRefreshToken = await this.refreshTokenRepository.findOneBy({ userId });
 
-    return { accessToken };
+    // 리프레쉬토큰이 이미 있을 경우 삭제
+    if (existedRefreshToken) {
+      await this.refreshTokenRepository.delete({ userId });
+    }
+
+    // 리프레쉬 토큰 저장
+    await this.refreshTokenRepository.save({ userId, token: hashedRefreshToken });
+
+    return { accessToken, refreshToken };
   }
 
   /**
@@ -86,20 +112,114 @@ export class AuthService {
     // 해당 ID를 가진 유저가 있는지 조회
     const user = await this.userRepository.findOne({
       where: { id: userId },
+      // relations: {
+      //   channels: true,
+      //   series: true,
+      //   posts: true,
+      //   postLikes: true,
+      //   subscribes: true,
+      //   comments: true,
+      //   commentLikes: true,
+      //   purchaseLists: true,
+      // },
     });
-
     // 없을 경우 예외처리
     if (!user) {
       throw new NotFoundException('없는 회원입니다.');
     }
+    // 트랜잭션 queryRunner 세팅
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
 
-    // 삭제
-    await this.userRepository.softDelete({ id: userId });
+    // 트랜잭션 로직 시작
+    try {
+      // 유저 삭제
+      await queryRunner.manager.softDelete(User, { id: userId });
+      // 리프레쉬 토큰 삭제
+      await queryRunner.manager.delete(RefreshToken, { userId });
+
+      // 트랜잭션 성공 시 커밋
+      await queryRunner.commitTransaction();
+      // 결과 적용
+      await queryRunner.release();
+    } catch (error) {
+      // 변경점 초기화
+      await queryRunner.rollbackTransaction();
+      // 결과 적용
+      await queryRunner.release();
+      // 에러 처리
+      throw new InternalServerErrorException('회원 탈퇴 과정 중에 오류가 발생했습니다. 관리자에게 문의해주세요.');
+    }
+
+    return true;
+  }
+  /**
+   * 로그아웃
+   * @param userId
+   * @returns
+   */
+  async signOut(userId: number) {
+    // userId에 맞는 유저가 있는지 확인
+    const user = await this.userRepository.findOne({
+      where: { id: userId },
+    });
+    // userId에 맞는 토큰이 있는지 확인
+    const token = await this.refreshTokenRepository.findOne({
+      where: { userId },
+    });
+
+    // 없으면 예외 처리
+    if (!user || !token) {
+      throw new NotFoundException('없는 유저이거나 토큰이 존재하지 않습니다.');
+    }
+
+    // 리프레쉬 토큰 삭제
+    await this.refreshTokenRepository.delete({ userId });
 
     return true;
   }
 
-  // 가입된 유저인지 조회
+  // 토큰 재발급
+  async tokenReIssue(token: string, userId: number) {
+    const payload = { id: userId };
+
+    // 리프레쉬토큰이 이미 있는지 조회
+    const existedRefreshToken = await this.refreshTokenRepository.findOneBy({ userId });
+
+    // 요청한 리프레쉬 토큰과 DB에 있는 토큰이 같은지 확인
+    const isMatchedRefreshToken = bcrypt.compareSync(token, existedRefreshToken.token);
+
+    // 리프레쉬 토큰이 다를 경우 예외 처리
+    if (!isMatchedRefreshToken) {
+      throw new UnauthorizedException('유효하지 않은 토큰입니다.');
+    }
+
+    // 리프레쉬토큰이 이미 있을 경우 삭제
+    if (existedRefreshToken) {
+      await this.refreshTokenRepository.delete({ userId });
+    }
+
+    // 유효하면 엑세스, 리프레쉬 토큰 재발급
+    const accessToken = this.jwtService.sign(payload, {
+      secret: this.configService.get<string>('ACCESS_TOKEN_SECRET'),
+      expiresIn: this.configService.get<string>('ACCESS_TOKEN_EXPIRES'),
+    });
+    const refreshToken = this.jwtService.sign(payload, {
+      secret: this.configService.get<string>('REFRESH_TOKEN_SECRET'),
+      expiresIn: this.configService.get<string>('REFRESH_TOKEN_EXPIRES'),
+    });
+
+    // 리프레쉬 토큰 암호화
+    const hashedRefreshToken = bcrypt.hashSync(refreshToken, 10);
+
+    // 암호화된 리프레쉬 토큰 저장
+    await this.refreshTokenRepository.save({ userId, token: hashedRefreshToken });
+
+    return { accessToken, refreshToken };
+  }
+
+  // 로그인 인증 정보가 일치하는지 확인
   async validateUser({ email, password }: SignInDto) {
     // 가입된 이메일이 있는지 조회
     const user = await this.userRepository.findOne({
@@ -107,9 +227,9 @@ export class AuthService {
       select: { id: true, password: true },
     });
 
-    // 이미 유저가 있을 경우 예외 처리
+    // 가입된 정보가 없을 경우
     if (!user) {
-      throw new UnauthorizedException('인증 정보가 일치하지 않습니다.');
+      throw new NotFoundException('인증 정보가 일치하지 않습니다.');
     }
     // 패스워드 일치 확인
     const isPasswordMatched = bcrypt.compareSync(password, user.password);
@@ -131,5 +251,17 @@ export class AuthService {
       throw new UnauthorizedException('인증 정보가 일치하지 않습니다.');
     }
     return user.id;
+  }
+
+  async findRefreshTokenById(userId: number) {
+    const refreshToken = await this.refreshTokenRepository.findOne({
+      where: { userId },
+    });
+    if (!refreshToken) {
+      throw new NotFoundException('일치하는 인증 정보가 없습니다.');
+    }
+    await this.findUserById(userId);
+
+    return refreshToken.userId;
   }
 }
