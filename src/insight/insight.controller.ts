@@ -39,7 +39,7 @@ export class InsightController {
   }
 
   // 매월 1일 자정 5분 후마다 월별 포스트 통합 총 조회수 등 통계 계산 후 저장
-  @Cron('0 5 * * *')
+  @Cron('5 0 1 * *')
   async channelMonthlyInsight() {
     console.log('포스트 통합 총 먼슬리 통계 저장');
 
