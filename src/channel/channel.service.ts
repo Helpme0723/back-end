@@ -14,6 +14,8 @@ import { DailyInsight } from 'src/insight/entities/daily-insight.entity';
 import { MonthlyInsight } from 'src/insight/entities/monthly-insight.entity';
 import { format, isValid } from 'date-fns';
 import { InsightSort } from './types/insight-sort.type';
+import { FindDailyInsightsDto } from './dtos/find-daily-insights.dto';
+import { FindMonthlyInsightsDto } from './dtos/find-monthly-insights.dto';
 
 @Injectable()
 export class ChannelService {
@@ -235,7 +237,9 @@ export class ChannelService {
   }
 
   // 일별 포스트 통계 전체 조회
-  async findDailyInsights(userId: number, channelId: number, date?: string, sort?: InsightSort) {
+  async findDailyInsights(userId: number, channelId: number, findDailyInsightsDto: FindDailyInsightsDto) {
+    const { date, sort, page, limit } = findDailyInsightsDto;
+
     const oneDayAgo = new Date().getTime() - 60 * 60 * 24 * 1000;
     const dateTime = date ? `${date}` : undefined;
 
@@ -255,19 +259,25 @@ export class ChannelService {
       throw new NotFoundException('해당 아이디의 내 채널이 없습니다.');
     }
 
-    const dailyInsights = await this.dailyInsightRepository.find({
-      where: {
-        channelId,
-        date: date ?? format(new Date(oneDayAgo), 'yyyy-MM-dd'),
-      },
-      order: { [sort]: 'DESC' },
-    });
+    const { items, meta } = await paginate<DailyInsight>(
+      this.dailyInsightRepository,
+      { page, limit },
+      {
+        where: {
+          channelId,
+          date: date ?? format(new Date(oneDayAgo), 'yyyy-MM-dd'),
+        },
+        order: { [sort]: 'DESC' },
+      }
+    );
 
-    return dailyInsights;
+    return { items, meta };
   }
 
   // 월별 포스트 통계 전체 조회
-  async findMonthlyInsights(userId: number, channelId: number, date?: string, sort?: InsightSort) {
+  async findMonthlyInsights(userId: number, channelId: number, findMonthlyInsightsDto: FindMonthlyInsightsDto) {
+    const { date, sort, page, limit } = findMonthlyInsightsDto;
+
     const oneMonthAgo = new Date().getTime() - 60 * 60 * 24 * 30 * 1000;
     const dateTime = date ? `${date}-01` : undefined;
 
@@ -287,14 +297,18 @@ export class ChannelService {
       throw new NotFoundException('해당 아이디의 내 채널이 없습니다.');
     }
 
-    const monthlyInsights = await this.monthlyInsightRepository.find({
-      where: {
-        channelId,
-        date: date ?? format(oneMonthAgo, 'yyyy-MM'),
-      },
-      order: { [sort]: 'DESC' },
-    });
+    const { items, meta } = await paginate<MonthlyInsight>(
+      this.monthlyInsightRepository,
+      { page, limit },
+      {
+        where: {
+          channelId,
+          date: date ?? format(oneMonthAgo, 'yyyy-MM'),
+        },
+        order: { [sort]: 'DESC' },
+      }
+    );
 
-    return monthlyInsights;
+    return { items, meta };
   }
 }

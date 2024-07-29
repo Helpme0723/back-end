@@ -182,9 +182,9 @@ export class ChannelController {
   async findDailyInsights(
     @UserInfo() user: User,
     @Param() { id }: ChannelIdDto,
-    @Query() { date, sort }: FindDailyInsightsDto
+    @Query() findDailyInsightsDto: FindDailyInsightsDto
   ) {
-    const data = await this.channelService.findDailyInsights(user.id, id, date, sort);
+    const data = await this.channelService.findDailyInsights(user.id, id, findDailyInsightsDto);
 
     return {
       status: HttpStatus.OK,
@@ -206,9 +206,9 @@ export class ChannelController {
   async findMonthlyInsights(
     @UserInfo() user: User,
     @Param() { id }: ChannelIdDto,
-    @Query() { date, sort }: FindMonthlyInsightsDto
+    @Query() findMonthlyInsightsDto: FindMonthlyInsightsDto
   ) {
-    const data = await this.channelService.findMonthlyInsights(user.id, id, date, sort);
+    const data = await this.channelService.findMonthlyInsights(user.id, id, findMonthlyInsightsDto);
 
     return {
       status: HttpStatus.OK,
