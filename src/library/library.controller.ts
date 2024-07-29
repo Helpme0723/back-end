@@ -1,10 +1,14 @@
 import { Controller, Get, HttpStatus, UseGuards } from '@nestjs/common';
 import { LibraryService } from './library.service';
-import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 import { UserInfo } from 'src/auth/decorators/user-info.decorator';
 import { User } from 'src/user/entities/user.entity';
-import { userInfo } from 'os';
 
 @ApiTags('8.라이브러리')
 @Controller('library')
@@ -18,7 +22,10 @@ export class LibraryController {
    * 해당되는 정보가 없을경우 빈 배열 리턴
    */
   @ApiBearerAuth()
-  @ApiOperation({ summary: '좋아요 한 포스트 조회', description: '내가 좋아요한 포스트를 조회합니다.' })
+  @ApiOperation({
+    summary: '좋아요 한 포스트 조회',
+    description: '내가 좋아요한 포스트를 조회합니다.',
+  })
   @ApiResponse({
     status: HttpStatus.OK,
     description: '좋아요한 포스트 조회 성공.',
@@ -42,7 +49,10 @@ export class LibraryController {
    * 해당되는 정보가 없을경우 빈 배열 리턴
    */
   @ApiBearerAuth()
-  @ApiOperation({ summary: '작성한 댓글 조회', description: '내가 작성한 댓글을 조회합니다.' })
+  @ApiOperation({
+    summary: '작성한 댓글 조회',
+    description: '내가 작성한 댓글을 조회합니다.',
+  })
   @ApiResponse({
     status: HttpStatus.OK,
     description: '작성한 댓글 조회 성공.',
@@ -66,7 +76,10 @@ export class LibraryController {
    * 해당되는 정보가 없을경우 빈 배열 리턴
    */
   @ApiBearerAuth()
-  @ApiOperation({ summary: '구매한 포스트 조회', description: '내가 구매한 포스트를 조회합니다.' })
+  @ApiOperation({
+    summary: '구매한 포스트 조회',
+    description: '내가 구매한 포스트를 조회합니다.',
+  })
   @ApiResponse({
     status: HttpStatus.OK,
     description: '구매한 포스트 조회 성공.',

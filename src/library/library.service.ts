@@ -24,7 +24,10 @@ export class LibraryService {
    * 조회된 값이 없을경우, 빈 배열 리턴
    */
   async findLikedPostsByUesrId(userId: number) {
-    const postLikes = await this.postLikeRepository.find({ where: { user: { id: userId } }, relations: ['post'] });
+    const postLikes = await this.postLikeRepository.find({
+      where: { user: { id: userId } },
+      relations: ['post'],
+    });
 
     return postLikes;
   }

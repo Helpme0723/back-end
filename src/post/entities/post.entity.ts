@@ -80,7 +80,11 @@ export class Post {
    * @example "PUBLIC"
    */
   @IsEnum(Object.values(VisibilityType))
-  @Column({ type: 'enum', enum: VisibilityType, default: VisibilityType.PUBLIC })
+  @Column({
+    type: 'enum',
+    enum: VisibilityType,
+    default: VisibilityType.PUBLIC,
+  })
   visibility: VisibilityType;
 
   @IsNumber()

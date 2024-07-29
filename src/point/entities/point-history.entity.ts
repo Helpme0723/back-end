@@ -1,5 +1,12 @@
 import { User } from 'src/user/entities/user.entity';
-import { Column, CreateDateColumn, DeleteDateColumn, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  CreateDateColumn,
+  DeleteDateColumn,
+  Entity,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 import { PointHistoryType } from '../types/point-history.type';
 import { IsNumber, IsString } from 'class-validator';
 

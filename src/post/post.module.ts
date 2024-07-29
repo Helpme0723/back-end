@@ -10,7 +10,9 @@ import { Channel } from 'src/channel/entities/channel.entity';
 import { Series } from 'src/series/entities/series.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Category, PostLike, Post, Tag, Channel, Series])],
+  imports: [
+    TypeOrmModule.forFeature([Category, PostLike, Post, Tag, Channel, Series]),
+  ],
   controllers: [PostController],
   providers: [PostService],
 })

@@ -1,5 +1,11 @@
 import { Type } from 'class-transformer';
-import { IsNotEmpty, IsNumber, IsOptional, IsString, MaxLength } from 'class-validator';
+import {
+  IsNotEmpty,
+  IsNumber,
+  IsOptional,
+  IsString,
+  MaxLength,
+} from 'class-validator';
 import { Post } from 'src/post/entities/post.entity';
 import { Series } from 'src/series/entities/series.entity';
 import { Subscribe } from 'src/subscribe/entities/subscribe.entity';

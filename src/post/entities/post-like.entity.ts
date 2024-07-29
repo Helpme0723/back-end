@@ -1,5 +1,11 @@
 import { User } from 'src/user/entities/user.entity';
-import { Column, Entity, ManyToOne, PrimaryGeneratedColumn, Unique } from 'typeorm';
+import {
+  Column,
+  Entity,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+  Unique,
+} from 'typeorm';
 import { Post } from './post.entity';
 
 @Entity('post_likes')

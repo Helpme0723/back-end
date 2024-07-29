@@ -10,7 +10,7 @@ export class PointService {
     @InjectRepository(PointHistory)
     private readonly pointHistoryRepository: Repository<PointHistory>,
     @InjectRepository(User)
-    private readonly userRepository: Repository<User>,
+    private readonly userRepository: Repository<User>
   ) {}
 
   async findPointHistory(userId: number) {
@@ -19,7 +19,9 @@ export class PointService {
       throw new NotFoundException('사용자를 찾을 수 없습니다.');
     }
 
-    const pointHistory = await this.pointHistoryRepository.find({ where: { userId } });
+    const pointHistory = await this.pointHistoryRepository.find({
+      where: { userId },
+    });
 
     return pointHistory;
   }

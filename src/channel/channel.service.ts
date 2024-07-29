@@ -1,4 +1,9 @@
-import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Channel } from './entities/channel.entity';
 import { FindOptionsWhere, Repository } from 'typeorm';
@@ -26,7 +31,10 @@ export class ChannelService {
 
   //채널 생성
   async createChannel(userId: number, createChannelDto: CreateChannelDto) {
-    const channel = await this.channelRepository.save({ userId, ...createChannelDto });
+    const channel = await this.channelRepository.save({
+      userId,
+      ...createChannelDto,
+    });
 
     return {
       id: channel.id,
@@ -45,7 +53,11 @@ export class ChannelService {
       throw new NotFoundException('존재하지 않는 유저입니다.');
     }
 
-    const { items, meta } = await paginate<Channel>(this.channelRepository, { page, limit }, { where: { userId } });
+    const { items, meta } = await paginate<Channel>(
+      this.channelRepository,
+      { page, limit },
+      { where: { userId } }
+    );
 
     return {
       channels: items.map((item) => ({
@@ -142,7 +154,11 @@ export class ChannelService {
   }
 
   // 채널 수정
-  async updateChannel(userId: number, channelId: number, updateChannelDto: UpdateChannelDto) {
+  async updateChannel(
+    userId: number,
+    channelId: number,
+    updateChannelDto: UpdateChannelDto
+  ) {
     const { title, description, imageUrl } = updateChannelDto;
 
     if (!title && !description && !imageUrl) {
@@ -159,7 +175,10 @@ export class ChannelService {
       throw new ForbiddenException('수정 권한이 없는 채널입니다.');
     }
 
-    const updatedChannel = await this.channelRepository.save({ id: channel.id, ...updateChannelDto });
+    const updatedChannel = await this.channelRepository.save({
+      id: channel.id,
+      ...updateChannelDto,
+    });
 
     return updatedChannel;
   }
