@@ -24,8 +24,26 @@ export class CommentService {
       throw new NotFoundException('포스트를 찾을 수 없습니다.');
     }
 
-    const comment = this.commentRepository.create(createCommentDto);
-    return this.commentRepository.save(comment);
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      await queryRunner.manager.increment(Post, { id: post.id }, 'commentCount', 1);
+
+      const commentData = this.commentRepository.create(createCommentDto);
+      const comment = await queryRunner.manager.save(Comment, commentData);
+
+      await queryRunner.commitTransaction();
+      await queryRunner.release();
+
+      return comment;
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      await queryRunner.release();
+
+      throw new InternalServerErrorException('인터넷 서버 에러');
+    }
   }
 
   // 댓글 수정 API
@@ -46,8 +64,25 @@ export class CommentService {
       throw new NotFoundException('댓글을 찾을 수 없습니다.');
     }
 
-    await this.commentRepository.softDelete({ id: comment.id });
-    return true;
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      await queryRunner.manager.decrement(Post, { id: comment.postId }, 'commentCount', 1);
+
+      await queryRunner.manager.softDelete(Comment, { id: comment.id });
+
+      await queryRunner.commitTransaction();
+      await queryRunner.release();
+
+      return true;
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      await queryRunner.release();
+
+      throw new InternalServerErrorException('인터넷 서버 에러');
+    }
   }
 
   // 댓글 좋아요 등록 API

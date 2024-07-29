@@ -13,7 +13,6 @@ import { paginate } from 'nestjs-typeorm-paginate';
 import { DailyInsight } from 'src/insight/entities/daily-insight.entity';
 import { MonthlyInsight } from 'src/insight/entities/monthly-insight.entity';
 import { format, isValid } from 'date-fns';
-import { InsightSort } from './types/insight-sort.type';
 import { FindDailyInsightsDto } from './dtos/find-daily-insights.dto';
 import { FindMonthlyInsightsDto } from './dtos/find-monthly-insights.dto';
 
