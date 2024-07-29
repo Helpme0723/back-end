@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DailyInsight } from './entities/daily-insight.entity';
-import { Repository } from 'typeorm';
+import { LessThan, Repository } from 'typeorm';
 import { MonthlyInsight } from './entities/monthly-insight.entity';
 import { Post } from 'src/post/entities/post.entity';
 import { format } from 'date-fns';
@@ -141,5 +141,16 @@ export class InsightService {
     }
 
     await this.monthlyInsightRepository.save(monthlyInsightData);
+  }
+
+  // 일주일 지난 데일리 통계 삭제
+  async deleteDailyInsight() {
+    const sevenDaysAgo = new Date().getTime() - 60 * 60 * 24 * 7 * 1000;
+
+    const sevenDaysAgoData = format(new Date(sevenDaysAgo), 'yyyy-MM-dd');
+
+    await this.dailyInsightRepository.delete({
+      date: LessThan(sevenDaysAgoData),
+    });
   }
 }

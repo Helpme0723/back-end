@@ -1,4 +1,4 @@
-import { Controller, Get } from '@nestjs/common';
+import { Controller, Delete, Get } from '@nestjs/common';
 import { InsightService } from './insight.service';
 import { Cron, CronExpression } from '@nestjs/schedule';
 
@@ -22,6 +22,14 @@ export class InsightController {
     await this.insightService.calculateMonthlyInsight();
   }
 
+  // 일주일 이상 지난 데일리 통계 삭제
+  @Cron(CronExpression.EVERY_1ST_DAY_OF_MONTH_AT_MIDNIGHT)
+  async deleteDailyHandleCron() {
+    console.log('일주일 지난 데일리 통계 삭제');
+
+    await this.insightService.deleteDailyInsight();
+  }
+
   // 서비스 로직 테스트용
   @Get('daily')
   async daily() {
@@ -32,5 +40,11 @@ export class InsightController {
   @Get('monthly')
   async monthly() {
     await this.insightService.calculateMonthlyInsight();
+  }
+
+  // 서비스 로직 테스트용
+  @Delete('daily')
+  async delete() {
+    await this.insightService.deleteDailyInsight();
   }
 }
