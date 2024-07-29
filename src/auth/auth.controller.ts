@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { Body, Controller, Delete, Get, HttpStatus, Post, Request, UseGuards, Headers } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpStatus, Post, Request, UseGuards, Headers, Query } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { SignUpDto } from './dtos/sign-up.dto';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
@@ -29,9 +29,9 @@ export class AuthController {
       data: data,
     };
   }
-  @Get('/existed-email')
-  async existedEmail(@Query() email: string) {
-    const data = await this.authService.existedEmail(email);
+  @Get('/check-email')
+  async checkEmail(@Query('email') email: string) {
+    const data = await this.authService.checkEmail(email);
 
     return {
       status: HttpStatus.OK,
