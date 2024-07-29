@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { Body, Controller, Delete, Get, HttpStatus, Post, Query, UseGuards, Headers } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpStatus, Post, Request, UseGuards, Headers } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { SignUpDto } from './dtos/sign-up.dto';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';

@@ -1,4 +1,16 @@
-import { Controller, Post, Body, HttpStatus, Get, Param, ParseIntPipe, Patch, Delete, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  HttpStatus,
+  Get,
+  Param,
+  ParseIntPipe,
+  Patch,
+  Delete,
+  UseGuards,
+  Query,
+} from '@nestjs/common';
 import { PostService } from './post.service';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
@@ -6,6 +18,7 @@ import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 import { UserInfo } from 'src/auth/decorators/user-info.decorator';
 import { User } from 'src/user/entities/user.entity';
+import { FindAllPostDto } from './dto/findall-post-by-channel-id.dto';
 
 @ApiTags('5.포스트')
 @Controller('post')
@@ -31,12 +44,13 @@ export class PostController {
   }
 
   /**
-   * 포스트 전체조회
+   *
+   * @param findAllPostDto
    * @returns
    */
   @Get()
-  async findAll() {
-    const data = await this.postService.findAll();
+  async findAll(@Query() findAllPostDto: FindAllPostDto) {
+    const data = await this.postService.findAll(findAllPostDto.id);
     return {
       status: HttpStatus.OK,
       message: '포스트 전체조회를 성공하였습니다.',
@@ -70,6 +84,7 @@ export class PostController {
   @Get(':id')
   async findOne(@Param('id', ParseIntPipe) id: number) {
     const data = await this.postService.findOne(id);
+    await this.postService.incrementViewCount(id);
     return {
       status: HttpStatus.OK,
       message: '포스트 상세조회에 성공하였습니다.',
