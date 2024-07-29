@@ -67,6 +67,7 @@ export class PurchaseService {
         userId,
         amount: post.price,
         type: PointHistoryType.OUTGOING,
+        postId,
         description: `포스트 구매 - ${post.title}`,
       });
 

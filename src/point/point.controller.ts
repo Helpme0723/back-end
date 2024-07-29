@@ -21,7 +21,7 @@ export class PointController {
   @Get('/history')
   async getHistory(@UserInfo() user: User) {
     const userId = user.id; // 인증된 사용자의 ID를 가져옴
-    const data = await this.pointService.getPointHistory(userId);
+    const data = await this.pointService.findPointHistory(userId);
     return {
       status: HttpStatus.OK,
       message: '포인트 히스토리 조회 성공',
