@@ -6,7 +6,7 @@ import { UserInfo } from 'src/auth/decorators/user-info.decorator';
 import { User } from 'src/user/entities/user.entity';
 import { userInfo } from 'os';
 
-@ApiTags('5.라이브러리')
+@ApiTags('8.라이브러리')
 @Controller('library')
 export class LibraryController {
   constructor(private readonly libraryService: LibraryService) {}

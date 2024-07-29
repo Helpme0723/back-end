@@ -7,7 +7,7 @@ import { AuthGuard } from '@nestjs/passport';
 import { UserInfo } from 'src/auth/decorators/user-info.decorator';
 import { User } from 'src/user/entities/user.entity';
 
-@ApiTags('6.댓글')
+@ApiTags('5.댓글')
 @Controller('comments')
 export class CommentController {
   constructor(private readonly commentService: CommentService) {}

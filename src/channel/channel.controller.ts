@@ -10,7 +10,7 @@ import { UserInfo } from 'src/auth/decorators/user-info.decorator';
 import { User } from 'src/user/entities/user.entity';
 import { FindAllMyChannelsDto } from './dtos/find-all-my-channels.dto';
 
-@ApiTags('채널')
+@ApiTags('3.채널')
 @Controller('channels')
 export class ChannelController {
   constructor(private readonly channelService: ChannelService) {}

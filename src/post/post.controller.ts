@@ -20,7 +20,7 @@ import { UserInfo } from 'src/auth/decorators/user-info.decorator';
 import { User } from 'src/user/entities/user.entity';
 import { FindAllPostDto } from './dto/findall-post-by-channel-id.dto';
 
-@ApiTags('5.포스트')
+@ApiTags('4.포스트')
 @Controller('post')
 export class PostController {
   constructor(private readonly postService: PostService) {}
