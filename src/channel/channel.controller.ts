@@ -12,7 +12,7 @@ import { FindAllMyChannelsDto } from './dtos/find-all-my-channels.dto';
 import { FindDailyInsightsDto } from './dtos/find-daily-insights.dto';
 import { FindMonthlyInsightsDto } from './dtos/find-monthly-insights.dto';
 
-@ApiTags('채널')
+@ApiTags('3.채널')
 @Controller('channels')
 export class ChannelController {
   constructor(private readonly channelService: ChannelService) {}
