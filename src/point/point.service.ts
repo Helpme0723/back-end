@@ -13,7 +13,7 @@ export class PointService {
     private readonly userRepository: Repository<User>,
   ) {}
 
-  async getPointHistory(userId: number) {
+  async findPointHistory(userId: number) {
     const user = await this.userRepository.findOne({ where: { id: userId } });
     if (!user) {
       throw new NotFoundException('사용자를 찾을 수 없습니다.');
@@ -23,24 +23,4 @@ export class PointService {
 
     return pointHistory;
   }
-
-  // 포인트 충전 관련 메서드 - 현재 주석 처리, 추후 구현 예정
-  // async addPoint(userId: number, amount: number, description: string) {
-  //   const user = await this.userRepository.findOne({ where: { id: userId } });
-  //   if (!user) {
-  //     throw new NotFoundException('사용자를 찾을 수 없습니다.');
-  //   }
-
-  //   user.point += amount;
-
-  //   const pointHistory = this.pointHistoryRepository.create({
-  //     userId,
-  //     amount,
-  //     type: PointHistoryType.INCOME,
-  //     description,
-  //   });
-
-  //   await this.userRepository.save(user);
-  //   return this.pointHistoryRepository.save(pointHistory);
-  // }
 }
