@@ -71,7 +71,7 @@ export class InsightService {
         viewCount -= existingInsightData.totalViews;
         likeCount -= existingInsightData.totalLikes;
         commentCount -= existingInsightData.totalComments;
-        salesCount -= existingInsightData.salesCount;
+        salesCount -= existingInsightData.totalSales;
       }
 
       const dailyInsight = this.dailyInsightRepository.create({
@@ -136,7 +136,7 @@ export class InsightService {
         viewCount -= existingInsightData.totalViews;
         likeCount -= existingInsightData.totalLikes;
         commentCount -= existingInsightData.totalComments;
-        salesCount -= existingInsightData.salesCount;
+        salesCount -= existingInsightData.totalSales;
       }
 
       const MonthlyInsight = this.monthlyInsightRepository.create({
