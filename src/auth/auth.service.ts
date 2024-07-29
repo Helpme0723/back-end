@@ -35,16 +35,6 @@ export class AuthService {
   async signUp(signUpDto: SignUpDto) {
     const { email, password, passwordConfirm, ...etc } = signUpDto;
 
-    // 이미 존재하는지 확인
-    const existedEmail = await this.userRepository.findOne({
-      where: { email },
-    });
-
-    // 이미 존재하는 이메일인 경우 예외 처리
-    if (existedEmail) {
-      throw new ConflictException('이미 존재하는 이메일입니다.');
-    }
-
     // 비밀번호와 비밀번호 확인 값이 다를 경우 예외 처리
     if (password !== passwordConfirm) {
       throw new BadRequestException('비밀번호와 비밀번호 확인이 일치하지 않습니다.');
@@ -62,6 +52,23 @@ export class AuthService {
     user.password = undefined;
     user.deletedAt = undefined;
     return user;
+  }
+
+  /**
+   * 이메일 중복 조회
+   * @param email
+   * @returns
+   */
+  async existedEmail(email: string) {
+    const existedEmail = await this.userRepository.findOne({
+      where: { email },
+    });
+
+    if (existedEmail) {
+      throw new ConflictException('이미 존재하는 이메일입니다.');
+    }
+
+    return true;
   }
 
   /**
