@@ -1,12 +1,20 @@
-import { Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  Injectable,
+  InternalServerErrorException,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Post } from './entities/post.entity';
-import { Repository } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
 import { VisibilityType } from './types/visibility.type';
 import { Channel } from 'src/channel/entities/channel.entity';
 import { Series } from 'src/series/entities/series.entity';
+import { PostLike } from './entities/post-like.entity';
 
 @Injectable()
 export class PostService {
@@ -16,27 +24,26 @@ export class PostService {
     @InjectRepository(Channel)
     private readonly channelRepository: Repository<Channel>,
     @InjectRepository(Series)
-    private readonly seriesRepository: Repository<Series>
+    private readonly seriesRepository: Repository<Series>,
+    @InjectRepository(PostLike)
+    private readonly postLikeRepositroy: Repository<PostLike>,
+    private readonly dataSource: DataSource
   ) {}
 
   async create(userId: number, createPostDto: CreatePostDto) {
     const { channelId, seriesId, ...postData } = createPostDto;
-
     const channel = await this.channelRepository.findOne({
-      where: { userId },
+      where: { userId, id: channelId },
     });
-
     if (channelId !== channel.id) {
       throw new UnauthorizedException('채널접근 권한이없습니다');
     }
-
     const series = await this.seriesRepository.findOne({
       where: { userId },
     });
-    if (seriesId !== series.id) {
+    if (seriesId && seriesId !== series.id) {
       throw new UnauthorizedException('시리즈에 접근 권한이 없습니다');
     }
-
     const post = this.postRepository.create({
       userId,
       channelId,
@@ -47,10 +54,22 @@ export class PostService {
     return post;
   }
 
-  async findAll() {
+  async findAll(id?: number) {
     const posts = await this.postRepository.find({
       where: { visibility: VisibilityType.PUBLIC },
     });
+    if (id) {
+      const posts = await this.channelRepository.find({
+        relations: { posts: true },
+        where: {
+          id,
+          posts: {
+            visibility: VisibilityType.PUBLIC,
+          },
+        },
+      });
+      return posts;
+    }
     if (posts.length === 0) {
       throw new NotFoundException('포스트를 찾을수 없습니다.');
     }
@@ -70,7 +89,6 @@ export class PostService {
     if (post.visibility === VisibilityType.PRIVATE) {
       throw new NotFoundException('비공개 처리된 포스트입니다.');
     }
-
     return post;
   }
 
@@ -95,7 +113,6 @@ export class PostService {
     const post = await this.postRepository.findOne({
       where: { id, userId },
     });
-    console.log(post);
     if (!post) {
       throw new NotFoundException('포스트를 찾을수 없습니다.');
     }
@@ -103,7 +120,6 @@ export class PostService {
       where: { userId },
     });
 
-    console.log(channel);
     if (channelId !== channel.id) {
       throw new UnauthorizedException('채널접근 권한이없습니다');
     }
@@ -140,6 +156,79 @@ export class PostService {
     }
     if (post) {
       await this.postRepository.softDelete({ id });
+    }
+  }
+
+  async createPostLike(userId: number, id: number) {
+    const post = await this.postRepository.findOne({
+      where: { id },
+    });
+
+    if (!post) {
+      throw new NotFoundException('포스트를 찾을수없습니다');
+    }
+    console.log(post);
+    if (post.userId === userId) {
+      throw new BadRequestException('내 포스트에는 좋아요를 남길수 없습니다');
+    }
+
+    //이미 포스트에 좋아요를 했는지 확인하기
+    const existPostLike = await this.postLikeRepositroy.findOne({
+      where: { postId: post.id, userId },
+    });
+    if (existPostLike) {
+      throw new ConflictException('이미 좋아요를 등록하였습니다.');
+    }
+
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      //post 라이크카운트 1씩 증가해주기
+      await queryRunner.manager.increment(Post, { id }, 'likeCount', 1);
+
+      //postlike 테이블에 포스트아이디 유저아이디 저장해주기
+      const postlikedata = this.postLikeRepositroy.create({
+        userId,
+        postId: id,
+      });
+      await queryRunner.manager.save(PostLike, postlikedata);
+
+      await queryRunner.commitTransaction();
+      await queryRunner.release();
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      await queryRunner.release();
+
+      throw new InternalServerErrorException('서버에 에러가발생했습니다.');
+    }
+  }
+
+  async deletePostLike(userId: number, id: number) {
+    const likeData = await this.postLikeRepositroy.findOne({
+      where: { userId, postId: id },
+    });
+    if (!likeData) {
+      throw new NotFoundException('좋아요를 한 포스트가 업습니다.');
+    }
+
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      await queryRunner.manager.decrement(Post, { id }, 'likeCount', 1);
+
+      await queryRunner.manager.delete(PostLike, { id: likeData.id });
+
+      await queryRunner.commitTransaction();
+      await queryRunner.release();
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      await queryRunner.release();
+
+      throw new InternalServerErrorException('서버에 에러가 발생햇습니다.');
     }
   }
 }
