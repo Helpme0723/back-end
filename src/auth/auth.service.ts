@@ -59,7 +59,7 @@ export class AuthService {
    * @param email
    * @returns
    */
-  async existedEmail(email: string) {
+  async checkEmail(email: string) {
     const existedEmail = await this.userRepository.findOne({
       where: { email },
     });
