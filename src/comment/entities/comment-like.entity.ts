@@ -1,6 +1,7 @@
 import { User } from 'src/user/entities/user.entity';
 import {
   Column,
+  CreateDateColumn,
   Entity,
   ManyToOne,
   PrimaryGeneratedColumn,
@@ -27,6 +28,9 @@ export class CommentLike {
   @IsNumber()
   @Column({ unsigned: true })
   commentId: number;
+
+  @CreateDateColumn()
+  createdAt: Date;
 
   @ManyToOne(() => User, (user) => user.commentLikes, { onDelete: 'CASCADE' })
   user: User;
