@@ -11,6 +11,7 @@ import { CreateCommentDto } from './dto/create-comment.dto';
 import { Post } from 'src/post/entities/post.entity';
 import { UpdateCommentDto } from './dto/update-comment.dto';
 import { CommentLike } from './entities/comment-like.entity';
+import { paginate } from 'nestjs-typeorm-paginate';
 
 @Injectable()
 export class CommentService {
@@ -52,6 +53,21 @@ export class CommentService {
       throw new InternalServerErrorException('인터넷 서버 에러');
     }
   }
+
+  async findAllComments(postId: number, page: number, limit: number){
+    const post = await this.postRepository.findOne({ where: { id: postId } });
+
+    if (!post) {
+      throw new NotFoundException('존재하지 않는 포스트입니다.');
+    }
+
+    const queryBuilder = this.commentRepository.createQueryBuilder('comment')
+      .where('comment.postId = :postId', { postId })
+      .orderBy('comment.id', 'ASC');
+
+    return paginate<Comment>(queryBuilder, { page, limit });
+  }
+
 
   // 댓글 수정 API
   async updateComment(
