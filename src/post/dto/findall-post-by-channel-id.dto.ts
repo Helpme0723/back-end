@@ -5,5 +5,5 @@ export class FindAllPostDto {
   @IsOptional()
   @IsNumber()
   @Type(() => Number)
-  id?: number;
+  channelId?: number;
 }

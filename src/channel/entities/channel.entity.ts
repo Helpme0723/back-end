@@ -1,5 +1,11 @@
 import { Type } from 'class-transformer';
-import { IsNotEmpty, IsNumber, IsOptional, IsString, MaxLength } from 'class-validator';
+import {
+  IsNotEmpty,
+  IsNumber,
+  IsOptional,
+  IsString,
+  MaxLength,
+} from 'class-validator';
 import { Post } from 'src/post/entities/post.entity';
 import { Series } from 'src/series/entities/series.entity';
 import { Subscribe } from 'src/subscribe/entities/subscribe.entity';
@@ -14,6 +20,10 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { DailyInsight } from '../../insight/entities/daily-insight.entity';
+import { MonthlyInsight } from '../../insight/entities/monthly-insight.entity';
+import { ChannelDailyInsight } from 'src/insight/entities/channel-daily-insight.entity';
+import { ChannelMonthlyInsight } from 'src/insight/entities/channel-monthly-insight.entity';
 
 @Entity('channels')
 export class Channel {
@@ -82,6 +92,18 @@ export class Channel {
 
   @OneToMany(() => Series, (series) => series.channel, { cascade: true })
   series: Series[];
+
+  @OneToMany(() => DailyInsight, (dailyInsight) => dailyInsight.channel)
+  dailyInsights: DailyInsight[];
+
+  @OneToMany(() => MonthlyInsight, (monthlyInsights) => monthlyInsights.channel)
+  monthlyInsights: MonthlyInsight[];
+
+  @OneToMany(() => ChannelDailyInsight, (channelDailyInsight) => channelDailyInsight.channel)
+  channelDailyInsights: ChannelDailyInsight[];
+
+  @OneToMany(() => ChannelMonthlyInsight, (channelMonthlyInsight) => channelMonthlyInsight.channel)
+  channelMonthlyInsights: ChannelMonthlyInsight[];
 
   @ManyToOne(() => User, (user) => user.channels)
   user: User;

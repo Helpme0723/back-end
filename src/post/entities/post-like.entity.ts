@@ -1,5 +1,12 @@
 import { User } from 'src/user/entities/user.entity';
-import { Column, Entity, ManyToOne, PrimaryGeneratedColumn, Unique } from 'typeorm';
+import {
+  Column,
+  CreateDateColumn,
+  Entity,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+  Unique,
+} from 'typeorm';
 import { Post } from './post.entity';
 
 @Entity('post_likes')
@@ -13,6 +20,9 @@ export class PostLike {
 
   @Column({ unsigned: true })
   postId: number;
+
+  @CreateDateColumn()
+  createdAt: Date;
 
   @ManyToOne(() => User, (user) => user.postLikes, { onDelete: 'CASCADE' })
   user: User;

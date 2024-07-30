@@ -7,10 +7,10 @@ export class FindAllChannelsDto extends PickType(Channel, ['userId']) {
   @IsNumber()
   @IsOptional()
   @Type(() => Number)
-  page: number = 1;
+  page?: number = 1;
 
   @IsNumber()
   @IsOptional()
   @Type(() => Number)
-  limit: number = 10;
+  limit?: number = 10;
 }

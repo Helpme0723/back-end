@@ -1,4 +1,15 @@
-import { Body, Controller, Delete, Get, HttpStatus, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpStatus,
+  Param,
+  Patch,
+  Post,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
 import { ChannelService } from './channel.service';
 import { FindAllChannelsDto } from './dtos/find-all-channels.dto';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
@@ -9,8 +20,10 @@ import { AuthGuard } from '@nestjs/passport';
 import { UserInfo } from 'src/auth/decorators/user-info.decorator';
 import { User } from 'src/user/entities/user.entity';
 import { FindAllMyChannelsDto } from './dtos/find-all-my-channels.dto';
+import { FindDailyInsightsDto } from './dtos/find-daily-insights.dto';
+import { FindMonthlyInsightsDto } from './dtos/find-monthly-insights.dto';
 
-@ApiTags('채널')
+@ApiTags('3.채널')
 @Controller('channels')
 export class ChannelController {
   constructor(private readonly channelService: ChannelService) {}
@@ -24,8 +37,14 @@ export class ChannelController {
   @ApiBearerAuth()
   @UseGuards(AuthGuard('jwt'))
   @Post()
-  async createChannel(@UserInfo() user: User, @Body() createChannelDto: CreateChannelDto) {
-    const data = await this.channelService.createChannel(user.id, createChannelDto);
+  async createChannel(
+    @UserInfo() user: User,
+    @Body() createChannelDto: CreateChannelDto
+  ) {
+    const data = await this.channelService.createChannel(
+      user.id,
+      createChannelDto
+    );
 
     return {
       status: HttpStatus.CREATED,
@@ -59,8 +78,15 @@ export class ChannelController {
   @ApiBearerAuth()
   @UseGuards(AuthGuard('jwt'))
   @Get('me')
-  async findAllMyChannels(@UserInfo() user: User, @Query() { page, limit }: FindAllMyChannelsDto) {
-    const data = await this.channelService.findAllChannels(user.id, page, limit);
+  async findAllMyChannels(
+    @UserInfo() user: User,
+    @Query() { page, limit }: FindAllMyChannelsDto
+  ) {
+    const data = await this.channelService.findAllChannels(
+      user.id,
+      page,
+      limit
+    );
 
     return {
       status: HttpStatus.OK,
@@ -95,7 +121,10 @@ export class ChannelController {
   @ApiBearerAuth()
   @UseGuards(AuthGuard('jwt'))
   @Get(':id/me')
-  async findOneMyChannel(@UserInfo() user: User, @Param() { id }: ChannelIdDto) {
+  async findOneMyChannel(
+    @UserInfo() user: User,
+    @Param() { id }: ChannelIdDto
+  ) {
     const data = await this.channelService.findOneChannel(id, user.id);
 
     return {
@@ -120,7 +149,11 @@ export class ChannelController {
     @Param() { id }: ChannelIdDto,
     @Body() updateChannelDto: UpdateChannelDto
   ) {
-    const data = await this.channelService.updateChannel(user.id, id, updateChannelDto);
+    const data = await this.channelService.updateChannel(
+      user.id,
+      id,
+      updateChannelDto
+    );
 
     return {
       status: HttpStatus.OK,
@@ -145,6 +178,73 @@ export class ChannelController {
       status: HttpStatus.OK,
       message: `${id}번 채널을 삭제했습니다.`,
       data: true,
+    };
+  }
+
+  /**
+   * 채널 통계 조회
+   * @param param1
+   * @returns
+   */
+  // 채널 통계 조회
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard('jwt'))
+  @Get(':id/insights')
+  async findInsights(@UserInfo() user: User, @Param() { id }: ChannelIdDto) {
+    const data = await this.channelService.findInsights(user.id, id);
+
+    return {
+      status: HttpStatus.OK,
+      message: `${id}번 채널의 통계를 조회했습니다.`,
+      data,
+    };
+  }
+
+  /**
+   * 일별 포스트 통계 전체 조회
+   * @param param1
+   * @param findDailyInsightsDto
+   * @returns
+   */
+  // 일별 포스트 통계 전체 조회
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard('jwt'))
+  @Get(':id/insights/daily')
+  async findDailyInsights(
+    @UserInfo() user: User,
+    @Param() { id }: ChannelIdDto,
+    @Query() findDailyInsightsDto: FindDailyInsightsDto
+  ) {
+    const data = await this.channelService.findDailyInsights(user.id, id, findDailyInsightsDto);
+
+    return {
+      status: HttpStatus.OK,
+      message: `${id}번 채널의 데일리 통계를 조회했습니다.`,
+      data,
+    };
+  }
+
+  /**
+   * 월별 포스트 통계 전체 조회
+   * @param param1
+   * @param findMonthlyInsightsDto
+   * @returns
+   */
+  // 월별 포스트 통계 전체 조회
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard('jwt'))
+  @Get(':id/insights/monthly')
+  async findMonthlyInsights(
+    @UserInfo() user: User,
+    @Param() { id }: ChannelIdDto,
+    @Query() findMonthlyInsightsDto: FindMonthlyInsightsDto
+  ) {
+    const data = await this.channelService.findMonthlyInsights(user.id, id, findMonthlyInsightsDto);
+
+    return {
+      status: HttpStatus.OK,
+      message: `${id}번 채널의 먼슬리 통계를 조회했습니다.`,
+      data,
     };
   }
 }

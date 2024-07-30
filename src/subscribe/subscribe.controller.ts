@@ -1,4 +1,13 @@
-import { Body, Controller, Delete, Get, HttpStatus, Post, Query, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpStatus,
+  Post,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
 import { SubscribeService } from './subscribe.service';
 import { AuthGuard } from '@nestjs/passport';
 import { UserInfo } from 'src/auth/decorators/user-info.decorator';
@@ -7,7 +16,7 @@ import { SubscribeDto } from './dtos/subscribe.dto';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { FindAllSubscribesDto } from './dtos/find-all-subscribes.dto';
 
-@ApiTags('구독')
+@ApiTags('7.구독')
 @Controller('subscribes')
 export class SubscribeController {
   constructor(private readonly subscribeService: SubscribeService) {}
@@ -21,8 +30,14 @@ export class SubscribeController {
   @ApiBearerAuth()
   @UseGuards(AuthGuard('jwt'))
   @Post()
-  async createSubscribe(@UserInfo() user: User, @Body() { channelId }: SubscribeDto) {
-    const data = await this.subscribeService.createSubscribe(user.id, channelId);
+  async createSubscribe(
+    @UserInfo() user: User,
+    @Body() { channelId }: SubscribeDto
+  ) {
+    const data = await this.subscribeService.createSubscribe(
+      user.id,
+      channelId
+    );
 
     return {
       status: HttpStatus.CREATED,
@@ -40,8 +55,14 @@ export class SubscribeController {
   @ApiBearerAuth()
   @UseGuards(AuthGuard('jwt'))
   @Delete()
-  async deleteSubsCribe(@UserInfo() user: User, @Body() { channelId }: SubscribeDto) {
-    const data = await this.subscribeService.deleteSubscribe(user.id, channelId);
+  async deleteSubsCribe(
+    @UserInfo() user: User,
+    @Body() { channelId }: SubscribeDto
+  ) {
+    const data = await this.subscribeService.deleteSubscribe(
+      user.id,
+      channelId
+    );
 
     return {
       status: HttpStatus.OK,
@@ -59,8 +80,15 @@ export class SubscribeController {
   @ApiBearerAuth()
   @UseGuards(AuthGuard('jwt'))
   @Get()
-  async findAllSubscribe(@UserInfo() user: User, @Query() { page, limit }: FindAllSubscribesDto) {
-    const data = await this.subscribeService.findAllSubsCribe(user.id, page, limit);
+  async findAllSubscribe(
+    @UserInfo() user: User,
+    @Query() { page, limit }: FindAllSubscribesDto
+  ) {
+    const data = await this.subscribeService.findAllSubsCribe(
+      user.id,
+      page,
+      limit
+    );
 
     return {
       status: HttpStatus.OK,

@@ -1,4 +1,15 @@
-import { Body, Controller, Delete, Get, HttpStatus, Param, ParseIntPipe, Patch, Post, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpStatus,
+  Param,
+  ParseIntPipe,
+  Patch,
+  Post,
+  UseGuards,
+} from '@nestjs/common';
 import { SeriesService } from './series.service';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { UserInfo } from 'src/auth/decorators/user-info.decorator';
@@ -35,7 +46,10 @@ export class SeriesController {
   @ApiBearerAuth()
   @UseGuards(AuthGuard('jwt'))
   @Post()
-  async create(@UserInfo() user: User, @Body() createSeriesDto: CreateSeriesDto) {
+  async create(
+    @UserInfo() user: User,
+    @Body() createSeriesDto: CreateSeriesDto
+  ) {
     const userId = user.id;
 
     const data = await this.seriesService.create(userId, createSeriesDto);
@@ -114,7 +128,7 @@ export class SeriesController {
    */
   @ApiBearerAuth()
   @UseGuards(AuthGuard('jwt'))
-  @Get('my/:id')
+  @Get('my')
   async findAllMySeries(@UserInfo() user: User) {
     const userId = user.id;
     const data = await this.seriesService.findAllMySeries(userId);

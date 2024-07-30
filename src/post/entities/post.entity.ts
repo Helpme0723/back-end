@@ -20,6 +20,8 @@ import { Channel } from 'src/channel/entities/channel.entity';
 import { Series } from 'src/series/entities/series.entity';
 import { VisibilityType } from '../types/visibility.type';
 import { IsEnum, IsNumber, IsOptional, IsString } from 'class-validator';
+import { DailyInsight } from 'src/insight/entities/daily-insight.entity';
+import { MonthlyInsight } from 'src/insight/entities/monthly-insight.entity';
 
 @Entity('posts')
 export class Post {
@@ -80,7 +82,11 @@ export class Post {
    * @example "PUBLIC"
    */
   @IsEnum(Object.values(VisibilityType))
-  @Column({ type: 'enum', enum: VisibilityType, default: VisibilityType.PUBLIC })
+  @Column({
+    type: 'enum',
+    enum: VisibilityType,
+    default: VisibilityType.PUBLIC,
+  })
   visibility: VisibilityType;
 
   @IsNumber()
@@ -90,6 +96,12 @@ export class Post {
   @IsNumber()
   @Column({ default: 0 })
   likeCount: number;
+
+  @Column({ default: 0 })
+  commentCount: number;
+
+  @Column({ default: 0 })
+  salesCount: number;
 
   @IsString()
   @IsOptional()
@@ -119,6 +131,12 @@ export class Post {
 
   @OneToMany(() => Comment, (comment) => comment.post)
   comments: Comment[];
+
+  @OneToMany(() => DailyInsight, (dailyInsight) => dailyInsight.post)
+  dailyInsights: DailyInsight[];
+
+  @OneToMany(() => MonthlyInsight, (monthlyInsights) => monthlyInsights.post)
+  monthlyInsights: MonthlyInsight[];
 
   @ManyToOne(() => Series, (series) => series.posts)
   series: Series;

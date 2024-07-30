@@ -4,12 +4,15 @@ import { Series } from './entities/series.entity';
 import { Repository } from 'typeorm';
 import { CreateSeriesDto } from './dtos//create-series-dto';
 import { UpdateSeriesDto } from './dtos/update-series-dto';
+import { Channel } from 'src/channel/entities/channel.entity';
 
 @Injectable()
 export class SeriesService {
   constructor(
     @InjectRepository(Series)
-    private readonly seriesRepository: Repository<Series>
+    private readonly seriesRepository: Repository<Series>,
+    @InjectRepository(Channel)
+    private readonly channelRepository: Repository<Channel>
   ) {}
 
   async findAll() {
@@ -48,6 +51,14 @@ export class SeriesService {
     if (!series) {
       throw new NotFoundException('시리즈를 찾을수 없습니다.');
     }
+    //내채널이 아닐때 오류떤져쥬기
+    const channel = await this.channelRepository.findOne({
+      where: { userId, id: updateSeriesDto.channelId },
+    });
+    if (!channel) {
+      throw new NotFoundException('채널을 찾을수 없습니다.');
+    }
+
     const newSeries = {
       ...series,
       ...updateSeriesDto,

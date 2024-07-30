@@ -7,11 +7,7 @@ import { AwsModule } from 'src/aws/aws.module';
 import { ConfigModule } from '@nestjs/config';
 
 @Module({
-  imports: [
-    TypeOrmModule.forFeature([User]),
-    AwsModule,
-    ConfigModule,
-  ],
+  imports: [TypeOrmModule.forFeature([User]), AwsModule, ConfigModule],
   controllers: [UserController],
   providers: [UserService],
   exports: [UserService],

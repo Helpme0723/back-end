@@ -6,7 +6,10 @@ import { JwtPayload } from '../interfaces/jwt-payload.interface';
 import { AuthService } from '../auth.service';
 
 @Injectable()
-export class RefreshTokenStrategy extends PassportStrategy(Strategy, 'refresh') {
+export class RefreshTokenStrategy extends PassportStrategy(
+  Strategy,
+  'refresh'
+) {
   constructor(
     private readonly configService: ConfigService,
     private readonly authService: AuthService

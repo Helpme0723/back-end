@@ -20,7 +20,7 @@ import { UserInfo } from 'src/auth/decorators/user-info.decorator';
 import { User } from 'src/user/entities/user.entity';
 import { FindAllPostDto } from './dto/findall-post-by-channel-id.dto';
 
-@ApiTags('5.포스트')
+@ApiTags('4.포스트')
 @Controller('post')
 export class PostController {
   constructor(private readonly postService: PostService) {}
@@ -44,13 +44,13 @@ export class PostController {
   }
 
   /**
-   *
+   * 포스트전체조회
    * @param findAllPostDto
    * @returns
    */
   @Get()
   async findAll(@Query() findAllPostDto: FindAllPostDto) {
-    const data = await this.postService.findAll(findAllPostDto.id);
+    const data = await this.postService.findAll(findAllPostDto.channelId);
     return {
       status: HttpStatus.OK,
       message: '포스트 전체조회를 성공하였습니다.',
@@ -81,9 +81,12 @@ export class PostController {
    * @param id
    * @returns
    */
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard('jwt'))
   @Get(':id')
-  async findOne(@Param('id', ParseIntPipe) id: number) {
-    const data = await this.postService.findOne(id);
+  async findOne(@UserInfo() user: User, @Param('id', ParseIntPipe) id: number) {
+    const userId = user.id;
+    const data = await this.postService.findOne(userId, id);
     await this.postService.incrementViewCount(id);
     return {
       status: HttpStatus.OK,
@@ -98,9 +101,14 @@ export class PostController {
    * @param updatePostDto
    * @returns
    */
+  @ApiBearerAuth()
   @UseGuards(AuthGuard('jwt'))
   @Patch(':id')
-  async update(@UserInfo() user: User, @Param('id', ParseIntPipe) id: number, @Body() updatePostDto: UpdatePostDto) {
+  async update(
+    @UserInfo() user: User,
+    @Param('id', ParseIntPipe) id: number,
+    @Body() updatePostDto: UpdatePostDto
+  ) {
     const data = await this.postService.update(user.id, id, updatePostDto);
     return {
       status: HttpStatus.OK,
@@ -136,7 +144,10 @@ export class PostController {
   @ApiBearerAuth()
   @UseGuards(AuthGuard('jwt'))
   @Post(':id/postlike')
-  async createLike(@UserInfo() user: User, @Param('id', ParseIntPipe) id: number) {
+  async createLike(
+    @UserInfo() user: User,
+    @Param('id', ParseIntPipe) id: number
+  ) {
     const userId = user.id;
     const data = await this.postService.createPostLike(userId, id);
 
@@ -156,7 +167,10 @@ export class PostController {
   @ApiBearerAuth()
   @UseGuards(AuthGuard('jwt'))
   @Delete(':id/postlike')
-  async deleteLike(@UserInfo() user: User, @Param('id', ParseIntPipe) id: number) {
+  async deleteLike(
+    @UserInfo() user: User,
+    @Param('id', ParseIntPipe) id: number
+  ) {
     const userId = user.id;
     const data = await this.postService.deletePostLike(userId, id);
 

@@ -15,6 +15,7 @@ import { VisibilityType } from './types/visibility.type';
 import { Channel } from 'src/channel/entities/channel.entity';
 import { Series } from 'src/series/entities/series.entity';
 import { PostLike } from './entities/post-like.entity';
+import { PurchaseList } from 'src/purchase/entities/purchase-list.entity';
 
 @Injectable()
 export class PostService {
@@ -27,6 +28,8 @@ export class PostService {
     private readonly seriesRepository: Repository<Series>,
     @InjectRepository(PostLike)
     private readonly postLikeRepositroy: Repository<PostLike>,
+    @InjectRepository(PurchaseList)
+    private readonly purchaseListRepository: Repository<PurchaseList>,
     private readonly dataSource: DataSource
   ) {}
 
@@ -35,13 +38,13 @@ export class PostService {
     const channel = await this.channelRepository.findOne({
       where: { userId, id: channelId },
     });
-    if (channelId !== channel.id) {
+    if (channelId !== channel?.id) {
       throw new UnauthorizedException('채널접근 권한이없습니다');
     }
     const series = await this.seriesRepository.findOne({
-      where: { userId },
+      where: { userId, id: seriesId },
     });
-    if (seriesId && seriesId !== series.id) {
+    if (seriesId && seriesId !== series?.id) {
       throw new UnauthorizedException('시리즈에 접근 권한이 없습니다');
     }
     const post = this.postRepository.create({
@@ -54,22 +57,10 @@ export class PostService {
     return post;
   }
 
-  async findAll(id?: number) {
+  async findAll(channelId?: number) {
     const posts = await this.postRepository.find({
-      where: { visibility: VisibilityType.PUBLIC },
+      where: { visibility: VisibilityType.PUBLIC, ...(channelId && { channelId }) },
     });
-    if (id) {
-      const posts = await this.channelRepository.find({
-        relations: { posts: true },
-        where: {
-          id,
-          posts: {
-            visibility: VisibilityType.PUBLIC,
-          },
-        },
-      });
-      return posts;
-    }
     if (posts.length === 0) {
       throw new NotFoundException('포스트를 찾을수 없습니다.');
     }
@@ -77,7 +68,7 @@ export class PostService {
     return posts;
   }
 
-  async findOne(id: number) {
+  async findOne(userId: number, id: number) {
     const post = await this.postRepository.findOne({
       relations: { comments: true },
       where: { id },
@@ -98,7 +89,7 @@ export class PostService {
 
   async findMy(userId: number) {
     const post = await this.postRepository.find({
-      where: { userId: userId },
+      where: { userId },
     });
 
     if (!post) {
@@ -109,7 +100,7 @@ export class PostService {
   }
 
   async update(userId: number, id: number, updatePostDto: UpdatePostDto) {
-    const { channelId, ...etc } = updatePostDto;
+    const { channelId } = updatePostDto;
     const post = await this.postRepository.findOne({
       where: { id, userId },
     });
@@ -117,15 +108,14 @@ export class PostService {
       throw new NotFoundException('포스트를 찾을수 없습니다.');
     }
     const channel = await this.channelRepository.findOne({
-      where: { userId },
+      where: { userId, id: channelId },
     });
 
-    if (channelId !== channel.id) {
+    if (channelId !== channel?.id) {
       throw new UnauthorizedException('채널접근 권한이없습니다');
     }
     const newPost = {
       ...post,
-      ...etc,
       ...updatePostDto,
     };
     const data = await this.postRepository.save(newPost);
@@ -134,10 +124,10 @@ export class PostService {
 
   async changeSeries(userId: number, id: number, seriesId: number) {
     const post = await this.postRepository.findOne({
-      where: { id },
+      where: { id, userId },
     });
-    if (post.userId !== userId) {
-      throw new UnauthorizedException('접근권한이 없는 포스트입니다.');
+    if (!post) {
+      throw new NotFoundException('포스트를 찾을수 없습니다.');
     }
     const newPost = {
       ...post,
@@ -154,9 +144,7 @@ export class PostService {
     if (!post) {
       throw new NotFoundException('포스트 를 찾지못했습니다.');
     }
-    if (post) {
-      await this.postRepository.softDelete({ id });
-    }
+    await this.postRepository.softDelete({ id });
   }
 
   async createPostLike(userId: number, id: number) {
@@ -167,7 +155,6 @@ export class PostService {
     if (!post) {
       throw new NotFoundException('포스트를 찾을수없습니다');
     }
-    console.log(post);
     if (post.userId === userId) {
       throw new BadRequestException('내 포스트에는 좋아요를 남길수 없습니다');
     }
