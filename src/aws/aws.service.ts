@@ -37,7 +37,11 @@ export class AwsService {
     const imageName = this.utilsService.getUUID();
     const ext = file.originalname.split('.').pop();
 
-    const imageUrl = await this.imageUploadToS3(`${imageName}.${ext}`, file, ext);
+    const imageUrl = await this.imageUploadToS3(
+      `${imageName}.${ext}`,
+      file,
+      ext
+    );
 
     return { imageUrl };
   }

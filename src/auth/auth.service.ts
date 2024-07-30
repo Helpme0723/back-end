@@ -47,7 +47,9 @@ export class AuthService {
 
     // 비밀번호와 비밀번호 확인 값이 다를 경우 예외 처리
     if (password !== passwordConfirm) {
-      throw new BadRequestException('비밀번호와 비밀번호 확인이 일치하지 않습니다.');
+      throw new BadRequestException(
+        '비밀번호와 비밀번호 확인이 일치하지 않습니다.'
+      );
     }
 
     // 비밀번호 암호화
@@ -83,7 +85,9 @@ export class AuthService {
     });
     const hashedRefreshToken = bcrypt.hashSync(refreshToken, 10);
     // 리프레쉬토큰이 이미 있는지 조회
-    const existedRefreshToken = await this.refreshTokenRepository.findOneBy({ userId });
+    const existedRefreshToken = await this.refreshTokenRepository.findOneBy({
+      userId,
+    });
 
     // 리프레쉬토큰이 이미 있을 경우 삭제
     if (existedRefreshToken) {
@@ -91,7 +95,10 @@ export class AuthService {
     }
 
     // 리프레쉬 토큰 저장
-    await this.refreshTokenRepository.save({ userId, token: hashedRefreshToken });
+    await this.refreshTokenRepository.save({
+      userId,
+      token: hashedRefreshToken,
+    });
 
     return { accessToken, refreshToken };
   }
@@ -142,7 +149,9 @@ export class AuthService {
       // 결과 적용
       await queryRunner.release();
       // 에러 처리
-      throw new InternalServerErrorException('회원 탈퇴 과정 중에 오류가 발생했습니다. 관리자에게 문의해주세요.');
+      throw new InternalServerErrorException(
+        '회원 탈퇴 과정 중에 오류가 발생했습니다. 관리자에게 문의해주세요.'
+      );
     }
 
     return true;
@@ -178,10 +187,15 @@ export class AuthService {
     const payload = { id: userId };
 
     // 리프레쉬토큰이 이미 있는지 조회
-    const existedRefreshToken = await this.refreshTokenRepository.findOneBy({ userId });
+    const existedRefreshToken = await this.refreshTokenRepository.findOneBy({
+      userId,
+    });
 
     // 요청한 리프레쉬 토큰과 DB에 있는 토큰이 같은지 확인
-    const isMatchedRefreshToken = bcrypt.compareSync(token, existedRefreshToken.token);
+    const isMatchedRefreshToken = bcrypt.compareSync(
+      token,
+      existedRefreshToken.token
+    );
 
     // 리프레쉬 토큰이 다를 경우 예외 처리
     if (!isMatchedRefreshToken) {
@@ -207,7 +221,10 @@ export class AuthService {
     const hashedRefreshToken = bcrypt.hashSync(refreshToken, 10);
 
     // 암호화된 리프레쉬 토큰 저장
-    await this.refreshTokenRepository.save({ userId, token: hashedRefreshToken });
+    await this.refreshTokenRepository.save({
+      userId,
+      token: hashedRefreshToken,
+    });
 
     return { accessToken, refreshToken };
   }

@@ -36,7 +36,10 @@ export class SubscribeService {
     }
 
     // 해당 유저가 해당 채널을 이미 구독했는지 조회
-    const existingSubscribe = await this.subscribeRepository.findOneBy({ userId, channelId });
+    const existingSubscribe = await this.subscribeRepository.findOneBy({
+      userId,
+      channelId,
+    });
 
     // 이미 구독했으면 오류
     if (existingSubscribe) {
@@ -50,10 +53,18 @@ export class SubscribeService {
 
     try {
       // 채널의 subscribers에 +1 해서 저장
-      await queryRunner.manager.increment(Channel, { id: channelId }, 'subscribers', 1);
+      await queryRunner.manager.increment(
+        Channel,
+        { id: channelId },
+        'subscribers',
+        1
+      );
 
       // subscribe에 구독 정보 저장
-      const subscribeData = this.subscribeRepository.create({ userId, channelId });
+      const subscribeData = this.subscribeRepository.create({
+        userId,
+        channelId,
+      });
       await queryRunner.manager.save(Subscribe, subscribeData);
 
       await queryRunner.commitTransaction();
@@ -70,7 +81,10 @@ export class SubscribeService {
 
   // 채널 구독 취소
   async deleteSubscribe(userId: number, channelId: number) {
-    const subscribe = await this.subscribeRepository.findOneBy({ userId, channelId });
+    const subscribe = await this.subscribeRepository.findOneBy({
+      userId,
+      channelId,
+    });
 
     if (!subscribe) {
       throw new BadRequestException('구독하지 않은 채널입니다.');
@@ -83,7 +97,12 @@ export class SubscribeService {
 
     try {
       // 채널의 subscribers에 -1 해서 저장
-      await queryRunner.manager.decrement(Channel, { id: channelId }, 'subscribers', 1);
+      await queryRunner.manager.decrement(
+        Channel,
+        { id: channelId },
+        'subscribers',
+        1
+      );
 
       // subscribe에서 구독 정보 삭제
       await queryRunner.manager.delete(Subscribe, { id: subscribe.id });

@@ -10,7 +10,6 @@ import { User } from 'src/user/entities/user.entity';
 export class PointController {
   constructor(private readonly pointService: PointService) {}
 
-
   /**
    * 유저 포인트 히스토리
    * @param createPurchaseDto

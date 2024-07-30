@@ -27,7 +27,6 @@ export class Comment {
   @Column({ unsigned: true })
   postId: number;
 
-
   /**
    * 댓글 내용
    * @example "이것은 테스트 댓글입니다."
