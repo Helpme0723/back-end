@@ -1,4 +1,15 @@
-import { Body, Controller, Delete, Get, HttpStatus, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpStatus,
+  Param,
+  Patch,
+  Post,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
 import { ChannelService } from './channel.service';
 import { FindAllChannelsDto } from './dtos/find-all-channels.dto';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
@@ -26,8 +37,14 @@ export class ChannelController {
   @ApiBearerAuth()
   @UseGuards(AuthGuard('jwt'))
   @Post()
-  async createChannel(@UserInfo() user: User, @Body() createChannelDto: CreateChannelDto) {
-    const data = await this.channelService.createChannel(user.id, createChannelDto);
+  async createChannel(
+    @UserInfo() user: User,
+    @Body() createChannelDto: CreateChannelDto
+  ) {
+    const data = await this.channelService.createChannel(
+      user.id,
+      createChannelDto
+    );
 
     return {
       status: HttpStatus.CREATED,
@@ -61,8 +78,15 @@ export class ChannelController {
   @ApiBearerAuth()
   @UseGuards(AuthGuard('jwt'))
   @Get('me')
-  async findAllMyChannels(@UserInfo() user: User, @Query() { page, limit }: FindAllMyChannelsDto) {
-    const data = await this.channelService.findAllChannels(user.id, page, limit);
+  async findAllMyChannels(
+    @UserInfo() user: User,
+    @Query() { page, limit }: FindAllMyChannelsDto
+  ) {
+    const data = await this.channelService.findAllChannels(
+      user.id,
+      page,
+      limit
+    );
 
     return {
       status: HttpStatus.OK,
@@ -97,7 +121,10 @@ export class ChannelController {
   @ApiBearerAuth()
   @UseGuards(AuthGuard('jwt'))
   @Get(':id/me')
-  async findOneMyChannel(@UserInfo() user: User, @Param() { id }: ChannelIdDto) {
+  async findOneMyChannel(
+    @UserInfo() user: User,
+    @Param() { id }: ChannelIdDto
+  ) {
     const data = await this.channelService.findOneChannel(id, user.id);
 
     return {
@@ -122,7 +149,11 @@ export class ChannelController {
     @Param() { id }: ChannelIdDto,
     @Body() updateChannelDto: UpdateChannelDto
   ) {
-    const data = await this.channelService.updateChannel(user.id, id, updateChannelDto);
+    const data = await this.channelService.updateChannel(
+      user.id,
+      id,
+      updateChannelDto
+    );
 
     return {
       status: HttpStatus.OK,

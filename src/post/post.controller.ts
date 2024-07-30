@@ -104,7 +104,11 @@ export class PostController {
   @ApiBearerAuth()
   @UseGuards(AuthGuard('jwt'))
   @Patch(':id')
-  async update(@UserInfo() user: User, @Param('id', ParseIntPipe) id: number, @Body() updatePostDto: UpdatePostDto) {
+  async update(
+    @UserInfo() user: User,
+    @Param('id', ParseIntPipe) id: number,
+    @Body() updatePostDto: UpdatePostDto
+  ) {
     const data = await this.postService.update(user.id, id, updatePostDto);
     return {
       status: HttpStatus.OK,
@@ -139,8 +143,11 @@ export class PostController {
    */
   @ApiBearerAuth()
   @UseGuards(AuthGuard('jwt'))
-  @Post(':id/like')
-  async createLike(@UserInfo() user: User, @Param('id', ParseIntPipe) id: number) {
+  @Post(':id/postlike')
+  async createLike(
+    @UserInfo() user: User,
+    @Param('id', ParseIntPipe) id: number
+  ) {
     const userId = user.id;
     const data = await this.postService.createPostLike(userId, id);
 
@@ -159,8 +166,11 @@ export class PostController {
    */
   @ApiBearerAuth()
   @UseGuards(AuthGuard('jwt'))
-  @Delete(':id/like')
-  async deleteLike(@UserInfo() user: User, @Param('id', ParseIntPipe) id: number) {
+  @Delete(':id/postlike')
+  async deleteLike(
+    @UserInfo() user: User,
+    @Param('id', ParseIntPipe) id: number
+  ) {
     const userId = user.id;
     const data = await this.postService.deletePostLike(userId, id);
 

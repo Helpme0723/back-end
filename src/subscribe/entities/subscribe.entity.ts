@@ -2,7 +2,14 @@ import { Type } from 'class-transformer';
 import { IsNotEmpty, IsNumber } from 'class-validator';
 import { Channel } from 'src/channel/entities/channel.entity';
 import { User } from 'src/user/entities/user.entity';
-import { Column, CreateDateColumn, Entity, ManyToOne, PrimaryGeneratedColumn, Unique } from 'typeorm';
+import {
+  Column,
+  CreateDateColumn,
+  Entity,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+  Unique,
+} from 'typeorm';
 
 @Entity('subscribes')
 @Unique(['userId', 'channelId'])
@@ -29,6 +36,8 @@ export class Subscribe {
   @ManyToOne(() => User, (user) => user.subscribes, { onDelete: 'CASCADE' })
   user: User;
 
-  @ManyToOne(() => Channel, (channel) => channel.subscribes, { onDelete: 'CASCADE' })
+  @ManyToOne(() => Channel, (channel) => channel.subscribes, {
+    onDelete: 'CASCADE',
+  })
   channel: Channel;
 }

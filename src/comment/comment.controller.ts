@@ -32,7 +32,10 @@ export class CommentController {
   @ApiBearerAuth()
   @UseGuards(AuthGuard('jwt'))
   @Post()
-  async create(@UserInfo() user: User, @Body() createCommentDto: CreateCommentDto) {
+  async create(
+    @UserInfo() user: User,
+    @Body() createCommentDto: CreateCommentDto
+  ) {
     const userId = user.id; // 인증된 사용자의 ID를 가져옴
 
     // userId를 createCommentDto에 추가
@@ -76,7 +79,11 @@ export class CommentController {
     @Body() updateCommentDto: UpdateCommentDto
   ) {
     const userId = user.id; // 인증된 사용자의 ID를 가져옴
-    const data = await this.commentService.updateComment(userId, commentId, updateCommentDto);
+    const data = await this.commentService.updateComment(
+      userId,
+      commentId,
+      updateCommentDto
+    );
     return {
       status: HttpStatus.OK,
       message: '댓글을 수정하였습니다.',
@@ -92,7 +99,10 @@ export class CommentController {
   @ApiBearerAuth()
   @UseGuards(AuthGuard('jwt'))
   @Delete(':commentId')
-  async delete(@UserInfo() user: User, @Param('commentId', ParseIntPipe) commentId: number) {
+  async delete(
+    @UserInfo() user: User,
+    @Param('commentId', ParseIntPipe) commentId: number
+  ) {
     const userId = user.id; // 인증된 사용자의 ID를 가져옴
     await this.commentService.deleteComment(userId, commentId);
     return {
@@ -109,7 +119,10 @@ export class CommentController {
   @ApiBearerAuth()
   @UseGuards(AuthGuard('jwt'))
   @Post(':commentId/likes')
-  async createLike(@UserInfo() user: User, @Param('commentId', ParseIntPipe) commentId: number) {
+  async createLike(
+    @UserInfo() user: User,
+    @Param('commentId', ParseIntPipe) commentId: number
+  ) {
     const userId = user.id; // 인증된 사용자의 ID를 가져옴
     const data = await this.commentService.createCommentLike(userId, commentId);
     return {
@@ -127,7 +140,10 @@ export class CommentController {
   @ApiBearerAuth()
   @UseGuards(AuthGuard('jwt'))
   @Delete(':commentId/likes')
-  async deleteLike(@UserInfo() user: User, @Param('commentId', ParseIntPipe) commentId: number) {
+  async deleteLike(
+    @UserInfo() user: User,
+    @Param('commentId', ParseIntPipe) commentId: number
+  ) {
     const userId = user.id; // 인증된 사용자의 ID를 가져옴
     await this.commentService.deleteCommentLike(userId, commentId);
     return {

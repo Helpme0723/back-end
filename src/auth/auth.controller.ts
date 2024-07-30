@@ -1,5 +1,14 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { Body, Controller, Delete, HttpStatus, Post, Request, UseGuards, Headers } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  HttpStatus,
+  Post,
+  Request,
+  UseGuards,
+  Headers,
+} from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { SignUpDto } from './dtos/sign-up.dto';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
@@ -75,7 +84,10 @@ export class AuthController {
   @ApiBearerAuth()
   @UseGuards(AuthGuard('refresh'))
   @Post('tokens')
-  async tokenReIssue(@Headers('Authorization') token: string, @UserInfo() user: User) {
+  async tokenReIssue(
+    @Headers('Authorization') token: string,
+    @UserInfo() user: User
+  ) {
     const refreshToken = token.split(' ')[1];
     const data = await this.authService.tokenReIssue(refreshToken, user.id);
     return {

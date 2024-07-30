@@ -19,9 +19,15 @@ export class PurchaseController {
   @ApiBearerAuth()
   @UseGuards(AuthGuard('jwt'))
   @Post()
-  async create(@UserInfo() user: User, @Body() createPurchaseDto: CreatePurchaseDto) {
+  async create(
+    @UserInfo() user: User,
+    @Body() createPurchaseDto: CreatePurchaseDto
+  ) {
     const userId = user.id; // 인증된 사용자의 ID를 가져옴
-    const data = await this.purchaseService.createPurchase(userId, createPurchaseDto);
+    const data = await this.purchaseService.createPurchase(
+      userId,
+      createPurchaseDto
+    );
     return {
       status: HttpStatus.OK,
       message: '포스트를 성공적으로 구매하였습니다.',

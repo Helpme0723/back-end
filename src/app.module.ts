@@ -15,6 +15,7 @@ import { PointModule } from './point/point.module';
 import { PurchaseModule } from './purchase/purchase.module';
 import { AwsModule } from './aws/aws.module';
 import { UtilsModule } from './utils/utils.module';
+import { LibraryModule } from './library/library.module';
 import { ScheduleModule } from '@nestjs/schedule';
 import { InsightModule } from './insight/insight.module';
 
@@ -37,6 +38,7 @@ import { InsightModule } from './insight/insight.module';
     PurchaseModule,
     AwsModule,
     UtilsModule,
+    LibraryModule,
     InsightModule,
   ],
   controllers: [AppController],

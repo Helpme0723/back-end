@@ -8,7 +8,7 @@ import { User } from 'src/user/entities/user.entity';
 import { PointHistory } from 'src/point/entities/point-history.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([PurchaseList, Post, User,PointHistory])],
+  imports: [TypeOrmModule.forFeature([PurchaseList, Post, User, PointHistory])],
   controllers: [PurchaseController],
   providers: [PurchaseService],
 })
