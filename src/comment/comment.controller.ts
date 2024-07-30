@@ -1,4 +1,16 @@
-import { Controller, Post, Body, HttpStatus, Patch, Param, Delete, UseGuards, ParseIntPipe } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  HttpStatus,
+  Patch,
+  Param,
+  Delete,
+  UseGuards,
+  ParseIntPipe,
+  Get,
+  Query,
+} from '@nestjs/common';
 import { CommentService } from './comment.service';
 import { CreateCommentDto } from './dto/create-comment.dto';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
@@ -32,6 +44,20 @@ export class CommentController {
     return {
       status: HttpStatus.OK,
       message: '댓글을 생성하였습니다.',
+      data,
+    };
+  }
+
+  @Get()
+  async findAllComments(
+    @Query('postId', ParseIntPipe) postId: number,
+    @Query('page', ParseIntPipe) page: number = 1,
+    @Query('limit', ParseIntPipe) limit: number = 10
+  ) {
+    const data = await this.commentService.findAllComments(postId, page, limit);
+    return {
+      status: HttpStatus.OK,
+      message: '댓글을 조회하였습니다.',
       data,
     };
   }
