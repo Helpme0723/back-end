@@ -29,13 +29,36 @@ export class AuthController {
       data: data,
     };
   }
-  @Get('/check-email')
-  async checkEmail(@Query('email') email: string) {
+
+  /**
+   * 이메일 중복 조회
+   * @param email
+   * @returns
+   */
+  @Post('/check-email')
+  async checkEmail(@Body('email') email: string) {
     const data = await this.authService.checkEmail(email);
 
     return {
       status: HttpStatus.OK,
       message: 'true',
+      data: data,
+    };
+  }
+
+  /**
+   * 이메일 인증
+   * @param email
+   * @param verification
+   * @returns
+   */
+  @Post('/verify-email')
+  async verifyEmail(@Body('email') email: string, @Body('verification') verification: number) {
+    const data = await this.authService.verifyEmail(email, verification);
+
+    return {
+      status: HttpStatus.OK,
+      message: '인증되었습니다.',
       data: data,
     };
   }

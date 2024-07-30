@@ -15,6 +15,7 @@ import { PointModule } from './point/point.module';
 import { PurchaseModule } from './purchase/purchase.module';
 import { AwsModule } from './aws/aws.module';
 import { UtilsModule } from './utils/utils.module';
+import { MailModule } from './mail/mail.module';
 
 @Module({
   imports: [
@@ -34,6 +35,7 @@ import { UtilsModule } from './utils/utils.module';
     PurchaseModule,
     AwsModule,
     UtilsModule,
+    MailModule,
   ],
   controllers: [AppController],
   providers: [],
