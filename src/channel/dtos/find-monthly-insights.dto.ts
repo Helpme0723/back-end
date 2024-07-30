@@ -1,9 +1,17 @@
-import { PickType } from '@nestjs/swagger';
-import { Channel } from '../entities/channel.entity';
 import { IsNumber, IsOptional } from 'class-validator';
+import { InsightSort } from '../types/insight-sort.type';
 import { Type } from 'class-transformer';
 
-export class FindAllChannelsDto extends PickType(Channel, ['userId']) {
+export class FindMonthlyInsightsDto {
+  /**
+   * @example "2024-06"
+   */
+  @IsOptional()
+  date?: string;
+
+  @IsOptional()
+  sort?: InsightSort = InsightSort.VIEW;
+
   @IsNumber()
   @IsOptional()
   @Type(() => Number)

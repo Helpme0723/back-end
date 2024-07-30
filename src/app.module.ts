@@ -16,6 +16,8 @@ import { PurchaseModule } from './purchase/purchase.module';
 import { AwsModule } from './aws/aws.module';
 import { UtilsModule } from './utils/utils.module';
 import { LibraryModule } from './library/library.module';
+import { ScheduleModule } from '@nestjs/schedule';
+import { InsightModule } from './insight/insight.module';
 
 @Module({
   imports: [
@@ -24,6 +26,7 @@ import { LibraryModule } from './library/library.module';
       validationSchema: configModuleValidationSchema,
     }),
     TypeOrmModule.forRootAsync(typeOrmModuleOptions),
+    ScheduleModule.forRoot(),
     UserModule,
     PostModule,
     AuthModule,
@@ -36,6 +39,7 @@ import { LibraryModule } from './library/library.module';
     AwsModule,
     UtilsModule,
     LibraryModule,
+    InsightModule,
   ],
   controllers: [AppController],
   providers: [],
