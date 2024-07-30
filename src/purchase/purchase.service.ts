@@ -71,11 +71,14 @@ export class PurchaseService {
         description: `포스트 구매 - ${post.title}`,
       });
 
+      // salesCount 증가
+      await this.postRepository.increment({ id: postId }, 'salesCount', 1);
+
       await queryRunner.manager.save(User, user);
       await queryRunner.manager.save(PurchaseList, purchase);
       await queryRunner.manager.save(PointHistory, pointHistory);
 
-
+    
       await queryRunner.commitTransaction();
       await queryRunner.release();
       return purchase;
