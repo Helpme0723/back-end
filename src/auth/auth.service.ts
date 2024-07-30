@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   ConflictException,
+  Inject,
   Injectable,
   InternalServerErrorException,
   NotFoundException,
@@ -15,6 +16,7 @@ import { SignInDto } from './dtos/sign-in.dto';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { RefreshToken } from './entities/refresh-token.entity';
+import { Cache, CACHE_MANAGER } from '@nestjs/cache-manager';
 
 @Injectable()
 export class AuthService {
@@ -25,7 +27,8 @@ export class AuthService {
     private readonly configService: ConfigService,
     private readonly dataSource: DataSource,
     @InjectRepository(RefreshToken)
-    private readonly refreshTokenRepository: Repository<RefreshToken>
+    private readonly refreshTokenRepository: Repository<RefreshToken>,
+    @Inject(CACHE_MANAGER) private readonly cacheManager: Cache
   ) {}
 
   /**
@@ -72,6 +75,22 @@ export class AuthService {
   }
 
   /**
+   * 회원가입 이메일 인증
+   * @param email
+   */
+  async verifyEmail(email: string, verification: number) {
+    // Redis Cloud에 담긴 인증번호와 입력한 인증번호 가져오기
+    const verificationInRedis = await this.cacheManager.get<number>(`인증 번호:${email}`);
+
+    // 같지 않을 경우 예외 처리
+    if (verification !== verificationInRedis) {
+      throw new BadRequestException('인증 번호가 틀렸습니다.');
+    }
+
+    return true;
+  }
+
+  /**
    * 로그인
    * @param signInDto
    */
@@ -96,10 +115,13 @@ export class AuthService {
     if (existedRefreshToken) {
       await this.refreshTokenRepository.delete({ userId });
     }
-
+    const ttl = 60 * 60 * 24 * 7;
     // 리프레쉬 토큰 저장
+    await this.cacheManager.set(`userId:${userId}`, hashedRefreshToken, { ttl });
     await this.refreshTokenRepository.save({ userId, token: hashedRefreshToken });
-
+    // await this.refreshTokenRepository.upsert({ token: hashedRefreshToken }, ['userId']);
+    // const redisToken = await this.cacheManager.get(`userId:${userId}`);
+    // console.log(redisToken);
     return { accessToken, refreshToken };
   }
 
@@ -253,6 +275,7 @@ export class AuthService {
     return user.id;
   }
 
+  // 리프레쉬토큰에 있는 userId로 DB에 있고 유저가 있는지 검증
   async findRefreshTokenById(userId: number) {
     const refreshToken = await this.refreshTokenRepository.findOne({
       where: { userId },
