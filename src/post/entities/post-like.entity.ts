@@ -1,6 +1,7 @@
 import { User } from 'src/user/entities/user.entity';
 import {
   Column,
+  CreateDateColumn,
   Entity,
   ManyToOne,
   PrimaryGeneratedColumn,
@@ -19,6 +20,9 @@ export class PostLike {
 
   @Column({ unsigned: true })
   postId: number;
+
+  @CreateDateColumn()
+  createdAt: Date;
 
   @ManyToOne(() => User, (user) => user.postLikes, { onDelete: 'CASCADE' })
   user: User;

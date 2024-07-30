@@ -1,4 +1,4 @@
-import { Controller, Get, HttpStatus, UseGuards } from '@nestjs/common';
+import { Controller, Get, HttpStatus, Query, UseGuards } from '@nestjs/common';
 import { LibraryService } from './library.service';
 import {
   ApiBearerAuth,
@@ -9,6 +9,7 @@ import {
 import { AuthGuard } from '@nestjs/passport';
 import { UserInfo } from 'src/auth/decorators/user-info.decorator';
 import { User } from 'src/user/entities/user.entity';
+import { PaginationDto } from './dtos/pagination.dto';
 
 @ApiTags('8.라이브러리')
 @Controller('library')
@@ -18,6 +19,7 @@ export class LibraryController {
   /**
    * 내가 좋아요한 포스트 조회
    * @param user 유저정보
+   * @param query 페이지네이션, 정렬 정보를 담은 값
    * @returns 조회된 정보
    * 해당되는 정보가 없을경우 빈 배열 리턴
    */
@@ -32,8 +34,11 @@ export class LibraryController {
   })
   @UseGuards(AuthGuard('jwt'))
   @Get('posts/likes')
-  async findLikedPosts(@UserInfo() user: User) {
-    const data = await this.libraryService.findLikedPostsByUesrId(user.id);
+  async findLikedPosts(@UserInfo() user: User, @Query() query: PaginationDto) {
+    const data = await this.libraryService.findLikedPostsByUesrId(
+      user.id,
+      query
+    );
 
     return {
       status: HttpStatus.OK,
@@ -45,6 +50,7 @@ export class LibraryController {
   /**
    * 작성한 댓글 조회
    * @param user 유저정보
+   * @param query 페이지네이션, 정렬 정보를 담은 값
    * @returns 조회된 정보
    * 해당되는 정보가 없을경우 빈 배열 리턴
    */
@@ -59,8 +65,8 @@ export class LibraryController {
   })
   @UseGuards(AuthGuard('jwt'))
   @Get('comments')
-  async findComments(@UserInfo() user: User) {
-    const data = await this.libraryService.findCommentsByUserId(user.id);
+  async findComments(@UserInfo() user: User, @Query() query: PaginationDto) {
+    const data = await this.libraryService.findCommentsByUserId(user.id, query);
 
     return {
       status: HttpStatus.OK,
@@ -72,6 +78,7 @@ export class LibraryController {
   /**
    * 구매한 포스트 조회
    * @param user 유저정보
+   * @param query 페이지네이션, 정렬 정보를 담은 값
    * @returns 조회한 정보
    * 해당되는 정보가 없을경우 빈 배열 리턴
    */
@@ -86,8 +93,14 @@ export class LibraryController {
   })
   @UseGuards(AuthGuard('jwt'))
   @Get('posts/purchases')
-  async findPurchasedPost(@UserInfo() user: User) {
-    const data = await this.libraryService.findPurchasedPostByUserId(user.id);
+  async findPurchasedPost(
+    @UserInfo() user: User,
+    @Query() query: PaginationDto
+  ) {
+    const data = await this.libraryService.findPurchasedPostsByUserId(
+      user.id,
+      query
+    );
 
     return {
       status: HttpStatus.OK,
