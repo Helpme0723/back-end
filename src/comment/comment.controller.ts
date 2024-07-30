@@ -51,6 +51,13 @@ export class CommentController {
     };
   }
 
+    /**
+   * 댓글 전체 조회
+   * @param postId 조회할 포스트 ID
+   * @param page 조회할 page
+   * @param limit 조회할 페이지당 갯수 제한
+   * @returns 생성된 댓글 정보와 상태 메시지
+   * */
   @Get()
   async findAllComments(
     @Query('postId', ParseIntPipe) postId: number,
