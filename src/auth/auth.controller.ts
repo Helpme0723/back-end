@@ -16,6 +16,8 @@ import { LocalAuthGuard } from './guards/local-auth.guard';
 import { User } from 'src/user/entities/user.entity';
 import { UserInfo } from 'src/auth/decorators/user-info.decorator';
 import { AuthGuard } from '@nestjs/passport';
+import { EmailConflictDto } from './dtos/email-conflict.dto';
+import { VerifyCodeDto } from './dtos/verify-code.dto';
 
 @ApiTags('1.auth')
 @Controller('auth')
@@ -40,11 +42,11 @@ export class AuthController {
 
   /**
    * 이메일 중복 조회
-   * @param email
+   * @param param0
    * @returns
    */
   @Post('/check-email')
-  async checkEmail(@Body('email') email: string) {
+  async checkEmail(@Body() { email }: EmailConflictDto) {
     const data = await this.authService.checkEmail(email);
 
     return {
@@ -61,11 +63,8 @@ export class AuthController {
    * @returns
    */
   @Post('/verify-email')
-  async verifyEmail(
-    @Body('email') email: string,
-    @Body('verification') verification: number
-  ) {
-    const data = await this.authService.verifyEmail(email, verification);
+  async verifyEmail(@Body() { email, code }: VerifyCodeDto) {
+    const data = await this.authService.verifyEmail(email, code);
 
     return {
       status: HttpStatus.OK,
@@ -137,6 +136,7 @@ export class AuthController {
    * @param user
    * @returns
    */
+  @ApiBearerAuth()
   @UseGuards(AuthGuard('jwt'))
   @Delete('/re-sign')
   async reSign(@UserInfo() user: User) {
