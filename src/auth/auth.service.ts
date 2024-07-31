@@ -53,7 +53,7 @@ export class AuthService {
     }
 
     // 비밀번호 암호화
-    const hashedPassword = bcrypt.hashSync(password, 10);
+    const hashedPassword = bcrypt.hashSync(password, this.configService.get<number>('HASH_ROUND'));
 
     // 저장
     const user = await this.userRepository.save({
@@ -83,7 +83,7 @@ export class AuthService {
       secret: this.configService.get<string>('REFRESH_TOKEN_SECRET'),
       expiresIn: this.configService.get<string>('REFRESH_TOKEN_EXPIRES'),
     });
-    const hashedRefreshToken = bcrypt.hashSync(refreshToken, 10);
+    const hashedRefreshToken = bcrypt.hashSync(refreshToken, this.configService.get<number>('HASH_ROUND'));
     // 리프레쉬토큰이 이미 있는지 조회
     const existedRefreshToken = await this.refreshTokenRepository.findOneBy({
       userId,
@@ -218,7 +218,7 @@ export class AuthService {
     });
 
     // 리프레쉬 토큰 암호화
-    const hashedRefreshToken = bcrypt.hashSync(refreshToken, 10);
+    const hashedRefreshToken = bcrypt.hashSync(refreshToken, this.configService.get<number>('HASH_ROUND'));
 
     // 암호화된 리프레쉬 토큰 저장
     await this.refreshTokenRepository.save({
