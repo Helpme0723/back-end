@@ -15,5 +15,5 @@ export class FindAllPostDto {
   @IsNumber()
   @IsOptional()
   @Type(() => Number)
-  limit?: number = 1;
+  limit?: number = 10;
 }
