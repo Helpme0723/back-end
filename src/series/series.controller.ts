@@ -20,7 +20,7 @@ import { AuthGuard } from '@nestjs/passport';
 import { UpdateSeriesDto } from './dtos/update-series-dto';
 import { FindAllSeriesDto } from './dtos/find-all-series.dto';
 
-@ApiTags('6.시리즈')
+@ApiTags('06.시리즈')
 @Controller('series')
 export class SeriesController {
   constructor(private readonly seriesService: SeriesService) {}

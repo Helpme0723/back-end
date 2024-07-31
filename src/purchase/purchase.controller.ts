@@ -6,7 +6,7 @@ import { UserInfo } from 'src/auth/decorators/user-info.decorator';
 import { User } from 'src/user/entities/user.entity';
 import { CreatePurchaseDto } from './dto/buy-post.dto';
 
-@ApiTags('9.구매')
+@ApiTags('09.구매')
 @Controller('purchases')
 export class PurchaseController {
   constructor(private readonly purchaseService: PurchaseService) {}
