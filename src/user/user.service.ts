@@ -161,7 +161,7 @@ export class UserService {
     // 새 비밀번호 해싱
     const hashedPassword = await bcrypt.hash(
       newPassword,
-      this.configService.get<number>('HASH_ROUNDS')
+      this.configService.get<number>('HASH_ROUND')
     );
 
     // 비밀번호 업데이트
