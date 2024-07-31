@@ -104,10 +104,13 @@ export class User {
   })
   pointHistories: PointHistory[];
 
-
-  @OneToMany(() => PointOrder, (pointOrder) => pointOrder.user, { cascade: true })
+  @OneToMany(() => PointOrder, (pointOrder) => pointOrder.user, {
+    cascade: true,
+  })
   pointOrder: PointOrder[];
 
-  @OneToMany(() => PurchaseList, (purchaseList) => purchaseList.user, { cascade: true })
+  @OneToMany(() => PurchaseList, (purchaseList) => purchaseList.user, {
+    cascade: true,
+  })
   purchaseLists: PurchaseList[];
 }

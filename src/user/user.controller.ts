@@ -3,6 +3,7 @@ import {
   Controller,
   Get,
   HttpStatus,
+  Param,
   Patch,
   UploadedFile,
   UseGuards,
@@ -23,7 +24,6 @@ import { UserInfo } from 'src/auth/decorators/user-info.decorator';
 import { AuthGuard } from '@nestjs/passport';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { UpdateUserPasswordDto } from './dtos/update-user-password.dto';
-import { ReadUserInfoDto } from './dtos/read-user-info.dto';
 
 @ApiTags('2. User API')
 @Controller('users')
@@ -47,7 +47,7 @@ export class UserController {
   @UseGuards(AuthGuard('jwt'))
   @Get('me')
   async findUserInfo(@UserInfo() user: User) {
-    const data = await this.userService.findUserById(user.id);
+    const data = await this.userService.findUserByMe(user.id);
     return {
       status: HttpStatus.OK,
       message: '내 정보 조회 성공.',
@@ -69,8 +69,8 @@ export class UserController {
     description: '사용자 정보 조회 성공.',
   })
   @Get(':id')
-  async findUserInfoById(@Body() readUserInfoDto: ReadUserInfoDto) {
-    const data = await this.userService.findUserById(readUserInfoDto.id);
+  async findUserInfoById(@Param('id') id: number) {
+    const data = await this.userService.findUserById(id);
     return {
       status: HttpStatus.OK,
       message: '사용자 정보 조회 성공.',
@@ -98,25 +98,20 @@ export class UserController {
     description: '내 정보 변경 성공.',
   })
   @ApiBody({
-    description: 'Update User DTO',
     schema: {
       type: 'object',
       properties: {
-        file: {
-          type: 'string',
-          format: 'binary',
-        },
-        nickname: {
-          type: 'string',
-          example: 'new_nickname',
-        },
+        file: { type: 'string', format: 'binary', nullable: true },
+        nickname: { type: 'string', example: 'new_nickname', nullable: true },
         profileUrl: {
           type: 'string',
           example: 'https://example.com/profile.jpg',
+          nullable: true,
         },
         description: {
           type: 'string',
           example: 'New description',
+          nullable: true,
         },
       },
     },

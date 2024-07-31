@@ -1,7 +1,12 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { Exclude } from 'class-transformer';
 import { IsOptional, IsString } from 'class-validator';
 
 export class UpdateUserDto {
+  @ApiProperty({ type: 'string', format: 'binary', required: false })
+  @IsOptional()
+  file?: any;
+
   @ApiProperty({ example: 'nickname' })
   @IsString()
   @IsOptional()
@@ -11,10 +16,6 @@ export class UpdateUserDto {
   @IsString()
   @IsOptional()
   description?: string;
-
-  @ApiProperty({ type: 'string', format: 'binary', required: false })
-  @IsOptional()
-  file?: any;
 
   @ApiProperty({ example: '기본 이미지.jpg' })
   @IsString()
