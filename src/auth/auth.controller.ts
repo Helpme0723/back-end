@@ -19,7 +19,7 @@ import { AuthGuard } from '@nestjs/passport';
 import { EmailConflictDto } from './dtos/email-conflict.dto';
 import { VerifyCodeDto } from './dtos/verify-code.dto';
 
-@ApiTags('1.auth')
+@ApiTags('01.auth')
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}

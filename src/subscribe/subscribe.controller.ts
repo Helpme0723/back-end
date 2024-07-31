@@ -16,7 +16,7 @@ import { SubscribeDto } from './dtos/subscribe.dto';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { FindAllSubscribesDto } from './dtos/find-all-subscribes.dto';
 
-@ApiTags('7.구독')
+@ApiTags('07.구독')
 @Controller('subscribes')
 export class SubscribeController {
   constructor(private readonly subscribeService: SubscribeService) {}

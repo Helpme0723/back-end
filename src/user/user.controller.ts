@@ -25,7 +25,7 @@ import { AuthGuard } from '@nestjs/passport';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { UpdateUserPasswordDto } from './dtos/update-user-password.dto';
 
-@ApiTags('2. User API')
+@ApiTags('02. User API')
 @Controller('users')
 export class UserController {
   constructor(private readonly userService: UserService) {}
