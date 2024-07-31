@@ -8,6 +8,7 @@ import {
   ParseIntPipe,
   Patch,
   Post,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import { SeriesService } from './series.service';
@@ -17,6 +18,7 @@ import { User } from 'src/user/entities/user.entity';
 import { CreateSeriesDto } from './dtos/create-series-dto';
 import { AuthGuard } from '@nestjs/passport';
 import { UpdateSeriesDto } from './dtos/update-series-dto';
+import { FindAllSeriesDto } from './dtos/find-all-series.dto';
 
 @ApiTags('6.시리즈')
 @Controller('series')
@@ -25,14 +27,41 @@ export class SeriesController {
 
   /**
    * 시리즈 전체조회
+   * @param findAllSeriesDto
    * @returns
    */
   @Get()
-  async findAll() {
-    const data = await this.seriesService.findAll();
+  async findAll(@Query() findAllSeriesDto: FindAllSeriesDto) {
+    const data = await this.seriesService.findAll(findAllSeriesDto);
     return {
       status: HttpStatus.OK,
       message: '시리즈를 조회하였습니다.',
+      data,
+    };
+  }
+
+  /**
+   * 내 시리즈전체조회
+   * @param user
+   * @param findAllSeriesDto
+   * @returns
+   */
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard('jwt'))
+  @Get('my')
+  async findAllMySeries(
+    @UserInfo() user: User,
+    @Query() findAllSeriesDto: FindAllSeriesDto
+  ) {
+    const userId = user.id;
+    const data = await this.seriesService.findAllMySeries(
+      userId,
+      findAllSeriesDto
+    );
+
+    return {
+      status: HttpStatus.OK,
+      message: '내 시리즈 들을 조회하였습니다',
       data,
     };
   }
@@ -61,17 +90,36 @@ export class SeriesController {
   }
 
   /**
-   * 시리즈 상세조회
+   * 로그인안한 유저의 상세보기
    * @param id
    * @returns
    */
-  @Get(':id')
+  @Get('unlogin/:id')
   async findOne(@Param('id', ParseIntPipe) id: number) {
     const data = await this.seriesService.findOne(id);
 
     return {
       status: HttpStatus.OK,
       message: '시리즈 불러오기를 성공했습니다',
+      data,
+    };
+  }
+
+  /**
+   * 내 시리즈 상세조회
+   * @param user
+   * @param id
+   * @returns
+   */
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard('jwt'))
+  @Get('/:id')
+  async readOne(@UserInfo() user: User, @Param('id', ParseIntPipe) id: number) {
+    const userId = user.id;
+    const data = await this.seriesService.readOne(userId, id);
+    return {
+      status: HttpStatus.OK,
+      message: '시리즈 상세조회에 성공하였습니다.',
       data,
     };
   }
@@ -117,25 +165,6 @@ export class SeriesController {
     return {
       status: HttpStatus.OK,
       message: '시리즈를 삭제하였습니다',
-      data,
-    };
-  }
-
-  /**
-   * 내시리즈 조회
-   * @param user
-   * @returns
-   */
-  @ApiBearerAuth()
-  @UseGuards(AuthGuard('jwt'))
-  @Get('my')
-  async findAllMySeries(@UserInfo() user: User) {
-    const userId = user.id;
-    const data = await this.seriesService.findAllMySeries(userId);
-
-    return {
-      status: HttpStatus.OK,
-      message: '내 시리즈 들을 조회하였습니다',
       data,
     };
   }
