@@ -6,7 +6,6 @@ export class UpdatePostDto extends PickType(CreatePostDto, [
   'content',
   'preview',
   'price',
-  'imageUrl',
   'channelId',
   'categoryId',
   'visibility',
