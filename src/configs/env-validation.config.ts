@@ -11,6 +11,7 @@ export const configModuleValidationSchema = Joi.object({
   ACCESS_TOKEN_EXPIRES: Joi.string().required(),
   REFRESH_TOKEN_SECRET: Joi.string().required(),
   REFRESH_TOKEN_EXPIRES: Joi.string().required(),
+  HASH_ROUND: Joi.number().required(),
   AWS_ACCESS_KEY_ID: Joi.string().required(),
   AWS_SECRET_KEY: Joi.string().required(),
   AWS_REGION: Joi.string().required(),

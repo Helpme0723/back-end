@@ -6,9 +6,11 @@ import { PointController } from './point.controller';
 import { PointService } from './point.service';
 import { Post } from 'src/post/entities/post.entity';
 import { PurchaseList } from 'src/purchase/entities/purchase-list.entity';
+import { PointMenu } from './entities/point-menu-entity';
+import { PointOrder } from './entities/point-order.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([PurchaseList, Post, User, PointHistory])],
+  imports: [TypeOrmModule.forFeature([PurchaseList, Post, User, PointHistory, PointMenu, PointOrder])],
   controllers: [PointController],
   providers: [PointService],
 })

@@ -11,12 +11,14 @@ import bcrypt from 'bcrypt';
 import { UpdateUserDto } from './dtos/update-user.dto';
 import { AwsService } from 'src/aws/aws.service';
 import { UpdateUserPasswordDto } from './dtos/update-user-password.dto';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class UserService {
   constructor(
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
+    private readonly configService: ConfigService,
     private readonly awsService: AwsService
   ) {}
 
@@ -114,7 +116,7 @@ export class UserService {
       throw new UnauthorizedException('같은 비밀번호는 사용할 수 없습니다.');
     }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const hashedPassword = await bcrypt.hash(password, this.configService.get<number>('HASH_ROUND'));
 
     await this.userRepository.update(
       { id: userId },

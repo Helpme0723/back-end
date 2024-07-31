@@ -49,8 +49,8 @@ export class PostController {
    * @returns
    */
   @Get()
-  async findAll(@Query() findAllPostDto: FindAllPostDto) {
-    const data = await this.postService.findAll(findAllPostDto.channelId);
+  async findAll(@Query() { channelId, page, limit }: FindAllPostDto) {
+    const data = await this.postService.findAll(channelId, page, limit);
     return {
       status: HttpStatus.OK,
       message: '포스트 전체조회를 성공하였습니다.',
@@ -66,9 +66,9 @@ export class PostController {
   @ApiBearerAuth()
   @UseGuards(AuthGuard('jwt'))
   @Get('me')
-  async findMy(@UserInfo() user: User) {
+  async findMy(@UserInfo() user: User, @Query() { channelId, page, limit }: FindAllPostDto) {
     const userId = user.id;
-    const data = await this.postService.findMy(userId);
+    const data = await this.postService.findMy(userId, channelId, page, limit);
 
     return {
       status: HttpStatus.OK,
