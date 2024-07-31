@@ -20,6 +20,7 @@ import { PointHistory } from 'src/point/entities/point-history.entity';
 import { PurchaseList } from 'src/purchase/entities/purchase-list.entity';
 import { UserRole } from '../types/user-role.type';
 import { IsEmail, IsNotEmpty, IsString } from 'class-validator';
+import { PointOrder } from 'src/point/entities/point-order.entity';
 
 @Entity('users')
 export class User {
@@ -100,6 +101,9 @@ export class User {
 
   @OneToMany(() => PointHistory, (pointHistory) => pointHistory.user, { cascade: true })
   pointHistories: PointHistory[];
+
+  @OneToMany(() => PointOrder, (pointOrder) => pointOrder.user, { cascade: true })
+  pointOrder: PointOrder[];
 
   @OneToMany(() => PurchaseList, (purchaseList) => purchaseList.user, { cascade: true })
   purchaseLists: PurchaseList[];

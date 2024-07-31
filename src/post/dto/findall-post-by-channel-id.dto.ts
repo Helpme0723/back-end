@@ -6,4 +6,14 @@ export class FindAllPostDto {
   @IsNumber()
   @Type(() => Number)
   channelId?: number;
+
+  @IsNumber()
+  @IsOptional()
+  @Type(() => Number)
+  page?: number = 1;
+
+  @IsNumber()
+  @IsOptional()
+  @Type(() => Number)
+  limit?: number = 1;
 }

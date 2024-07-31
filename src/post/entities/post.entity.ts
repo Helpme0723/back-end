@@ -19,7 +19,7 @@ import { Comment } from 'src/comment/entities/comment.entity';
 import { Channel } from 'src/channel/entities/channel.entity';
 import { Series } from 'src/series/entities/series.entity';
 import { VisibilityType } from '../types/visibility.type';
-import { IsEnum, IsNumber, IsOptional, IsString } from 'class-validator';
+import { IsEnum, IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
 import { DailyInsight } from 'src/insight/entities/daily-insight.entity';
 import { MonthlyInsight } from 'src/insight/entities/monthly-insight.entity';
 
@@ -32,6 +32,7 @@ export class Post {
   @Column({ unsigned: true })
   userId: number;
 
+  @IsNotEmpty({ message: '채널아이디를 입력해주세요' })
   @IsNumber()
   @Column({ unsigned: true })
   channelId: number;
@@ -41,6 +42,7 @@ export class Post {
   @Column({ nullable: true, unsigned: true })
   seriesId?: number;
 
+  @IsNotEmpty({ message: '카테고리 아이디를 입력해주세요' })
   @IsNumber()
   @Column({ unsigned: true })
   categoryId: number;
@@ -49,6 +51,7 @@ export class Post {
    * 포스트이름
    * @example "포스트1번입니다"
    */
+  @IsNotEmpty({ message: '제목을 입력해주세요' })
   @IsString()
   @Column()
   title: string;
@@ -57,6 +60,7 @@ export class Post {
    * 프리뷰이름
    * @example "프리뷰1번입니다"
    */
+  @IsOptional()
   @IsString()
   @Column({ type: 'text' })
   preview: string;
@@ -65,6 +69,7 @@ export class Post {
    * 내용
    * @example "내용1번입니다"
    */
+  @IsNotEmpty({ message: '컨텐츠를 입력해주세요' })
   @IsString()
   @Column({ type: 'text' })
   content: string;
@@ -73,6 +78,7 @@ export class Post {
    * 가격
    * @example 30000
    */
+  @IsNotEmpty({ message: '가격을 입력해주세요' })
   @IsNumber()
   @Column({ default: 0 })
   price: number;
@@ -81,9 +87,10 @@ export class Post {
    * 공개여부 설정
    * @example "PUBLIC"
    */
+  @IsOptional()
   @IsEnum(Object.values(VisibilityType))
   @Column({ type: 'enum', enum: VisibilityType, default: VisibilityType.PUBLIC })
-  visibility: VisibilityType;
+  visibility?: VisibilityType;
 
   @IsNumber()
   @Column({ default: 0 })
@@ -99,18 +106,13 @@ export class Post {
   @Column({ default: 0 })
   salesCount: number;
 
-  @IsString()
-  @IsOptional()
-  @Column({ default: '기본이미지.jpg' })
-  imageUrl?: string;
-
   @CreateDateColumn()
   createdAt: Date;
 
   @UpdateDateColumn()
   updatedAt: Date;
 
-  @DeleteDateColumn({ select: false })
+  @DeleteDateColumn()
   deletedAt: Date;
 
   @ManyToOne(() => User, (user) => user.posts)
