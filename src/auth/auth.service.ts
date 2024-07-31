@@ -211,7 +211,7 @@ export class AuthService {
 
     // 리프레쉬 토큰 삭제
     await this.refreshTokenRepository.delete({ userId });
-
+    await this.cacheManager.del(`userId:${userId}`);
     return true;
   }
 
