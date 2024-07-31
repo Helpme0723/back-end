@@ -2,9 +2,15 @@
 <html lang="en">
   <head>
     <!-- jQuery -->
-    <script type="text/javascript" src="https://code.jquery.com/jquery-1.12.4.min.js"></script>
+    <script
+      type="text/javascript"
+      src="https://code.jquery.com/jquery-1.12.4.min.js"
+    ></script>
     <!-- iamport.payment.js -->
-    <script type="text/javascript" src="https://cdn.iamport.kr/js/iamport.payment-1.2.0.js"></script>
+    <script
+      type="text/javascript"
+      src="https://cdn.iamport.kr/js/iamport.payment-1.2.0.js"
+    ></script>
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <script>
       var IMP = window.IMP;
@@ -15,17 +21,14 @@
       async function requestPay() {
         IMP.request_pay(
           {
-            pg: 'kakaopay',
+            pg: 'uplus',
             //pg: 'kakaopay.store-d4803772-89ec-4186-8a5d-39c2c94edc15',
             pay_method: 'card',
-            merchant_uid: '57008833-312404',
+            merchant_uid: '57008833-312794',
             name: '당근 10kg',
             amount: 20000,
             buyer_email: 'Iamport@chai.finance',
             buyer_name: '포트원 기술지원팀',
-            buyer_tel: '010-1234-5678',
-            buyer_addr: '서울특별시 강남구 삼성동',
-            buyer_postcode: '123-456',
           },
           function (rsp) {
             console.log(rsp);

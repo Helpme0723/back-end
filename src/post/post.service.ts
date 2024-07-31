@@ -17,6 +17,7 @@ import { Series } from 'src/series/entities/series.entity';
 import { PostLike } from './entities/post-like.entity';
 import { PurchaseList } from 'src/purchase/entities/purchase-list.entity';
 import { paginate } from 'nestjs-typeorm-paginate';
+import { FindAllPostDto } from './dto/findall-post-by-channel-id.dto';
 
 @Injectable()
 export class PostService {
@@ -58,18 +59,28 @@ export class PostService {
     return post;
   }
 
-  async findAll(channelId?: number, page?: number, limit?: number) {
-    // const posts = await this.postRepository.find({
-    //   where: { visibility: VisibilityType.PUBLIC, ...(channelId && { channelId }), deletedAt: null },
-    //   order: { createdAt: 'DESC' },
-    // });
-    // if (posts.length === 0) {
-    //   throw new NotFoundException('포스트를 찾을수 없습니다.');
-    // }
+  async findAll(findAllPostDto: FindAllPostDto) {
+    const { channelId, page, limit, sort } = findAllPostDto;
+    const channel = await this.channelRepository.findOne({
+      where: { id: channelId },
+    });
+
+    if (channelId && !channel) {
+      throw new NotFoundException('존재하지 않은 채널입니다.');
+    }
     const { items, meta } = await paginate<Post>(
       this.postRepository,
       { page, limit },
-      { where: { visibility: VisibilityType.PUBLIC, ...(channelId && { channelId }), deletedAt: null } }
+      {
+        where: {
+          visibility: VisibilityType.PUBLIC,
+          ...(channelId && { channelId }),
+          deletedAt: null,
+        },
+        order: {
+          createdAt: sort,
+        },
+      }
     );
 
     return {
@@ -108,7 +119,11 @@ export class PostService {
     if (!post) {
       throw new NotFoundException('포스트를 찾을수 없습니다.');
     }
-    if (purchasedPost?.postId !== post.id && post.visibility === VisibilityType.PRIVATE && post.userId !== userId) {
+    if (
+      purchasedPost?.postId !== post.id &&
+      post.visibility === VisibilityType.PRIVATE &&
+      post.userId !== userId
+    ) {
       throw new NotFoundException('비공개 처리된 포스트입니다.');
     }
     if (purchasedPost?.postId !== post.id && post.price > 0) {
@@ -117,6 +132,11 @@ export class PostService {
     if (post.deletedAt && purchasedPost?.postId !== post.id) {
       throw new NotFoundException('삭제된 포스트입니다.');
     }
+
+    post.deletedAt = undefined;
+    post.comments = post.comments.splice(0, 5);
+    console.log(post.comments);
+
     return post;
   }
 
@@ -124,14 +144,8 @@ export class PostService {
     await this.postRepository.increment({ id }, 'viewCount', 1);
   }
 
-  async findMy(userId: number, channelId?: number, page?: number, limit?: number) {
-    // const post = await this.postRepository.find({
-    //   where: { userId },
-    // });
-
-    // if (!post) {
-    //   throw new NotFoundException('포스트가 존재하지 않습니다.');
-    // }
+  async findMy(userId: number, findAllPostDto: FindAllPostDto) {
+    const { channelId, page, limit, sort } = findAllPostDto;
 
     const channel = await this.channelRepository.findOne({
       where: { id: channelId, userId },
@@ -144,7 +158,7 @@ export class PostService {
     const { items, meta } = await paginate<Post>(
       this.postRepository,
       { page, limit },
-      { where: { userId, channelId } }
+      { where: { userId, channelId }, order: { createdAt: sort } }
     );
 
     return {
@@ -171,7 +185,7 @@ export class PostService {
   }
 
   async update(userId: number, id: number, updatePostDto: UpdatePostDto) {
-    const { channelId } = updatePostDto;
+    const { channelId, seriesId } = updatePostDto;
     const post = await this.postRepository.findOne({
       where: { id, userId },
     });
@@ -182,8 +196,17 @@ export class PostService {
       where: { userId, id: channelId },
     });
 
-    if (channelId !== channel?.id) {
+    if (channelId && channelId !== channel?.id) {
       throw new UnauthorizedException('채널접근 권한이없습니다');
+    }
+    const sereis = await this.seriesRepository.findOne({
+      where: { id: seriesId },
+    });
+    if (!sereis) {
+      throw new NotFoundException('존재하지 않은 시리즈입니다.');
+    }
+    if (seriesId && sereis.userId !== userId) {
+      throw new UnauthorizedException('접근권한이 없는 시리즈입니다.');
     }
     const newPost = {
       ...post,
@@ -223,6 +246,9 @@ export class PostService {
       where: { id },
     });
 
+    if (post.visibility === VisibilityType.PRIVATE) {
+      throw new BadRequestException('비공개처리된 포스트입니다.');
+    }
     if (!post) {
       throw new NotFoundException('포스트를 찾을수없습니다');
     }
@@ -269,6 +295,12 @@ export class PostService {
     });
     if (!likeData) {
       throw new NotFoundException('좋아요를 한 포스트가 아닙니다.');
+    }
+    const post = await this.postRepository.findOne({
+      where: { id },
+    });
+    if (post.visibility === VisibilityType.PRIVATE) {
+      throw new BadRequestException('비공개처리된 포스트입니다.');
     }
 
     const queryRunner = this.dataSource.createQueryRunner();

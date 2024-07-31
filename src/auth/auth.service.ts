@@ -46,7 +46,10 @@ export class AuthService {
     }
 
     // 비밀번호 암호화
-    const hashedPassword = bcrypt.hashSync(password, this.configService.get<number>('HASH_ROUND'));
+    const hashedPassword = bcrypt.hashSync(
+      password,
+      this.configService.get<number>('HASH_ROUND')
+    );
 
     // 저장
     const user = await this.userRepository.save({
@@ -111,7 +114,10 @@ export class AuthService {
       secret: this.configService.get<string>('REFRESH_TOKEN_SECRET'),
       expiresIn: this.configService.get<string>('REFRESH_TOKEN_EXPIRES'),
     });
-    const hashedRefreshToken = bcrypt.hashSync(refreshToken, this.configService.get<number>('HASH_ROUND'));
+    const hashedRefreshToken = bcrypt.hashSync(
+      refreshToken,
+      this.configService.get<number>('HASH_ROUND')
+    );
     // 리프레쉬토큰이 이미 있는지 조회
     const existedRefreshToken = await this.refreshTokenRepository.findOneBy({
       userId,
@@ -145,16 +151,11 @@ export class AuthService {
     // 해당 ID를 가진 유저가 있는지 조회
     const user = await this.userRepository.findOne({
       where: { id: userId },
-      // relations: {
-      //   channels: true,
-      //   series: true,
-      //   posts: true,
-      //   postLikes: true,
-      //   subscribes: true,
-      //   comments: true,
-      //   commentLikes: true,
-      //   purchaseLists: true,
-      // },
+      relations: {
+        channels: true,
+        series: true,
+        posts: true,
+      },
     });
     // 없을 경우 예외처리
     if (!user) {
@@ -168,9 +169,12 @@ export class AuthService {
     // 트랜잭션 로직 시작
     try {
       // 유저 삭제
-      await queryRunner.manager.softDelete(User, { id: userId });
+      await queryRunner.manager.softRemove(User, user);
       // 리프레쉬 토큰 삭제
       await queryRunner.manager.delete(RefreshToken, { userId });
+
+      // TODO: queryRunner.manager 안써도 되는게 맞는지 확인해주세요.
+      await this.cacheManager.del(`userId:${userId}`);
 
       // 트랜잭션 성공 시 커밋
       await queryRunner.commitTransaction();
@@ -251,7 +255,10 @@ export class AuthService {
     });
 
     // 리프레쉬 토큰 암호화
-    const hashedRefreshToken = bcrypt.hashSync(refreshToken, this.configService.get<number>('HASH_ROUND'));
+    const hashedRefreshToken = bcrypt.hashSync(
+      refreshToken,
+      this.configService.get<number>('HASH_ROUND')
+    );
 
     // 암호화된 리프레쉬 토큰 저장
     await this.refreshTokenRepository.save({

@@ -2,9 +2,15 @@
 <html lang="en">
   <head>
     <!-- jQuery -->
-    <script type="text/javascript" src="https://code.jquery.com/jquery-1.12.4.min.js"></script>
+    <script
+      type="text/javascript"
+      src="https://code.jquery.com/jquery-1.12.4.min.js"
+    ></script>
     <!-- iamport.payment.js -->
-    <script type="text/javascript" src="https://cdn.iamport.kr/js/iamport.payment-1.2.0.js"></script>
+    <script
+      type="text/javascript"
+      src="https://cdn.iamport.kr/js/iamport.payment-1.2.0.js"
+    ></script>
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <script>
       var IMP = window.IMP;
@@ -13,11 +19,14 @@
       const accessToken = localStorage.getItem('accessToken');
       const id = 3;
       async function requestPay() {
-        const response = await axios.get(`http://localhost:3000/api/point/details/${id}`, {
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-          },
-        });
+        const response = await axios.get(
+          `http://localhost:3000/api/point/details/${id}`,
+          {
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+            },
+          }
+        );
         const data = response.data;
         console.log(data);
 
@@ -36,6 +45,7 @@
             buyer_postcode: '1203-213',
           },
           function (rsp) {
+            console.log(rsp);
             if (rsp.success) {
               console.log(rsp);
               // 결제가 성공적으로 완료된 경우

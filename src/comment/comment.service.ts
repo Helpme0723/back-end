@@ -11,7 +11,9 @@ import { CreateCommentDto } from './dto/create-comment.dto';
 import { Post } from 'src/post/entities/post.entity';
 import { UpdateCommentDto } from './dto/update-comment.dto';
 import { CommentLike } from './entities/comment-like.entity';
-import { paginate } from 'nestjs-typeorm-paginate';
+import { paginate, Pagination } from 'nestjs-typeorm-paginate';
+import { VisibilityType } from 'src/post/types/visibility.type';
+import { FindAllCommentsDto } from './dto/pagination.dto';
 
 @Injectable()
 export class CommentService {
@@ -30,6 +32,10 @@ export class CommentService {
     });
     if (!post) {
       throw new NotFoundException('포스트를 찾을 수 없습니다.');
+    }
+
+    if (post.visibility === VisibilityType.PRIVATE) {
+      throw new BadRequestException('비공개 포스트에는 댓글을 작성 할 수 없습니다.');
     }
 
     const queryRunner = this.dataSource.createQueryRunner();
@@ -54,7 +60,11 @@ export class CommentService {
     }
   }
 
-  async findAllComments(postId: number, page: number, limit: number){
+  async findAllComments(
+    findAllCommentsDto: FindAllCommentsDto
+  ): Promise<Pagination<Comment>> {
+    const { postId, page, limit } = findAllCommentsDto;
+
     const post = await this.postRepository.findOne({ where: { id: postId } });
 
     if (!post) {
@@ -82,6 +92,15 @@ export class CommentService {
       throw new NotFoundException('댓글을 찾을 수 없습니다.');
     }
 
+    const post = await this.postRepository.findOne({ where: { id: comment.postId } });
+    if (!post) {
+      throw new NotFoundException('포스트를 찾을 수 없습니다.');
+    }
+
+    if (post.visibility === VisibilityType.PRIVATE) {
+      throw new BadRequestException('비공개 포스트에는 댓글을 수정 할 수 없습니다.');
+    }
+    
     const updatedComment = await this.commentRepository.save({
       id: comment.id,
       ...updateCommentDto,

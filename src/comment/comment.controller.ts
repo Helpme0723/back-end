@@ -18,6 +18,7 @@ import { UpdateCommentDto } from './dto/update-comment.dto';
 import { AuthGuard } from '@nestjs/passport';
 import { UserInfo } from 'src/auth/decorators/user-info.decorator';
 import { User } from 'src/user/entities/user.entity';
+import { FindAllCommentsDto } from './dto/pagination.dto';
 
 @ApiTags('5.댓글')
 @Controller('comments')
@@ -51,7 +52,7 @@ export class CommentController {
     };
   }
 
-    /**
+  /**
    * 댓글 전체 조회
    * @param postId 조회할 포스트 ID
    * @param page 조회할 page
@@ -59,12 +60,8 @@ export class CommentController {
    * @returns 생성된 댓글 정보와 상태 메시지
    * */
   @Get()
-  async findAllComments(
-    @Query('postId', ParseIntPipe) postId: number,
-    @Query('page', ParseIntPipe) page: number = 1,
-    @Query('limit', ParseIntPipe) limit: number = 10
-  ) {
-    const data = await this.commentService.findAllComments(postId, page, limit);
+  async findAllComments(@Query() findAllCommentsDto: FindAllCommentsDto) {
+    const data = await this.commentService.findAllComments(findAllCommentsDto);
     return {
       status: HttpStatus.OK,
       message: '댓글을 조회하였습니다.',

@@ -1,11 +1,4 @@
-import {
-  IsOptional,
-  IsString,
-  IsIn,
-  IsEnum,
-  IsNumber,
-  Min,
-} from 'class-validator';
+import { IsOptional, IsEnum, IsNumber } from 'class-validator';
 import { Type } from 'class-transformer';
 import { OrderType } from '../types/order.types';
 import { SortField } from '../types/field.types';

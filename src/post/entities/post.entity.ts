@@ -19,7 +19,13 @@ import { Comment } from 'src/comment/entities/comment.entity';
 import { Channel } from 'src/channel/entities/channel.entity';
 import { Series } from 'src/series/entities/series.entity';
 import { VisibilityType } from '../types/visibility.type';
-import { IsEnum, IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
+import {
+  IsEnum,
+  IsNotEmpty,
+  IsNumber,
+  IsOptional,
+  IsString,
+} from 'class-validator';
 import { DailyInsight } from 'src/insight/entities/daily-insight.entity';
 import { MonthlyInsight } from 'src/insight/entities/monthly-insight.entity';
 
@@ -89,7 +95,11 @@ export class Post {
    */
   @IsOptional()
   @IsEnum(Object.values(VisibilityType))
-  @Column({ type: 'enum', enum: VisibilityType, default: VisibilityType.PUBLIC })
+  @Column({
+    type: 'enum',
+    enum: VisibilityType,
+    default: VisibilityType.PUBLIC,
+  })
   visibility?: VisibilityType;
 
   @IsNumber()

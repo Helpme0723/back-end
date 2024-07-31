@@ -11,7 +11,7 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 import { CommentLike } from './comment-like.entity';
-import { IsNotEmpty, IsNumber, IsString } from 'class-validator';
+import { IsNotEmpty, IsNumber, IsString, MaxLength } from 'class-validator';
 
 @Entity('comments')
 export class Comment {
@@ -33,6 +33,7 @@ export class Comment {
    */
   @IsNotEmpty({ message: '컨텐츠를 입력해 주세요.' })
   @IsString()
+  @MaxLength(255, { message: '댓글은 최대 255글자까지 입력 가능합니다.' })
   @Column()
   content: string;
 
