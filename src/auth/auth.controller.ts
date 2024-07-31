@@ -5,7 +5,6 @@ import {
   Delete,
   HttpStatus,
   Post,
-  Request,
   UseGuards,
   Headers,
 } from '@nestjs/common';
@@ -17,6 +16,8 @@ import { LocalAuthGuard } from './guards/local-auth.guard';
 import { User } from 'src/user/entities/user.entity';
 import { UserInfo } from 'src/auth/decorators/user-info.decorator';
 import { AuthGuard } from '@nestjs/passport';
+import { EmailConflictDto } from './dtos/email-conflict.dto';
+import { VerifyCodeDto } from './dtos/verify-code.dto';
 
 @ApiTags('1.auth')
 @Controller('auth')
@@ -35,6 +36,39 @@ export class AuthController {
     return {
       status: HttpStatus.CREATED,
       message: '회원가입에 성공했습니다.',
+      data: data,
+    };
+  }
+
+  /**
+   * 이메일 중복 조회
+   * @param param0
+   * @returns
+   */
+  @Post('/check-email')
+  async checkEmail(@Body() { email }: EmailConflictDto) {
+    const data = await this.authService.checkEmail(email);
+
+    return {
+      status: HttpStatus.OK,
+      message: 'true',
+      data: data,
+    };
+  }
+
+  /**
+   * 이메일 인증
+   * @param email
+   * @param verification
+   * @returns
+   */
+  @Post('/verify-email')
+  async verifyEmail(@Body() { email, code }: VerifyCodeDto) {
+    const data = await this.authService.verifyEmail(email, code);
+
+    return {
+      status: HttpStatus.OK,
+      message: '인증되었습니다.',
       data: data,
     };
   }
@@ -102,6 +136,7 @@ export class AuthController {
    * @param user
    * @returns
    */
+  @ApiBearerAuth()
   @UseGuards(AuthGuard('jwt'))
   @Delete('/re-sign')
   async reSign(@UserInfo() user: User) {

@@ -1,5 +1,11 @@
 import { User } from 'src/user/entities/user.entity';
-import { Column, CreateDateColumn, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  CreateDateColumn,
+  Entity,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 import { PointHistoryType } from '../types/point-history.type';
 import { IsNumber, IsString } from 'class-validator';
 
@@ -13,7 +19,7 @@ export class PointHistory {
   userId: number;
 
   @IsNumber()
-  @Column({ unsigned: true })
+  @Column({ unsigned: true, nullable: true })
   postId: number;
 
   @IsNumber()

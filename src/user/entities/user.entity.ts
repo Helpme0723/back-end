@@ -19,11 +19,14 @@ import { Subscribe } from 'src/subscribe/entities/subscribe.entity';
 import { PointHistory } from 'src/point/entities/point-history.entity';
 import { PurchaseList } from 'src/purchase/entities/purchase-list.entity';
 import { UserRole } from '../types/user-role.type';
-import { IsEmail, IsNotEmpty, IsString } from 'class-validator';
+import { IsEmail, IsNotEmpty, IsNumber, IsString } from 'class-validator';
 import { PointOrder } from 'src/point/entities/point-order.entity';
+import { Type } from 'class-transformer';
 
 @Entity('users')
 export class User {
+  @Type(() => Number)
+  @IsNumber()
   @PrimaryGeneratedColumn({ unsigned: true })
   id: number;
 
@@ -104,10 +107,13 @@ export class User {
   })
   pointHistories: PointHistory[];
 
-
-  @OneToMany(() => PointOrder, (pointOrder) => pointOrder.user, { cascade: true })
+  @OneToMany(() => PointOrder, (pointOrder) => pointOrder.user, {
+    cascade: true,
+  })
   pointOrder: PointOrder[];
 
-  @OneToMany(() => PurchaseList, (purchaseList) => purchaseList.user, { cascade: true })
+  @OneToMany(() => PurchaseList, (purchaseList) => purchaseList.user, {
+    cascade: true,
+  })
   purchaseLists: PurchaseList[];
 }

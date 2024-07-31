@@ -3,6 +3,7 @@ import {
   Controller,
   Get,
   HttpStatus,
+  Param,
   Patch,
   UploadedFile,
   UseGuards,
@@ -69,7 +70,7 @@ export class UserController {
     description: '사용자 정보 조회 성공.',
   })
   @Get(':id')
-  async findUserInfoById(@Body() readUserInfoDto: ReadUserInfoDto) {
+  async findUserInfoById(@Param() readUserInfoDto: ReadUserInfoDto) {
     const data = await this.userService.findUserById(readUserInfoDto.id);
     return {
       status: HttpStatus.OK,

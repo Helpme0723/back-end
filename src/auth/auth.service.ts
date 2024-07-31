@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   ConflictException,
+  Inject,
   Injectable,
   InternalServerErrorException,
   NotFoundException,
@@ -15,6 +16,7 @@ import { SignInDto } from './dtos/sign-in.dto';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { RefreshToken } from './entities/refresh-token.entity';
+import { Cache, CACHE_MANAGER } from '@nestjs/cache-manager';
 
 @Injectable()
 export class AuthService {
@@ -25,7 +27,8 @@ export class AuthService {
     private readonly configService: ConfigService,
     private readonly dataSource: DataSource,
     @InjectRepository(RefreshToken)
-    private readonly refreshTokenRepository: Repository<RefreshToken>
+    private readonly refreshTokenRepository: Repository<RefreshToken>,
+    @Inject(CACHE_MANAGER) private readonly cacheManager: Cache
   ) {}
 
   /**
@@ -35,16 +38,6 @@ export class AuthService {
   async signUp(signUpDto: SignUpDto) {
     const { email, password, passwordConfirm, ...etc } = signUpDto;
 
-    // 이미 존재하는지 확인
-    const existedEmail = await this.userRepository.findOne({
-      where: { email },
-    });
-
-    // 이미 존재하는 이메일인 경우 예외 처리
-    if (existedEmail) {
-      throw new ConflictException('이미 존재하는 이메일입니다.');
-    }
-
     // 비밀번호와 비밀번호 확인 값이 다를 경우 예외 처리
     if (password !== passwordConfirm) {
       throw new BadRequestException(
@@ -53,7 +46,10 @@ export class AuthService {
     }
 
     // 비밀번호 암호화
-    const hashedPassword = bcrypt.hashSync(password, this.configService.get<number>('HASH_ROUND'));
+    const hashedPassword = bcrypt.hashSync(
+      password,
+      this.configService.get<number>('HASH_ROUND')
+    );
 
     // 저장
     const user = await this.userRepository.save({
@@ -64,6 +60,41 @@ export class AuthService {
     user.password = undefined;
     user.deletedAt = undefined;
     return user;
+  }
+
+  /**
+   * 이메일 중복 조회
+   * @param email
+   * @returns
+   */
+  async checkEmail(email: string) {
+    const existedEmail = await this.userRepository.findOne({
+      where: { email },
+    });
+
+    if (existedEmail) {
+      throw new ConflictException('이미 존재하는 이메일입니다.');
+    }
+
+    return true;
+  }
+
+  /**
+   * 회원가입 이메일 인증
+   * @param email
+   */
+  async verifyEmail(email: string, verification: number) {
+    // Redis Cloud에 담긴 인증번호와 입력한 인증번호 가져오기
+    const verificationInRedis = await this.cacheManager.get<number>(
+      `인증 번호:${email}`
+    );
+
+    // 같지 않을 경우 예외 처리
+    if (verification !== verificationInRedis) {
+      throw new BadRequestException('인증 번호가 틀렸습니다.');
+    }
+
+    return true;
   }
 
   /**
@@ -83,7 +114,10 @@ export class AuthService {
       secret: this.configService.get<string>('REFRESH_TOKEN_SECRET'),
       expiresIn: this.configService.get<string>('REFRESH_TOKEN_EXPIRES'),
     });
-    const hashedRefreshToken = bcrypt.hashSync(refreshToken, this.configService.get<number>('HASH_ROUND'));
+    const hashedRefreshToken = bcrypt.hashSync(
+      refreshToken,
+      this.configService.get<number>('HASH_ROUND')
+    );
     // 리프레쉬토큰이 이미 있는지 조회
     const existedRefreshToken = await this.refreshTokenRepository.findOneBy({
       userId,
@@ -93,13 +127,18 @@ export class AuthService {
     if (existedRefreshToken) {
       await this.refreshTokenRepository.delete({ userId });
     }
-
+    const ttl = 60 * 60 * 24 * 7;
     // 리프레쉬 토큰 저장
+    await this.cacheManager.set(`userId:${userId}`, hashedRefreshToken, {
+      ttl,
+    });
     await this.refreshTokenRepository.save({
       userId,
       token: hashedRefreshToken,
     });
-
+    // await this.refreshTokenRepository.upsert({ token: hashedRefreshToken }, ['userId']);
+    // const redisToken = await this.cacheManager.get(`userId:${userId}`);
+    // console.log(redisToken);
     return { accessToken, refreshToken };
   }
 
@@ -112,16 +151,11 @@ export class AuthService {
     // 해당 ID를 가진 유저가 있는지 조회
     const user = await this.userRepository.findOne({
       where: { id: userId },
-      // relations: {
-      //   channels: true,
-      //   series: true,
-      //   posts: true,
-      //   postLikes: true,
-      //   subscribes: true,
-      //   comments: true,
-      //   commentLikes: true,
-      //   purchaseLists: true,
-      // },
+      relations: {
+        channels: true,
+        series: true,
+        posts: true,
+      },
     });
     // 없을 경우 예외처리
     if (!user) {
@@ -135,9 +169,12 @@ export class AuthService {
     // 트랜잭션 로직 시작
     try {
       // 유저 삭제
-      await queryRunner.manager.softDelete(User, { id: userId });
+      await queryRunner.manager.softRemove(User, user);
       // 리프레쉬 토큰 삭제
       await queryRunner.manager.delete(RefreshToken, { userId });
+
+      // TODO: queryRunner.manager 안써도 되는게 맞는지 확인해주세요.
+      await this.cacheManager.del(`userId:${userId}`);
 
       // 트랜잭션 성공 시 커밋
       await queryRunner.commitTransaction();
@@ -178,7 +215,7 @@ export class AuthService {
 
     // 리프레쉬 토큰 삭제
     await this.refreshTokenRepository.delete({ userId });
-
+    await this.cacheManager.del(`userId:${userId}`);
     return true;
   }
 
@@ -218,7 +255,10 @@ export class AuthService {
     });
 
     // 리프레쉬 토큰 암호화
-    const hashedRefreshToken = bcrypt.hashSync(refreshToken, this.configService.get<number>('HASH_ROUND'));
+    const hashedRefreshToken = bcrypt.hashSync(
+      refreshToken,
+      this.configService.get<number>('HASH_ROUND')
+    );
 
     // 암호화된 리프레쉬 토큰 저장
     await this.refreshTokenRepository.save({
@@ -263,6 +303,7 @@ export class AuthService {
     return user.id;
   }
 
+  // 리프레쉬토큰에 있는 userId로 DB에 있고 유저가 있는지 검증
   async findRefreshTokenById(userId: number) {
     const refreshToken = await this.refreshTokenRepository.findOne({
       where: { userId },

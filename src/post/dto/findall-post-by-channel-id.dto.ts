@@ -16,7 +16,7 @@ export class FindAllPostDto {
   @IsNumber()
   @IsOptional()
   @Type(() => Number)
-  limit?: number = 1;
+  limit?: number = 10;
 
   @IsOptional()
   @IsEnum(OrderType, { message: '잘못된 필드입니다.' })
