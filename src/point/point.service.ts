@@ -5,6 +5,7 @@ import { PointHistory } from './entities/point-history.entity';
 import { User } from 'src/user/entities/user.entity';
 import { MakeChoiceDto } from './dtos/make-choice.dto';
 import { PointMenu } from './entities/point-menu-entity';
+import { PointHistoryType } from './types/point-history.type';
 
 @Injectable()
 export class PointService {
@@ -17,15 +18,22 @@ export class PointService {
     private readonly userRepository: Repository<User>
   ) {}
 
-  async findPointHistory(userId: number) {
+  async findPointHistory(userId: number, type?: PointHistoryType, sort: 'ASC' | 'DESC' = 'DESC') {
     const user = await this.userRepository.findOne({ where: { id: userId } });
     if (!user) {
       throw new NotFoundException('사용자를 찾을 수 없습니다.');
     }
 
-    const pointHistory = await this.pointHistoryRepository.find({ where: { userId } });
+    const queryBuilder = this.pointHistoryRepository.createQueryBuilder('pointHistory')
+      .where('pointHistory.userId = :userId', { userId });
 
-    return pointHistory;
+    if (type) {
+      queryBuilder.andWhere('pointHistory.type = :type', { type });
+    }
+
+    queryBuilder.orderBy('pointHistory.createdAt', sort);
+
+    return queryBuilder.getMany();
   }
 
   async createChoice(makeChoiceDto: MakeChoiceDto) {

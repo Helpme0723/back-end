@@ -99,8 +99,11 @@ export class User {
   @OneToMany(() => Subscribe, (subscribe) => subscribe.user)
   subscribes: Subscribe[];
 
-  @OneToMany(() => PointHistory, (pointHistory) => pointHistory.user, { cascade: true })
+  @OneToMany(() => PointHistory, (pointHistory) => pointHistory.user, {
+    cascade: true,
+  })
   pointHistories: PointHistory[];
+
 
   @OneToMany(() => PointOrder, (pointOrder) => pointOrder.user, { cascade: true })
   pointOrder: PointOrder[];

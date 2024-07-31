@@ -21,6 +21,9 @@ async function bootstrap() {
     })
   );
 
+  // CORS 설정 추가
+  app.enableCors();
+
   const config = new DocumentBuilder()
     .setTitle('TalentVerse')
     .setDescription('TalentVerse PROJECT')

@@ -87,7 +87,10 @@ export class InsightService {
       dailyInsightData.push(dailyInsight);
     }
 
-    await this.dailyInsightRepository.upsert(dailyInsightData, ['postId', 'date']);
+    await this.dailyInsightRepository.upsert(dailyInsightData, [
+      'postId',
+      'date',
+    ]);
   }
 
   // 월별 통계 계산 및 저장
@@ -152,19 +155,22 @@ export class InsightService {
       monthlyInsightData.push(MonthlyInsight);
     }
 
-    await this.monthlyInsightRepository.upsert(monthlyInsightData, ['postId', 'date']);
+    await this.monthlyInsightRepository.upsert(monthlyInsightData, [
+      'postId',
+      'date',
+    ]);
   }
 
-  // 한달 지난 데일리 통계 삭제
-  async deleteDailyInsight() {
-    const sevenDaysAgo = sub(new Date(), { days: 7 });
+  // // 한달 지난 데일리 통계 삭제
+  // async deleteDailyInsight() {
+  //   const sevenDaysAgo = sub(new Date(), { days: 30 });
 
-    const sevenDaysAgoData = format(sevenDaysAgo, 'yyyy-MM-dd');
+  //   const sevenDaysAgoData = format(sevenDaysAgo, 'yyyy-MM-dd');
 
-    await this.dailyInsightRepository.delete({
-      date: LessThan(sevenDaysAgoData),
-    });
-  }
+  //   await this.dailyInsightRepository.delete({
+  //     date: LessThan(sevenDaysAgoData),
+  //   });
+  // }
 
   // 매일 자정마다 +5분마다 일별 포스트 통합 총 조회수 등 통계 저장
   async calculateChannelDailyInsight() {
@@ -197,7 +203,10 @@ export class InsightService {
       channelDailyInsightData.push(channelDailyInsight);
     }
 
-    await this.channelDailyInsightRepository.upsert(channelDailyInsightData, ['channelId', 'date']);
+    await this.channelDailyInsightRepository.upsert(channelDailyInsightData, [
+      'channelId',
+      'date',
+    ]);
   }
 
   // 매월 1일 자정 +5분 마다 월별 포스트 통합 총 조회수 등 통계 계산 후 저장
@@ -219,18 +228,23 @@ export class InsightService {
     const channelMonthlyInsightData = [];
 
     for (const existingInsight of existingInsights) {
-      const channelMonthlyInsight = this.channelMonthlyInsightRepository.create({
-        channelId: existingInsight.channelId,
-        viewCount: Number(existingInsight.totalViews),
-        likeCount: Number(existingInsight.totalLikes),
-        commentCount: Number(existingInsight.totalComments),
-        salesCount: Number(existingInsight.totalSales),
-        date: monthly,
-      });
+      const channelMonthlyInsight = this.channelMonthlyInsightRepository.create(
+        {
+          channelId: existingInsight.channelId,
+          viewCount: Number(existingInsight.totalViews),
+          likeCount: Number(existingInsight.totalLikes),
+          commentCount: Number(existingInsight.totalComments),
+          salesCount: Number(existingInsight.totalSales),
+          date: monthly,
+        }
+      );
 
       channelMonthlyInsightData.push(channelMonthlyInsight);
     }
 
-    await this.channelMonthlyInsightRepository.upsert(channelMonthlyInsightData, ['channelId', 'date']);
+    await this.channelMonthlyInsightRepository.upsert(
+      channelMonthlyInsightData,
+      ['channelId', 'date']
+    );
   }
 }

@@ -1,4 +1,16 @@
-import { Controller, Post, Body, HttpStatus, Patch, Param, Delete, UseGuards, ParseIntPipe } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  HttpStatus,
+  Patch,
+  Param,
+  Delete,
+  UseGuards,
+  ParseIntPipe,
+  Get,
+  Query,
+} from '@nestjs/common';
 import { CommentService } from './comment.service';
 import { CreateCommentDto } from './dto/create-comment.dto';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
@@ -20,7 +32,10 @@ export class CommentController {
   @ApiBearerAuth()
   @UseGuards(AuthGuard('jwt'))
   @Post()
-  async create(@UserInfo() user: User, @Body() createCommentDto: CreateCommentDto) {
+  async create(
+    @UserInfo() user: User,
+    @Body() createCommentDto: CreateCommentDto
+  ) {
     const userId = user.id; // 인증된 사용자의 ID를 가져옴
 
     // userId를 createCommentDto에 추가
@@ -32,6 +47,27 @@ export class CommentController {
     return {
       status: HttpStatus.OK,
       message: '댓글을 생성하였습니다.',
+      data,
+    };
+  }
+
+    /**
+   * 댓글 전체 조회
+   * @param postId 조회할 포스트 ID
+   * @param page 조회할 page
+   * @param limit 조회할 페이지당 갯수 제한
+   * @returns 생성된 댓글 정보와 상태 메시지
+   * */
+  @Get()
+  async findAllComments(
+    @Query('postId', ParseIntPipe) postId: number,
+    @Query('page', ParseIntPipe) page: number = 1,
+    @Query('limit', ParseIntPipe) limit: number = 10
+  ) {
+    const data = await this.commentService.findAllComments(postId, page, limit);
+    return {
+      status: HttpStatus.OK,
+      message: '댓글을 조회하였습니다.',
       data,
     };
   }
@@ -50,7 +86,11 @@ export class CommentController {
     @Body() updateCommentDto: UpdateCommentDto
   ) {
     const userId = user.id; // 인증된 사용자의 ID를 가져옴
-    const data = await this.commentService.updateComment(userId, commentId, updateCommentDto);
+    const data = await this.commentService.updateComment(
+      userId,
+      commentId,
+      updateCommentDto
+    );
     return {
       status: HttpStatus.OK,
       message: '댓글을 수정하였습니다.',
@@ -66,7 +106,10 @@ export class CommentController {
   @ApiBearerAuth()
   @UseGuards(AuthGuard('jwt'))
   @Delete(':commentId')
-  async delete(@UserInfo() user: User, @Param('commentId', ParseIntPipe) commentId: number) {
+  async delete(
+    @UserInfo() user: User,
+    @Param('commentId', ParseIntPipe) commentId: number
+  ) {
     const userId = user.id; // 인증된 사용자의 ID를 가져옴
     await this.commentService.deleteComment(userId, commentId);
     return {
@@ -83,7 +126,10 @@ export class CommentController {
   @ApiBearerAuth()
   @UseGuards(AuthGuard('jwt'))
   @Post(':commentId/likes')
-  async createLike(@UserInfo() user: User, @Param('commentId', ParseIntPipe) commentId: number) {
+  async createLike(
+    @UserInfo() user: User,
+    @Param('commentId', ParseIntPipe) commentId: number
+  ) {
     const userId = user.id; // 인증된 사용자의 ID를 가져옴
     const data = await this.commentService.createCommentLike(userId, commentId);
     return {
@@ -101,7 +147,10 @@ export class CommentController {
   @ApiBearerAuth()
   @UseGuards(AuthGuard('jwt'))
   @Delete(':commentId/likes')
-  async deleteLike(@UserInfo() user: User, @Param('commentId', ParseIntPipe) commentId: number) {
+  async deleteLike(
+    @UserInfo() user: User,
+    @Param('commentId', ParseIntPipe) commentId: number
+  ) {
     const userId = user.id; // 인증된 사용자의 ID를 가져옴
     await this.commentService.deleteCommentLike(userId, commentId);
     return {

@@ -1,4 +1,9 @@
-import { BadRequestException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { User } from './entities/user.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -6,12 +11,14 @@ import bcrypt from 'bcrypt';
 import { UpdateUserDto } from './dtos/update-user.dto';
 import { AwsService } from 'src/aws/aws.service';
 import { UpdateUserPasswordDto } from './dtos/update-user-password.dto';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class UserService {
   constructor(
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
+    private readonly configService: ConfigService,
     private readonly awsService: AwsService
   ) {}
 
@@ -35,7 +42,10 @@ export class UserService {
    * @returns 패스워드 정보
    */
   async findUserPasswordById(id: number) {
-    const userPasswordInfo = await this.userRepository.findOne({ where: { id: id }, select: ['password'] });
+    const userPasswordInfo = await this.userRepository.findOne({
+      where: { id: id },
+      select: ['password'],
+    });
 
     if (!userPasswordInfo) {
       throw new NotFoundException('회원을 찾을수 없습니다.');
@@ -50,7 +60,11 @@ export class UserService {
    * @param file 파일 업로드시
    * @returns
    */
-  async updateUserInfo(user: User, updateUserDto: UpdateUserDto, file?: Express.Multer.File) {
+  async updateUserInfo(
+    user: User,
+    updateUserDto: UpdateUserDto,
+    file?: Express.Multer.File
+  ) {
     // 파일이 제공된 경우
     if (file) {
       const uploadResult = await this.awsService.saveImage(file);
@@ -79,7 +93,10 @@ export class UserService {
    * @param user 유저정보
    * @param updateUserPasswordDto 비밀번호, 비밀번호확인 값
    */
-  async updateUserPassword(userId: number, updateUserPasswordDto: UpdateUserPasswordDto) {
+  async updateUserPassword(
+    userId: number,
+    updateUserPasswordDto: UpdateUserPasswordDto
+  ) {
     const { password, passwordConfirm } = updateUserPasswordDto;
 
     // 비밀번호와 비밀번호 확인 값이 다를 경우 예외 처리
@@ -90,14 +107,20 @@ export class UserService {
     //패스워드 조회
     const currentUserPassword = await this.findUserPasswordById(userId);
 
-    const isPasswordValid = await bcrypt.compare(password, currentUserPassword.password);
+    const isPasswordValid = await bcrypt.compare(
+      password,
+      currentUserPassword.password
+    );
 
     if (isPasswordValid) {
       throw new UnauthorizedException('같은 비밀번호는 사용할 수 없습니다.');
     }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const hashedPassword = await bcrypt.hash(password, this.configService.get<number>('HASH_ROUND'));
 
-    await this.userRepository.update({ id: userId }, { password: hashedPassword });
+    await this.userRepository.update(
+      { id: userId },
+      { password: hashedPassword }
+    );
   }
 }

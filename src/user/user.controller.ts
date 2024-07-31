@@ -1,6 +1,22 @@
-import { Body, Controller, Get, HttpStatus, Patch, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  HttpStatus,
+  Patch,
+  UploadedFile,
+  UseGuards,
+  UseInterceptors,
+} from '@nestjs/common';
 import { UserService } from './user.service';
-import { ApiBearerAuth, ApiBody, ApiConsumes, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiBody,
+  ApiConsumes,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import { User } from './entities/user.entity';
 import { UpdateUserDto } from './dtos/update-user.dto';
 import { UserInfo } from 'src/auth/decorators/user-info.decorator';
@@ -20,7 +36,10 @@ export class UserController {
    * @returns 조회된 정보
    */
   @ApiBearerAuth()
-  @ApiOperation({ summary: '내 정보 조회', description: '사용자의 정보를 조회합니다.' })
+  @ApiOperation({
+    summary: '내 정보 조회',
+    description: '사용자의 정보를 조회합니다.',
+  })
   @ApiResponse({
     status: HttpStatus.OK,
     description: '내 정보 조회 성공',
@@ -41,7 +60,10 @@ export class UserController {
    * @param id userId
    * @returns 조회된 정보
    */
-  @ApiOperation({ summary: '사용자 정보 조회', description: '특정 사용자의 정보를 조회합니다.' })
+  @ApiOperation({
+    summary: '사용자 정보 조회',
+    description: '특정 사용자의 정보를 조회합니다.',
+  })
   @ApiResponse({
     status: HttpStatus.OK,
     description: '사용자 정보 조회 성공.',
@@ -64,7 +86,10 @@ export class UserController {
    * @returns 결과
    */
   @ApiBearerAuth()
-  @ApiOperation({ summary: '내 정보 변경', description: '사용자의 정보를 변경합니다.' })
+  @ApiOperation({
+    summary: '내 정보 변경',
+    description: '사용자의 정보를 변경합니다.',
+  })
   @UseGuards(AuthGuard('jwt'))
   @ApiConsumes('multipart/form-data')
   @UseInterceptors(FileInterceptor('file'))
@@ -111,10 +136,16 @@ export class UserController {
   }
 
   @ApiBearerAuth()
-  @ApiOperation({ summary: '비밀번호 변경', description: '사용자의 비밀번호를 변경 합니다.' })
+  @ApiOperation({
+    summary: '비밀번호 변경',
+    description: '사용자의 비밀번호를 변경 합니다.',
+  })
   @UseGuards(AuthGuard('jwt'))
   @Patch('me/password')
-  async updateUserPassword(@UserInfo() user: User, @Body() updateUserPasswordDto: UpdateUserPasswordDto) {
+  async updateUserPassword(
+    @UserInfo() user: User,
+    @Body() updateUserPasswordDto: UpdateUserPasswordDto
+  ) {
     await this.userService.updateUserPassword(user.id, updateUserPasswordDto);
     return {
       status: HttpStatus.OK,
