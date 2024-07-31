@@ -18,6 +18,7 @@ import { UtilsModule } from './utils/utils.module';
 import { LibraryModule } from './library/library.module';
 import { ScheduleModule } from '@nestjs/schedule';
 import { InsightModule } from './insight/insight.module';
+import { MailModule } from './mail/mail.module';
 
 @Module({
   imports: [
@@ -40,6 +41,7 @@ import { InsightModule } from './insight/insight.module';
     UtilsModule,
     LibraryModule,
     InsightModule,
+    MailModule,
   ],
   controllers: [AppController],
   providers: [],
