@@ -12,6 +12,7 @@ import { User } from 'src/user/entities/user.entity';
 import { CreatePurchaseDto } from './dto/buy-post.dto';
 import { PointHistory } from 'src/point/entities/point-history.entity';
 import { PointHistoryType } from 'src/point/types/point-history.type';
+import { VisibilityType } from 'src/post/types/visibility.type';
 
 @Injectable()
 export class PurchaseService {
@@ -43,6 +44,14 @@ export class PurchaseService {
       const user = await this.userRepository.findOne({ where: { id: userId } });
       if (!user) {
         throw new NotFoundException('사용자를 찾을 수 없습니다.');
+      }
+      
+      if (post.visibility === VisibilityType.PRIVATE) {
+        throw new BadRequestException('비공개 포스트는 구매할 수 없습니다.');
+      }
+
+      if (post.price === 0) {
+        throw new BadRequestException('가격이 0원인 포스트는 구매할 수 없습니다.');
       }
 
       // 본인의 포스트인지 확인
