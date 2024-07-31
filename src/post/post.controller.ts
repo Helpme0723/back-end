@@ -42,15 +42,15 @@ export class PostController {
       data,
     };
   }
-
   /**
-   * 포스트전체조회
+   * 전체포스트 조회
    * @param findAllPostDto
    * @returns
    */
   @Get()
-  async findAll(@Query() { channelId, page, limit }: FindAllPostDto) {
-    const data = await this.postService.findAll(channelId, page, limit);
+  async findAll(@Query() findAllPostDto: FindAllPostDto) {
+    console.log('@@@@@');
+    const data = await this.postService.findAll(findAllPostDto);
     return {
       status: HttpStatus.OK,
       message: '포스트 전체조회를 성공하였습니다.',
@@ -59,16 +59,20 @@ export class PostController {
   }
 
   /**
-   * 내 포스트 조회
+   * 내 포스트조회
    * @param user
+   * @param findAllPostDto
    * @returns
    */
   @ApiBearerAuth()
   @UseGuards(AuthGuard('jwt'))
   @Get('me')
-  async findMy(@UserInfo() user: User, @Query() { channelId, page, limit }: FindAllPostDto) {
+  async findMy(
+    @UserInfo() user: User,
+    @Query() findAllPostDto: FindAllPostDto
+  ) {
     const userId = user.id;
-    const data = await this.postService.findMy(userId, channelId, page, limit);
+    const data = await this.postService.findMy(userId, findAllPostDto);
 
     return {
       status: HttpStatus.OK,
