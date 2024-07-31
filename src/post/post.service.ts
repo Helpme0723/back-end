@@ -140,6 +140,23 @@ export class PostService {
     return post;
   }
 
+  async readOne(id: number) {
+    const post = await this.postRepository.findOne({
+      relations: { comments: true },
+      where: { id, deletedAt: null, visibility: VisibilityType.PUBLIC },
+    });
+    if (!post) {
+      throw new NotFoundException('포스트를 찾을수 없습니다.');
+    }
+    if (post.price > 0) {
+      post.content = '로그인후 확인하실수 있습니다..';
+    }
+    console.log(post);
+    post.comments = post.comments.splice(0, 5);
+
+    return post;
+  }
+
   async incrementViewCount(id: number) {
     await this.postRepository.increment({ id }, 'viewCount', 1);
   }

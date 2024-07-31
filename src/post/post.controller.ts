@@ -100,6 +100,22 @@ export class PostController {
   }
 
   /**
+   * 로그인안된 유저의 상세보기
+   * @param id
+   * @returns
+   */
+  @Get('unlogin/:id')
+  async readOne(@Param('id', ParseIntPipe) id: number) {
+    const data = await this.postService.readOne(id);
+    await this.postService.incrementViewCount(id);
+    return {
+      status: HttpStatus.OK,
+      message: '포스트 상세조회에 성공하였습니다.',
+      data,
+    };
+  }
+
+  /**
    * 포스트 수정
    * @param id
    * @param updatePostDto
