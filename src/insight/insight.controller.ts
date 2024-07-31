@@ -22,13 +22,13 @@ export class InsightController {
     await this.insightService.calculateMonthlyInsight();
   }
 
-  // 한달 이상 지난 데일리 통계 삭제
-  @Cron(CronExpression.EVERY_1ST_DAY_OF_MONTH_AT_MIDNIGHT)
-  async deleteDailyHandleCron() {
-    console.log('한달 지난 데일리 통계 삭제');
+  // // 한달 이상 지난 데일리 통계 삭제
+  // @Cron(CronExpression.EVERY_1ST_DAY_OF_MONTH_AT_MIDNIGHT)
+  // async deleteDailyHandleCron() {
+  //   console.log('한달 지난 데일리 통계 삭제');
 
-    await this.insightService.deleteDailyInsight();
-  }
+  //   await this.insightService.deleteDailyInsight();
+  // }
 
   // 매일 자정 5분 후마다 일별 포스트 통합 총 조회수 등 통계 저장
   @Cron('0 5 * * *')
@@ -58,11 +58,11 @@ export class InsightController {
     await this.insightService.calculateMonthlyInsight();
   }
 
-  // 서비스 로직 테스트용
-  @Delete('daily')
-  async delete() {
-    await this.insightService.deleteDailyInsight();
-  }
+  // // 서비스 로직 테스트용
+  // @Delete('daily')
+  // async delete() {
+  //   await this.insightService.deleteDailyInsight();
+  // }
 
   @Get('channel/daily')
   async channelDaily() {
