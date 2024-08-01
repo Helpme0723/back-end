@@ -1,6 +1,5 @@
 import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
-import { AppService } from './app.service';
 import { ConfigModule } from '@nestjs/config';
 import { configModuleValidationSchema } from './configs/env-validation.config';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -14,6 +13,12 @@ import { CommentModule } from './comment/comment.module';
 import { SubscribeModule } from './subscribe/subscribe.module';
 import { PointModule } from './point/point.module';
 import { PurchaseModule } from './purchase/purchase.module';
+import { AwsModule } from './aws/aws.module';
+import { UtilsModule } from './utils/utils.module';
+import { LibraryModule } from './library/library.module';
+import { ScheduleModule } from '@nestjs/schedule';
+import { InsightModule } from './insight/insight.module';
+import { MailModule } from './mail/mail.module';
 
 @Module({
   imports: [
@@ -22,6 +27,7 @@ import { PurchaseModule } from './purchase/purchase.module';
       validationSchema: configModuleValidationSchema,
     }),
     TypeOrmModule.forRootAsync(typeOrmModuleOptions),
+    ScheduleModule.forRoot(),
     UserModule,
     PostModule,
     AuthModule,
@@ -31,8 +37,13 @@ import { PurchaseModule } from './purchase/purchase.module';
     SubscribeModule,
     PointModule,
     PurchaseModule,
+    AwsModule,
+    UtilsModule,
+    LibraryModule,
+    InsightModule,
+    MailModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [],
 })
 export class AppModule {}

@@ -19,25 +19,48 @@ import { Subscribe } from 'src/subscribe/entities/subscribe.entity';
 import { PointHistory } from 'src/point/entities/point-history.entity';
 import { PurchaseList } from 'src/purchase/entities/purchase-list.entity';
 import { UserRole } from '../types/user-role.type';
+import { IsEmail, IsNotEmpty, IsNumber, IsString } from 'class-validator';
+import { PointOrder } from 'src/point/entities/point-order.entity';
+import { Type } from 'class-transformer';
 
 @Entity('users')
 export class User {
+  @Type(() => Number)
+  @IsNumber()
   @PrimaryGeneratedColumn({ unsigned: true })
   id: number;
 
+  /**
+   * 이메일
+   * @example "email@domain.com"
+   */
+  @IsNotEmpty({ message: '이메일을 입력해주세요.' })
+  @IsEmail({}, { message: '이메일 형식이 올바르지 않습니다.' })
   @Column({ unique: true })
   email: string;
 
+  /**
+   * 비밀번호
+   * @example "qwer1234"
+   */
+  @IsString()
+  @IsNotEmpty({ message: '비밀번호를 입력해주세요.' })
   @Column({ select: false })
   password: string;
 
+  /**
+   * 닉네임
+   * @example "닉네임"
+   */
+  @IsString()
+  @IsNotEmpty({ message: '닉네임을 입력해주세요.' })
   @Column()
   nickname: string;
 
-  @Column()
+  @Column({ default: '기본 이미지.jpg' })
   profileUrl: string;
 
-  @Column()
+  @Column({ default: '안녕하세요.' })
   description: string;
 
   @Column()
@@ -52,22 +75,22 @@ export class User {
   @UpdateDateColumn()
   updatedAt: Date;
 
-  @DeleteDateColumn()
+  @DeleteDateColumn({ select: false })
   deletedAt: Date;
 
   @OneToOne(() => RefreshToken, (refreshToken) => refreshToken.user)
   refreshToken: RefreshToken;
 
-  @OneToMany(() => Channel, (channel) => channel.user, { cascade: ['soft-remove'] })
+  @OneToMany(() => Channel, (channel) => channel.user, { cascade: true })
   channels: Channel[];
 
-  @OneToMany(() => Series, (series) => series.user, { cascade: ['soft-remove'] })
+  @OneToMany(() => Series, (series) => series.user, { cascade: true })
   series: Series[];
 
-  @OneToMany(() => Post, (post) => post.user, { cascade: ['soft-remove'] })
+  @OneToMany(() => Post, (post) => post.user, { cascade: true })
   posts: Post[];
 
-  @OneToMany(() => Comment, (commnet) => commnet.user, { cascade: ['soft-remove'] })
+  @OneToMany(() => Comment, (comment) => comment.user, { cascade: true })
   comments: Comment[];
 
   @OneToMany(() => PostLike, (postLike) => postLike.user)
@@ -79,9 +102,18 @@ export class User {
   @OneToMany(() => Subscribe, (subscribe) => subscribe.user)
   subscribes: Subscribe[];
 
-  @OneToMany(() => PointHistory, (pointHistory) => pointHistory.user, { cascade: ['soft-remove'] })
+  @OneToMany(() => PointHistory, (pointHistory) => pointHistory.user, {
+    cascade: true,
+  })
   pointHistories: PointHistory[];
 
-  @OneToMany(() => PurchaseList, (purchaseList) => purchaseList.user, { cascade: ['soft-remove'] })
+  @OneToMany(() => PointOrder, (pointOrder) => pointOrder.user, {
+    cascade: true,
+  })
+  pointOrder: PointOrder[];
+
+  @OneToMany(() => PurchaseList, (purchaseList) => purchaseList.user, {
+    cascade: true,
+  })
   purchaseLists: PurchaseList[];
 }

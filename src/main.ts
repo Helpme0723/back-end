@@ -1,13 +1,13 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-import {ConfigService} from '@nestjs/config'
+import { ConfigService } from '@nestjs/config';
 import { ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
-  const configService = app.get(ConfigService)
-  const port =configService.get<number>('SERVER_PORT')
+  const app = await NestFactory.create(AppModule, { cors: true });
+  const configService = app.get(ConfigService);
+  const port = configService.get<number>('SERVER_PORT');
 
   app.setGlobalPrefix('api', { exclude: ['/health-check'] });
   app.useGlobalPipes(
@@ -18,8 +18,11 @@ async function bootstrap() {
       whitelist: true,
       // DTO 클래스에 정의되지 않은 속성이 요청 데이터에 포함된 경우, 유효성 검사에서 에러를 발생
       forbidNonWhitelisted: true,
-    }),
+    })
   );
+
+  // CORS 설정 추가
+  app.enableCors();
 
   const config = new DocumentBuilder()
     .setTitle('TalentVerse')
@@ -29,7 +32,7 @@ async function bootstrap() {
     // .addTag('cats')
     .build();
   const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('api', app, document, {
+  SwaggerModule.setup('api-docs', app, document, {
     swaggerOptions: {
       persistAuthorization: true, // 새로고침 시에도 JWT 유지하기
       tagsSorter: 'alpha', // API 그룹 정렬을 알파벳 순으로
