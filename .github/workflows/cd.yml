@@ -77,7 +77,7 @@ jobs:
             npm run build
             # npm run build
 
-            # PM2로 실행 중인 서버 중지 및 삭제
+            # PM2로 실행 중인 서버 중지 및 삭제a
             pm2 delete talentVerse
 
             # 서버를 PM2로 실행
