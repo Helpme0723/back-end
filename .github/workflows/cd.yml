@@ -32,7 +32,7 @@ jobs:
             [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
 
             # 프로젝트 폴더로 이동
-            cd /home/ubuntu/p6.teamTrello
+            cd /home/ubuntu/TalentVerse
 
             # main 브랜치로 이동
             git switch main
@@ -78,10 +78,10 @@ jobs:
             # npm run build
 
             # PM2로 실행 중인 서버 중지 및 삭제
-            pm2 delete team-trello
+            pm2 delete TalentVerse
 
             # 서버를 PM2로 실행
-            pm2 --name team-trello start dist/main.js
+            pm2 --name TalentVerse start dist/main.js
 
             # PM2 설정 저장 (선택사항, startup 설정을 해놨다면)
             pm2 save
