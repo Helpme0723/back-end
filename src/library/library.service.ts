@@ -5,7 +5,6 @@ import { PostLike } from 'src/post/entities/post-like.entity';
 import { PurchaseList } from 'src/purchase/entities/purchase-list.entity';
 import { Repository } from 'typeorm';
 import { PaginationDto } from './dtos/pagination.dto';
-import { SortField } from './types/field.types';
 import { OrderType } from './types/order.types';
 import { IPaginationOptions, paginate } from 'nestjs-typeorm-paginate';
 
@@ -21,18 +20,13 @@ export class LibraryService {
   ) {}
 
   /**
-   * PaginationDTO을 입력값에 따라 TypeORM 구문으로 변환하는 함수
-   * @param order 정렬 방식 기준값 Enum Type ASC, DESC
-   * @param sort 사전순, 날짜순 판별 기준값 Enum Type DATE, ALPHABET
-   * @returns
+   * 정렬방식 선택 
+   * @param DESC, ACS 를 입력받음
+   * @returns 정렬결과값
    */
-  private getOrder(order: OrderType, sort: SortField) {
+  private getDateOrder(order: OrderType) {
     const orderBy: any = {};
-    if (sort === SortField.DATE) {
-      orderBy.createdAt = order;
-    } else if (sort === SortField.ALPHABET) {
-      orderBy.title = order;
-    }
+    orderBy.createdAt = order;
     return orderBy;
   }
 
@@ -45,7 +39,7 @@ export class LibraryService {
    * 조회된 값이 없을경우, 빈 배열 리턴
    */
   async findLikedPostsByUesrId(userId: number, pagiNationDto: PaginationDto) {
-    const { page, limit, order, sort } = pagiNationDto;
+    const { page, limit, order } = pagiNationDto;
     const options: IPaginationOptions = {
       page,
       limit,
@@ -54,7 +48,7 @@ export class LibraryService {
     return paginate<PostLike>(this.postLikeRepository, options, {
       where: { user: { id: userId } },
       relations: ['post'],
-      order: this.getOrder(order, sort),
+      order: this.getDateOrder(order),
     });
   }
 
@@ -67,7 +61,7 @@ export class LibraryService {
    * 조회된 값이 없을경우, 빈 배열 리턴
    */
   async findCommentsByUserId(userId: number, pagiNationDto: PaginationDto) {
-    const { page, limit, order, sort } = pagiNationDto;
+    const { page, limit, order } = pagiNationDto;
     const options: IPaginationOptions = {
       page,
       limit,
@@ -75,8 +69,8 @@ export class LibraryService {
 
     return paginate<Comment>(this.commentRepository, options, {
       where: { user: { id: userId } },
-      relations: ['user', 'post'],
-      order: this.getOrder(order, sort),
+      relations: ['post'],
+      order: this.getDateOrder(order),
     });
   }
 
@@ -92,7 +86,7 @@ export class LibraryService {
     userId: number,
     pagiNationDto: PaginationDto
   ) {
-    const { page, limit, order, sort } = pagiNationDto;
+    const { page, limit, order } = pagiNationDto;
     const options: IPaginationOptions = {
       page,
       limit,
@@ -101,7 +95,7 @@ export class LibraryService {
     return paginate<PurchaseList>(this.purchaseListRepository, options, {
       where: { user: { id: userId } },
       relations: ['user', 'post'],
-      order: this.getOrder(order, sort),
+      order: this.getDateOrder(order),
     });
   }
 }
