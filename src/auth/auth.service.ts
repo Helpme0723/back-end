@@ -38,6 +38,9 @@ export class AuthService {
   async signUp(signUpDto: SignUpDto) {
     const { email, password, passwordConfirm, ...etc } = signUpDto;
 
+    // 이메일 중복 조회
+    await this.checkEmail(email);
+
     // 비밀번호와 비밀번호 확인 값이 다를 경우 예외 처리
     if (password !== passwordConfirm) {
       throw new BadRequestException(
@@ -68,10 +71,11 @@ export class AuthService {
    * @returns
    */
   async checkEmail(email: string) {
+    // 해당 이메일이 있는지 조회
     const existedEmail = await this.userRepository.findOne({
       where: { email },
     });
-
+    // 있을 경우 예외 처리
     if (existedEmail) {
       throw new ConflictException('이미 존재하는 이메일입니다.');
     }
@@ -114,31 +118,28 @@ export class AuthService {
       secret: this.configService.get<string>('REFRESH_TOKEN_SECRET'),
       expiresIn: this.configService.get<string>('REFRESH_TOKEN_EXPIRES'),
     });
+    // 리프레쉬 토큰 암호화
     const hashedRefreshToken = bcrypt.hashSync(
       refreshToken,
       this.configService.get<number>('HASH_ROUND')
     );
-    // 리프레쉬토큰이 이미 있는지 조회
-    const existedRefreshToken = await this.refreshTokenRepository.findOneBy({
-      userId,
-    });
 
-    // 리프레쉬토큰이 이미 있을 경우 삭제
-    if (existedRefreshToken) {
-      await this.refreshTokenRepository.delete({ userId });
+    // 레디스에 리프레쉬 토큰 있는지 조회
+    const redisRefreshToken = await this.cacheManager.get<string>(
+      `userId:${userId}`
+    );
+    console.log(redisRefreshToken);
+    // 이미 있으면 삭제
+    if (redisRefreshToken) {
+      await this.cacheManager.del(`userId:${userId}`);
     }
+
     const ttl = 60 * 60 * 24 * 7;
-    // 리프레쉬 토큰 저장
+    // 레디스에 리프레쉬 토큰 저장
     await this.cacheManager.set(`userId:${userId}`, hashedRefreshToken, {
       ttl,
     });
-    await this.refreshTokenRepository.save({
-      userId,
-      token: hashedRefreshToken,
-    });
-    // await this.refreshTokenRepository.upsert({ token: hashedRefreshToken }, ['userId']);
-    // const redisToken = await this.cacheManager.get(`userId:${userId}`);
-    // console.log(redisToken);
+
     return { accessToken, refreshToken };
   }
 
@@ -157,10 +158,22 @@ export class AuthService {
         posts: true,
       },
     });
-    // 없을 경우 예외처리
+
+    // 유저가 없을 경우 예외 처리
     if (!user) {
       throw new NotFoundException('없는 회원입니다.');
     }
+
+    // 레디스에 리프레쉬 토큰 있는지 조회
+    const redisRefreshToken = await this.cacheManager.get<string>(
+      `userId:${userId}`
+    );
+
+    // 없을 경우 예외 처리
+    if (!redisRefreshToken) {
+      throw new NotFoundException('토큰이 존재하지 않습니다.');
+    }
+
     // 트랜잭션 queryRunner 세팅
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
@@ -170,8 +183,6 @@ export class AuthService {
     try {
       // 유저 삭제
       await queryRunner.manager.softRemove(User, user);
-      // 리프레쉬 토큰 삭제
-      await queryRunner.manager.delete(RefreshToken, { userId });
 
       // TODO: queryRunner.manager 안써도 되는게 맞는지 확인해주세요.
       await this.cacheManager.del(`userId:${userId}`);
@@ -203,18 +214,15 @@ export class AuthService {
     const user = await this.userRepository.findOne({
       where: { id: userId },
     });
-    // userId에 맞는 토큰이 있는지 확인
-    const token = await this.refreshTokenRepository.findOne({
-      where: { userId },
-    });
-
+    const redisRefreshToken = await this.cacheManager.get<string>(
+      `userId:${userId}`
+    );
     // 없으면 예외 처리
-    if (!user || !token) {
+    if (!user || !redisRefreshToken) {
       throw new NotFoundException('없는 유저이거나 토큰이 존재하지 않습니다.');
     }
 
-    // 리프레쉬 토큰 삭제
-    await this.refreshTokenRepository.delete({ userId });
+    // 레디스에 리프레쉬 토큰 삭제
     await this.cacheManager.del(`userId:${userId}`);
     return true;
   }
@@ -223,25 +231,17 @@ export class AuthService {
   async tokenReIssue(token: string, userId: number) {
     const payload = { id: userId };
 
-    // 리프레쉬토큰이 이미 있는지 조회
-    const existedRefreshToken = await this.refreshTokenRepository.findOneBy({
-      userId,
-    });
+    // 레디스에 리프레쉬토큰이 이미 있는지 조회
+    const redisRefreshToken = await this.cacheManager.get<string>(
+      `userId:${userId}`
+    );
 
     // 요청한 리프레쉬 토큰과 DB에 있는 토큰이 같은지 확인
-    const isMatchedRefreshToken = bcrypt.compareSync(
-      token,
-      existedRefreshToken.token
-    );
+    const isMatchedRefreshToken = bcrypt.compareSync(token, redisRefreshToken);
 
     // 리프레쉬 토큰이 다를 경우 예외 처리
     if (!isMatchedRefreshToken) {
       throw new UnauthorizedException('유효하지 않은 토큰입니다.');
-    }
-
-    // 리프레쉬토큰이 이미 있을 경우 삭제
-    if (existedRefreshToken) {
-      await this.refreshTokenRepository.delete({ userId });
     }
 
     // 유효하면 엑세스, 리프레쉬 토큰 재발급
@@ -260,10 +260,11 @@ export class AuthService {
       this.configService.get<number>('HASH_ROUND')
     );
 
+    // 리프레쉬 토큰 만료 시간 설정
+    const ttl = 60 * 60 * 24 * 7;
     // 암호화된 리프레쉬 토큰 저장
-    await this.refreshTokenRepository.save({
-      userId,
-      token: hashedRefreshToken,
+    await this.cacheManager.set(`userId:${userId}`, hashedRefreshToken, {
+      ttl,
     });
 
     return { accessToken, refreshToken };
@@ -305,14 +306,14 @@ export class AuthService {
 
   // 리프레쉬토큰에 있는 userId로 DB에 있고 유저가 있는지 검증
   async findRefreshTokenById(userId: number) {
-    const refreshToken = await this.refreshTokenRepository.findOne({
-      where: { userId },
-    });
+    const refreshToken = await this.cacheManager.get<string>(
+      `userId:${userId}`
+    );
     if (!refreshToken) {
       throw new NotFoundException('일치하는 인증 정보가 없습니다.');
     }
     await this.findUserById(userId);
 
-    return refreshToken.userId;
+    return userId;
   }
 }
