@@ -20,7 +20,7 @@ import { UserInfo } from 'src/auth/decorators/user-info.decorator';
 import { User } from 'src/user/entities/user.entity';
 import { FindAllPostDto } from './dto/findall-post-by-channel-id.dto';
 
-@ApiTags('4.포스트')
+@ApiTags('04.포스트')
 @Controller('post')
 export class PostController {
   constructor(private readonly postService: PostService) {}
@@ -91,6 +91,22 @@ export class PostController {
   async findOne(@UserInfo() user: User, @Param('id', ParseIntPipe) id: number) {
     const userId = user.id;
     const data = await this.postService.findOne(userId, id);
+    await this.postService.incrementViewCount(id);
+    return {
+      status: HttpStatus.OK,
+      message: '포스트 상세조회에 성공하였습니다.',
+      data,
+    };
+  }
+
+  /**
+   * 로그인안된 유저의 상세보기
+   * @param id
+   * @returns
+   */
+  @Get('unlogin/:id')
+  async readOne(@Param('id', ParseIntPipe) id: number) {
+    const data = await this.postService.readOne(id);
     await this.postService.incrementViewCount(id);
     return {
       status: HttpStatus.OK,

@@ -8,7 +8,7 @@ import { AwsService } from './aws.service';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiBody, ApiConsumes, ApiTags } from '@nestjs/swagger';
 
-@ApiTags('8.Aws API')
+@ApiTags('12.Aws API')
 @Controller('images')
 export class AwsController {
   constructor(private readonly awsService: AwsService) {}

@@ -11,7 +11,7 @@ import { UserInfo } from 'src/auth/decorators/user-info.decorator';
 import { User } from 'src/user/entities/user.entity';
 import { PaginationDto } from './dtos/pagination.dto';
 
-@ApiTags('8.라이브러리')
+@ApiTags('08.라이브러리')
 @Controller('library')
 export class LibraryController {
   constructor(private readonly libraryService: LibraryService) {}

@@ -20,7 +20,7 @@ import { UserInfo } from 'src/auth/decorators/user-info.decorator';
 import { User } from 'src/user/entities/user.entity';
 import { FindAllCommentsDto } from './dto/pagination.dto';
 
-@ApiTags('5.댓글')
+@ApiTags('05.댓글')
 @Controller('comments')
 export class CommentController {
   constructor(private readonly commentService: CommentService) {}
