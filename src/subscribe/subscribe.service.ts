@@ -178,6 +178,7 @@ export class SubscribeService {
     const posts = items.map((post) => ({
       channelId: post.channel.id,
       channelTitle: post.channel.title,
+      channelImgUrl: post.channel.imageUrl,
       ownerId: post.channel.user.id,
       ownerNickname: post.channel.user.nickname,
       title: post.title,
