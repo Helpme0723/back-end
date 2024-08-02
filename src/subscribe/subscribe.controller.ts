@@ -96,4 +96,30 @@ export class SubscribeController {
       data,
     };
   }
+
+  /**
+   * 내가 구독한 채널의 포스트 모아보기
+   * @param param1
+   * @returns
+   */
+  // 내가 구독한 채널의 포스트 모아보기
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard('jwt'))
+  @Get('posts')
+  async findAllSubscribePosts(
+    @UserInfo() user: User,
+    @Query() { page, limit }: FindAllSubscribesDto
+  ) {
+    const data = await this.subscribeService.findAllSubscribePosts(
+      user.id,
+      page,
+      limit
+    );
+
+    return {
+      status: HttpStatus.OK,
+      message: '내가 구독한 채널들의 전체 포스트 조회에 성공했습니다.',
+      data,
+    };
+  }
 }
