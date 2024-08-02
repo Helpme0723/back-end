@@ -21,7 +21,10 @@ export class SearchService {
       post,
     ]);
 
-    const data = await this.elasticsearchService.bulk({ refresh: true, body });
+    const data = await this.elasticsearchService.bulk({
+      refresh: true,
+      body,
+    });
 
     return data;
   }
@@ -58,6 +61,6 @@ export class SearchService {
       },
     });
 
-    return data.hits.hits;
+    return data.body.hits.hits;
   }
 }

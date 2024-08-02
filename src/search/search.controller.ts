@@ -7,7 +7,7 @@ export class SearchController {
 
   @Get()
   async postsIndexing() {
-    const data = this.searchService.postsIndexing();
+    const data = await this.searchService.postsIndexing();
 
     return data;
   }
