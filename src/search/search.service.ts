@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { ElasticsearchService } from '@nestjs/elasticsearch';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Post } from 'src/post/entities/post.entity';
-import { Repository } from 'typeorm';
+import { IsNull, MoreThan, Not, Repository } from 'typeorm';
 
 @Injectable()
 export class SearchService {
@@ -21,16 +21,37 @@ export class SearchService {
       post,
     ]);
 
-    const data = await this.elasticsearchService.bulk({
+    await this.elasticsearchService.bulk({
       refresh: true,
       body,
     });
+  }
 
-    return data;
+  // 삭제된 포스트 인덱싱 삭제
+  async deleteIndexing() {
+    console.log('@@@@@@@@@@@@@@@@@@@@');
+
+    const deletedPosts = await this.postRepository.find({
+      where: { deletedAt: Not(IsNull()) },
+    });
+
+    const body = deletedPosts.flatMap((post) => [
+      { delete: { _index: 'posts', _id: post.id.toString() } },
+    ]);
+
+    console.log('###', body);
+
+    if (body.length > 0) {
+      await this.elasticsearchService.bulk({ refresh: true, body });
+    }
   }
 
   // 엘라스틱 서치로 검색
   async searchPosts(keyword: string, field?: string) {
+    const deletedPosts = await this.postRepository.find({
+      // where: { deletedAt: MoreThan(new Date(0)) },
+    });
+    console.log('##############', deletedPosts);
     const shouldCondition = [];
 
     if (field === 'title') {
