@@ -22,7 +22,11 @@ async function bootstrap() {
   );
 
   // CORS 설정 추가
-  app.enableCors();
+  app.enableCors({
+    origin: [configService.get<string>('PRODUCTION_URL'),configService.get<string>('DEVELOP_URL')],
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
+    credentials: true,
+  });
 
   const config = new DocumentBuilder()
     .setTitle('TalentVerse')
