@@ -7,9 +7,10 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Subscribe } from './entities/subscribe.entity';
-import { DataSource, Repository } from 'typeorm';
+import { DataSource, In, Repository } from 'typeorm';
 import { Channel } from 'src/channel/entities/channel.entity';
 import { paginate } from 'nestjs-typeorm-paginate';
+import { Post } from 'src/post/entities/post.entity';
 
 @Injectable()
 export class SubscribeService {
@@ -18,6 +19,8 @@ export class SubscribeService {
     private readonly subscribeRepository: Repository<Subscribe>,
     @InjectRepository(Channel)
     private readonly channelRepository: Repository<Channel>,
+    @InjectRepository(Post)
+    private readonly postRepository: Repository<Post>,
     private readonly dataSource: DataSource
   ) {}
 
@@ -146,6 +149,49 @@ export class SubscribeService {
         imageUrl: item.channel.imageUrl,
         subscribers: item.channel.subscribers,
       })),
+      meta,
+    };
+  }
+
+  // 내가 구독한 채널의 포스트 모아보기
+  async findAllSubscribePosts(userId: number, page: number, limit: number) {
+    const subscribes = await this.subscribeRepository.find({
+      where: { userId },
+      relations: { channel: true },
+    });
+
+    const channelIds = subscribes.map((subscribe) => subscribe.channel.id);
+
+    const { items, meta } = await paginate<Post>(
+      this.postRepository,
+      { page, limit },
+      {
+        where: { channelId: In(channelIds) },
+        relations: {
+          channel: {
+            user: true,
+          },
+        },
+      }
+    );
+
+    const posts = items.map((post) => ({
+      channelId: post.channel.id,
+      channelTitle: post.channel.title,
+      ownerId: post.channel.user.id,
+      ownerNickname: post.channel.user.nickname,
+      title: post.title,
+      viewCount: post.viewCount,
+      likeCount: post.likeCount,
+      commentCount: post.commentCount,
+      price: post.price,
+      createdAt: post.createdAt,
+    }));
+
+    posts.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+
+    return {
+      posts,
       meta,
     };
   }

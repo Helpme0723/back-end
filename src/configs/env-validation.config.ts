@@ -16,4 +16,10 @@ export const configModuleValidationSchema = Joi.object({
   AWS_SECRET_KEY: Joi.string().required(),
   AWS_REGION: Joi.string().required(),
   AWS_BUCKET_NAME: Joi.string().required(),
+  REDIS_HOST: Joi.string().required(),
+  REDIS_PORT:  Joi.string().required(),
+  REDIS_USERNAME:  Joi.string().required(),
+  REDIS_PASSWORD:  Joi.string().required(),
+  PRODUCTION_URL:  Joi.string().required(),
+  DEVELOP_URL:  Joi.string().required(),
 });
