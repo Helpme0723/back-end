@@ -196,6 +196,7 @@ export class SubscribeService {
       channelImgUrl: post.channel.imageUrl,
       ownerId: post.channel.user.id,
       ownerNickname: post.channel.user.nickname,
+      id: post.id,
       title: post.title,
       viewCount: post.viewCount,
       likeCount: post.likeCount,
