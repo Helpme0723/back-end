@@ -17,7 +17,7 @@ import { Series } from 'src/series/entities/series.entity';
 import { PostLike } from './entities/post-like.entity';
 import { PurchaseList } from 'src/purchase/entities/purchase-list.entity';
 import { paginate } from 'nestjs-typeorm-paginate';
-import { FindAllPostDto } from './dto/findall-post-by-channel-id.dto';
+import { FindAllPostDto } from './dto/find-all-post-by-channel-id.dto';
 
 @Injectable()
 export class PostService {
@@ -29,7 +29,7 @@ export class PostService {
     @InjectRepository(Series)
     private readonly seriesRepository: Repository<Series>,
     @InjectRepository(PostLike)
-    private readonly postLikeRepositroy: Repository<PostLike>,
+    private readonly postLikeRepository: Repository<PostLike>,
     @InjectRepository(PurchaseList)
     private readonly purchaseListRepository: Repository<PurchaseList>,
     private readonly dataSource: DataSource
@@ -216,13 +216,13 @@ export class PostService {
     if (channelId && channelId !== channel?.id) {
       throw new UnauthorizedException('채널접근 권한이없습니다');
     }
-    const sereis = await this.seriesRepository.findOne({
+    const series = await this.seriesRepository.findOne({
       where: { id: seriesId },
     });
-    if (!sereis) {
+    if (!series) {
       throw new NotFoundException('존재하지 않은 시리즈입니다.');
     }
-    if (seriesId && sereis.userId !== userId) {
+    if (seriesId && series.userId !== userId) {
       throw new UnauthorizedException('접근권한이 없는 시리즈입니다.');
     }
     const newPost = {
@@ -274,7 +274,7 @@ export class PostService {
     }
 
     //이미 포스트에 좋아요를 했는지 확인하기
-    const existPostLike = await this.postLikeRepositroy.findOne({
+    const existPostLike = await this.postLikeRepository.findOne({
       where: { postId: post.id, userId },
     });
     if (existPostLike) {
@@ -290,11 +290,11 @@ export class PostService {
       await queryRunner.manager.increment(Post, { id }, 'likeCount', 1);
 
       //postlike 테이블에 포스트아이디 유저아이디 저장해주기
-      const postlikedata = this.postLikeRepositroy.create({
+      const postLikeData = this.postLikeRepository.create({
         userId,
         postId: id,
       });
-      await queryRunner.manager.save(PostLike, postlikedata);
+      await queryRunner.manager.save(PostLike, postLikeData);
 
       await queryRunner.commitTransaction();
       await queryRunner.release();
@@ -307,7 +307,7 @@ export class PostService {
   }
 
   async deletePostLike(userId: number, id: number) {
-    const likeData = await this.postLikeRepositroy.findOne({
+    const likeData = await this.postLikeRepository.findOne({
       where: { userId, postId: id },
     });
     if (!likeData) {
