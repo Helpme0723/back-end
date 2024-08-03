@@ -223,7 +223,10 @@ export class ChannelService {
 
   // 채널 통계 조회
   async findInsights(userId: number, channelId: number) {
-    const channel = await this.channelRepository.findOneBy({ id: channelId, userId });
+    const channel = await this.channelRepository.findOneBy({
+      id: channelId,
+      userId,
+    });
 
     if (!channel) {
       throw new NotFoundException('해당 아이디의 내 채널이 존재하지 않습니다.');
@@ -236,16 +239,27 @@ export class ChannelService {
     const monthly = format(oneMonthAgo, 'yyyy-MM');
 
     // 일별 포스트 전체 합산
-    const dailyInsights = await this.channelDailyInsightRepository.findOneBy({ channelId, date: daily });
+    const dailyInsights = await this.channelDailyInsightRepository.findOneBy({
+      channelId,
+      date: daily,
+    });
 
     // 월별 포스트 전체 합산
-    const monthlyInsights = await this.channelMonthlyInsightRepository.findOneBy({ channelId, date: monthly });
+    const monthlyInsights =
+      await this.channelMonthlyInsightRepository.findOneBy({
+        channelId,
+        date: monthly,
+      });
 
     return { dailyInsights, monthlyInsights };
   }
 
   // 일별 포스트 통계 전체 조회
-  async findDailyInsights(userId: number, channelId: number, findDailyInsightsDto: FindDailyInsightsDto) {
+  async findDailyInsights(
+    userId: number,
+    channelId: number,
+    findDailyInsightsDto: FindDailyInsightsDto
+  ) {
     const { sort, page, limit } = findDailyInsightsDto;
 
     const oneDayAgo = sub(new Date(), { days: 1 });
@@ -262,7 +276,10 @@ export class ChannelService {
       throw new BadRequestException('아직 통계가 계산되지 않은 날짜입니다.');
     }
 
-    const channel = await this.channelRepository.findOneBy({ id: channelId, userId });
+    const channel = await this.channelRepository.findOneBy({
+      id: channelId,
+      userId,
+    });
 
     if (!channel) {
       throw new NotFoundException('해당 아이디의 내 채널이 없습니다.');
@@ -284,7 +301,11 @@ export class ChannelService {
   }
 
   // 월별 포스트 통계 전체 조회
-  async findMonthlyInsights(userId: number, channelId: number, findMonthlyInsightsDto: FindMonthlyInsightsDto) {
+  async findMonthlyInsights(
+    userId: number,
+    channelId: number,
+    findMonthlyInsightsDto: FindMonthlyInsightsDto
+  ) {
     const { sort, page, limit } = findMonthlyInsightsDto;
 
     const oneMonthAgo = sub(new Date(), { months: 1 });
@@ -303,7 +324,10 @@ export class ChannelService {
       throw new BadRequestException('아직 통계가 계산되지 않은 달입니다.');
     }
 
-    const channel = await this.channelRepository.findOneBy({ id: channelId, userId });
+    const channel = await this.channelRepository.findOneBy({
+      id: channelId,
+      userId,
+    });
 
     if (!channel) {
       throw new NotFoundException('해당 아이디의 내 채널이 없습니다.');

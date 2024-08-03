@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   ConflictException,
+  Inject,
   Injectable,
   InternalServerErrorException,
   NotFoundException,
@@ -18,6 +19,7 @@ import { PostLike } from './entities/post-like.entity';
 import { PurchaseList } from 'src/purchase/entities/purchase-list.entity';
 import { paginate } from 'nestjs-typeorm-paginate';
 import { FindAllPostDto } from './dto/find-all-post-by-channel-id.dto';
+import { Cache, CACHE_MANAGER } from '@nestjs/cache-manager';
 
 @Injectable()
 export class PostService {
@@ -32,7 +34,8 @@ export class PostService {
     private readonly postLikeRepository: Repository<PostLike>,
     @InjectRepository(PurchaseList)
     private readonly purchaseListRepository: Repository<PurchaseList>,
-    private readonly dataSource: DataSource
+    private readonly dataSource: DataSource,
+    @Inject(CACHE_MANAGER) private readonly cacheManager: Cache
   ) {}
 
   async create(userId: number, createPostDto: CreatePostDto) {
@@ -61,6 +64,15 @@ export class PostService {
 
   async findAll(findAllPostDto: FindAllPostDto) {
     const { channelId, page, limit, sort } = findAllPostDto;
+
+    const cacheKey = `posts:${channelId}-${page}-${limit}-${sort}`;
+
+    const cachedPosts = await this.cacheManager.get<string>(cacheKey);
+
+    if (cachedPosts) {
+      return cachedPosts;
+    }
+
     const channel = await this.channelRepository.findOne({
       where: { id: channelId },
     });
@@ -83,27 +95,28 @@ export class PostService {
       }
     );
 
-    return {
-      posts: items.map((item) => ({
-        id: item.id,
-        userId: item.userId,
-        channelId: item.channelId,
-        seriesId: item.seriesId,
-        categoryId: item.categoryId,
-        title: item.title,
-        preview: item.preview,
-        content: item.content,
-        price: item.price,
-        visibility: item.visibility,
-        viewCount: item.visibility,
-        likeCount: item.likeCount,
-        commentCount: item.commentCount,
-        salesCount: item.salesCount,
-        createdAt: item.createdAt,
-        updatedAt: item.updatedAt,
-      })),
-      meta,
-    };
+    const posts = items.map((item) => ({
+      id: item.id,
+      userId: item.userId,
+      channelId: item.channelId,
+      seriesId: item.seriesId,
+      categoryId: item.categoryId,
+      title: item.title,
+      preview: item.preview,
+      price: item.price,
+      visibility: item.visibility,
+      viewCount: item.visibility,
+      likeCount: item.likeCount,
+      commentCount: item.commentCount,
+      createdAt: item.createdAt,
+    }));
+
+    const returnValue = { posts, meta };
+
+    const ttl = 60 * 5;
+    await this.cacheManager.set(cacheKey, returnValue, { ttl });
+
+    return returnValue;
   }
 
   async findOne(userId: number, id: number) {
@@ -289,7 +302,7 @@ export class PostService {
       //post 라이크카운트 1씩 증가해주기
       await queryRunner.manager.increment(Post, { id }, 'likeCount', 1);
 
-      //postlike 테이블에 포스트아이디 유저아이디 저장해주기
+      //postLike 테이블에 포스트아이디 유저아이디 저장해주기
       const postLikeData = this.postLikeRepository.create({
         userId,
         postId: id,

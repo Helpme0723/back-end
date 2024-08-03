@@ -203,15 +203,13 @@ export class SubscribeService {
       price: post.price,
       createdAt: post.createdAt,
     }));
-    console.log('$$$$$$$$$$$$$');
+
+    const returnValue = { posts, meta };
 
     // 레디스에 저장된 데이터 없으면 레디스에 저장
     const ttl = 60 * 30;
-    await this.cacheManager.set(cacheKey, posts, { ttl });
+    await this.cacheManager.set(cacheKey, returnValue, { ttl });
 
-    return {
-      posts,
-      meta,
-    };
+    return returnValue;
   }
 }
