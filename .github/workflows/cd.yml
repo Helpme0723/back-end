@@ -60,6 +60,9 @@ jobs:
             echo "AWS_SECRET_KEY=${{ secrets.AWS_SECRET_KEY }}" >> .env
             echo "AWS_REGION=${{ secrets.AWS_REGION }}" >> .env
             echo "AWS_BUCKET_NAME=${{ secrets.AWS_BUCKET_NAME }}" >> .env
+            echo "ELASTICSEARCH_NODE=${{ secrets.ELASTICSEARCH_NODE }}" >> .env
+            echo "ELASTICSEARCH_USERNAME=${{ secrets.ELASTICSEARCH_USERNAME }}" >> .env
+            echo "ELASTICSEARCH_PASSWORD=${{ secrets.ELASTICSEARCH_PASSWORD }}" >> .env
             echo "NODEMAILER_HOST=${{ secrets.NODEMAILER_HOST }}" >> .env
             echo "NODEMAILER_PORT=${{ secrets.NODEMAILER_PORT }}" >> .env
             echo "NODEMAILER_USER=${{ secrets.NODEMAILER_USER }}" >> .env
