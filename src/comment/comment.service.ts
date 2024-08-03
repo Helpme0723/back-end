@@ -83,7 +83,6 @@ export class CommentService {
       return cachedComments;
     }
 
-    console.log('@@@@@@@');
     const post = await this.postRepository.findOne({ where: { id: postId } });
 
     if (!post) {
@@ -96,10 +95,8 @@ export class CommentService {
       .orderBy('comment.id', 'ASC');
 
     const comments = await paginate<Comment>(queryBuilder, { page, limit });
-    console.log(comments);
     const ttl = 60 * 30;
     await this.cacheManager.set(cacheKey, comments, { ttl });
-    console.log('#########');
     return comments;
   }
 
