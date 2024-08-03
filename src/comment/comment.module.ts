@@ -5,9 +5,18 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { Comment } from './entities/comment.entity';
 import { CommentLike } from './entities/comment-like.entity';
 import { Post } from 'src/post/entities/post.entity';
+import { CacheModule } from '@nestjs/cache-manager';
+import { CacheConfigService } from 'src/configs/cache.config';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Comment, CommentLike, Post])],
+  imports: [
+    TypeOrmModule.forFeature([Comment, CommentLike, Post]),
+    CacheModule.registerAsync({
+      isGlobal: true,
+      useClass: CacheConfigService,
+    }),
+  ],
+
   controllers: [CommentController],
   providers: [CommentService],
 })
