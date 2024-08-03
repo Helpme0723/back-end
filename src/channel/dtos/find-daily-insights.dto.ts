@@ -1,4 +1,4 @@
-import { IsNumber, IsOptional } from 'class-validator';
+import { IsNumber, IsOptional, Min } from 'class-validator';
 import { InsightSort } from '../types/insight-sort.type';
 import { Type } from 'class-transformer';
 
@@ -14,11 +14,13 @@ export class FindDailyInsightsDto {
 
   @IsNumber()
   @IsOptional()
+  @Min(1)
   @Type(() => Number)
   page?: number = 1;
 
   @IsNumber()
   @IsOptional()
+  @Min(1)
   @Type(() => Number)
   limit?: number = 10;
 }
