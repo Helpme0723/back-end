@@ -9,7 +9,9 @@ export class InsightController {
   constructor(private readonly insightService: InsightService) {}
 
   // 매일 자정마다 실행
-  @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
+  @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT, {
+    timeZone: 'Asia/Seoul',
+  })
   async dailyInsight() {
     console.log('데일리 통계');
 
@@ -17,7 +19,9 @@ export class InsightController {
   }
 
   // 매월 1일 자정마다 실행
-  @Cron(CronExpression.EVERY_1ST_DAY_OF_MONTH_AT_MIDNIGHT)
+  @Cron(CronExpression.EVERY_1ST_DAY_OF_MONTH_AT_MIDNIGHT, {
+    timeZone: 'Asia/Seoul',
+  })
   async monthlyInsight() {
     console.log('먼슬리 통계');
 
@@ -33,7 +37,9 @@ export class InsightController {
   // }
 
   // 매일 자정 5분 후마다 일별 포스트 통합 총 조회수 등 통계 저장
-  @Cron('0 5 * * *')
+  @Cron('0 5 * * *', {
+    timeZone: 'Asia/Seoul',
+  })
   async channelDailyInsight() {
     console.log('포스트 통합 총 데일리 통계 저장');
 
@@ -41,7 +47,9 @@ export class InsightController {
   }
 
   // 매월 1일 자정 5분 후마다 월별 포스트 통합 총 조회수 등 통계 계산 후 저장
-  @Cron('5 0 1 * *')
+  @Cron('5 0 1 * *', {
+    timeZone: 'Asia/Seoul',
+  })
   async channelMonthlyInsight() {
     console.log('포스트 통합 총 먼슬리 통계 저장');
 

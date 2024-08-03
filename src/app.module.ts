@@ -19,6 +19,7 @@ import { LibraryModule } from './library/library.module';
 import { ScheduleModule } from '@nestjs/schedule';
 import { InsightModule } from './insight/insight.module';
 import { MailModule } from './mail/mail.module';
+import { SearchModule } from './search/search.module';
 
 @Module({
   imports: [
@@ -42,6 +43,7 @@ import { MailModule } from './mail/mail.module';
     LibraryModule,
     InsightModule,
     MailModule,
+    SearchModule,
   ],
   controllers: [AppController],
   providers: [],
