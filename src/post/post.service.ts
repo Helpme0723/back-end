@@ -64,9 +64,9 @@ export class PostService {
   }
 
   async findAll(findAllPostDto: FindAllPostDto) {
-    const { channelId, page, limit, sort } = findAllPostDto;
+    const { channelId, page, limit, sort, categoryId } = findAllPostDto;
 
-    const cacheKey = `posts:${channelId}-${page}-${limit}-${sort}`;
+    const cacheKey = `posts:${channelId}-${page}-${limit}-${sort}-${categoryId}`;
 
     const cachedPosts = await this.cacheManager.get<string>(cacheKey);
 
@@ -88,6 +88,7 @@ export class PostService {
         where: {
           visibility: VisibilityType.PUBLIC,
           ...(channelId && { channelId }),
+          ...(categoryId && { categoryId }),
           deletedAt: null,
         },
         order: {
