@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   ConflictException,
+  ForbiddenException,
   Inject,
   Injectable,
   InternalServerErrorException,
@@ -119,38 +120,91 @@ export class PostService {
     return returnValue;
   }
 
+  // 포스트 상세 조회
   async findOne(userId: number, id: number) {
+    // 해당 포스트 찾기
     const post = await this.postRepository.findOne({
       relations: { comments: true },
       where: { id },
       withDeleted: true,
     });
-    const purchasedPost = await this.purchaseListRepository.findOne({
-      where: { postId: id, userId },
-    });
 
+    console.log('$$$$$$$$$$', post);
+
+    // 해당하는 아이디의 포스터가 없으면 오류 반환
     if (!post) {
       throw new NotFoundException('포스트를 찾을수 없습니다.');
     }
-    if (
-      purchasedPost?.postId !== post.id &&
-      post.visibility === VisibilityType.PRIVATE &&
-      post.userId !== userId
-    ) {
-      throw new NotFoundException('비공개 처리된 포스트입니다.');
-    }
-    if (purchasedPost?.postId !== post.id && post.price > 0) {
-      post.content = '구매시 볼수있는 내용입니다';
-    }
-    if (post.deletedAt && purchasedPost?.postId !== post.id) {
-      throw new NotFoundException('삭제된 포스트입니다.');
+
+    // 반환값 정렬
+    const mappedPost = {
+      postId: post.id,
+      userId: post.userId,
+      channelId: post.channelId,
+      seriesId: post.seriesId,
+      title: post.title,
+      preview: post.preview,
+      content: post.content,
+      price: post.price,
+      viewCount: post.viewCount,
+      likeCount: post.likeCount,
+      commentCount: post.commentCount,
+      createdAt: post.createdAt,
+      comments: post.comments.splice(0, 5).map((comment) => ({
+        id: comment.id,
+        content: comment.content,
+        likeCount: comment.likeCount,
+        createdAt: comment.createdAt,
+      })),
+    };
+
+    // 포스트 작성자고, 삭제되지 않은 포스트라면 전체 포스트 반환
+    if (!post.deletedAt && post.userId === userId) {
+      return mappedPost;
     }
 
-    post.deletedAt = undefined;
-    post.comments = post.comments.splice(0, 5);
-    console.log(post.comments);
+    // 비공개 포스트거나, 삭제된 포스트
+    if (post.visibility === VisibilityType.PRIVATE || post.deletedAt) {
+      // 구매 이력이 있는지 확인
+      const purchasedPost = await this.purchaseListRepository.findOneBy({
+        postId: id,
+        userId,
+      });
 
-    return post;
+      // 구매 이력이 없다면 접근 권한 오류
+      if (!purchasedPost) {
+        throw new ForbiddenException('삭제 또는 비공개 된 포스트입니다.');
+      }
+
+      // 구매 이력이 있다면 전체 내용 반환
+      if (purchasedPost) {
+        return mappedPost;
+      }
+    }
+
+    // 유료 포스트일 경우
+    if (post?.price !== 0) {
+      // 구매 이력이 있는지 확인
+      const purchasedPost = await this.purchaseListRepository.findOneBy({
+        postId: id,
+        userId,
+      });
+
+      // 구매 이력이 있다면 전체 포스트 반환
+      if (purchasedPost) {
+        return mappedPost;
+      }
+
+      // 구매 이력이 없다면 전체 내용을 제외하고 반환
+      if (!purchasedPost) {
+        const { content: _content, ...etc } = mappedPost;
+
+        return etc;
+      }
+    }
+
+    // 삭제되지 않았고, 내 포스트가 아니며, 무료 포스트일 때 반환
+    return mappedPost;
   }
 
   async readOne(id: number) {
