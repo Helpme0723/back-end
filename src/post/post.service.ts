@@ -105,7 +105,7 @@ export class PostService {
       preview: item.preview,
       price: item.price,
       visibility: item.visibility,
-      viewCount: item.visibility,
+      viewCount: item.viewCount,
       likeCount: item.likeCount,
       commentCount: item.commentCount,
       createdAt: item.createdAt,
