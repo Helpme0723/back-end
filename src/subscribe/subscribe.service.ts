@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   ConflictException,
+  Inject,
   Injectable,
   InternalServerErrorException,
   NotFoundException,
@@ -11,6 +12,7 @@ import { DataSource, In, Repository } from 'typeorm';
 import { Channel } from 'src/channel/entities/channel.entity';
 import { paginate } from 'nestjs-typeorm-paginate';
 import { Post } from 'src/post/entities/post.entity';
+import { CACHE_MANAGER, Cache } from '@nestjs/cache-manager';
 
 @Injectable()
 export class SubscribeService {
@@ -21,7 +23,8 @@ export class SubscribeService {
     private readonly channelRepository: Repository<Channel>,
     @InjectRepository(Post)
     private readonly postRepository: Repository<Post>,
-    private readonly dataSource: DataSource
+    private readonly dataSource: DataSource,
+    @Inject(CACHE_MANAGER) private readonly cacheManager: Cache
   ) {}
 
   // 채널 구독
@@ -155,6 +158,17 @@ export class SubscribeService {
 
   // 내가 구독한 채널의 포스트 모아보기
   async findAllSubscribePosts(userId: number, page: number, limit: number) {
+    // 레디스에서 조회 or 저장할 키 지정
+    const cacheKey = `subscribePosts:${userId}-${page}-${limit}`;
+
+    // 레디스에서 해당 키의 캐시 데이터가 있는지 확인
+    const cachedPosts = await this.cacheManager.get<string>(cacheKey);
+
+    // 해당 데이터가 있으면 해당 데이터 반환
+    if (cachedPosts) {
+      return cachedPosts;
+    }
+
     const subscribes = await this.subscribeRepository.find({
       where: { userId },
       relations: { channel: true },
@@ -172,6 +186,7 @@ export class SubscribeService {
             user: true,
           },
         },
+        order: { createdAt: 'DESC' },
       }
     );
 
@@ -181,6 +196,7 @@ export class SubscribeService {
       channelImgUrl: post.channel.imageUrl,
       ownerId: post.channel.user.id,
       ownerNickname: post.channel.user.nickname,
+      id: post.id,
       title: post.title,
       viewCount: post.viewCount,
       likeCount: post.likeCount,
@@ -189,11 +205,12 @@ export class SubscribeService {
       createdAt: post.createdAt,
     }));
 
-    posts.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+    const returnValue = { posts, meta };
 
-    return {
-      posts,
-      meta,
-    };
+    // 레디스에 저장된 데이터 없으면 레디스에 저장
+    const ttl = 60 * 30;
+    await this.cacheManager.set(cacheKey, returnValue, { ttl });
+
+    return returnValue;
   }
 }

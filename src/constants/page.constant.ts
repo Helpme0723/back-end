@@ -1,1 +1,1 @@
-export const TAKE_COUNT = 5;
+export const TAKE_COUNT = 6;

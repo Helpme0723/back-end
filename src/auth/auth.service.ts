@@ -15,7 +15,6 @@ import bcrypt from 'bcrypt';
 import { SignInDto } from './dtos/sign-in.dto';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
-import { RefreshToken } from './entities/refresh-token.entity';
 import { Cache, CACHE_MANAGER } from '@nestjs/cache-manager';
 
 @Injectable()
@@ -26,8 +25,6 @@ export class AuthService {
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
     private readonly dataSource: DataSource,
-    @InjectRepository(RefreshToken)
-    private readonly refreshTokenRepository: Repository<RefreshToken>,
     @Inject(CACHE_MANAGER) private readonly cacheManager: Cache
   ) {}
 
