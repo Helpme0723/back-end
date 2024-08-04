@@ -18,10 +18,10 @@ import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 import { UserInfo } from 'src/auth/decorators/user-info.decorator';
 import { User } from 'src/user/entities/user.entity';
-import { FindAllPostDto } from './dto/findall-post-by-channel-id.dto';
+import { FindAllPostDto } from './dto/find-all-post-by-channel-id.dto';
 
 @ApiTags('04.포스트')
-@Controller('post')
+@Controller('posts')
 export class PostController {
   constructor(private readonly postService: PostService) {}
 

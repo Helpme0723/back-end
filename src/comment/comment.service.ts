@@ -5,6 +5,7 @@ import {
   InternalServerErrorException,
   HttpException,
   ConflictException,
+  Inject,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource } from 'typeorm';
@@ -13,9 +14,10 @@ import { CreateCommentDto } from './dto/create-comment.dto';
 import { Post } from 'src/post/entities/post.entity';
 import { UpdateCommentDto } from './dto/update-comment.dto';
 import { CommentLike } from './entities/comment-like.entity';
-import { paginate, Pagination } from 'nestjs-typeorm-paginate';
+import { paginate } from 'nestjs-typeorm-paginate';
 import { VisibilityType } from 'src/post/types/visibility.type';
 import { FindAllCommentsDto } from './dto/pagination.dto';
+import { Cache, CACHE_MANAGER } from '@nestjs/cache-manager';
 
 @Injectable()
 export class CommentService {
@@ -24,7 +26,8 @@ export class CommentService {
     private readonly commentRepository: Repository<Comment>,
     @InjectRepository(Post)
     private readonly postRepository: Repository<Post>,
-    private readonly dataSource: DataSource
+    private readonly dataSource: DataSource,
+    @Inject(CACHE_MANAGER) private readonly cacheManager: Cache
   ) {}
 
   // 댓글 생성 API
@@ -37,7 +40,9 @@ export class CommentService {
     }
 
     if (post.visibility === VisibilityType.PRIVATE) {
-      throw new BadRequestException('비공개 포스트에는 댓글을 작성 할 수 없습니다.');
+      throw new BadRequestException(
+        '비공개 포스트에는 댓글을 작성 할 수 없습니다.'
+      );
     }
 
     const queryRunner = this.dataSource.createQueryRunner();
@@ -45,7 +50,12 @@ export class CommentService {
     await queryRunner.startTransaction();
 
     try {
-      await queryRunner.manager.increment(Post, { id: post.id }, 'commentCount', 1);
+      await queryRunner.manager.increment(
+        Post,
+        { id: post.id },
+        'commentCount',
+        1
+      );
 
       const commentData = this.commentRepository.create(createCommentDto);
       const comment = await queryRunner.manager.save(Comment, commentData);
@@ -64,8 +74,16 @@ export class CommentService {
 
   async findAllComments(
     findAllCommentsDto: FindAllCommentsDto
-  ): Promise<Pagination<Comment>> {
+  ) /*: Promise<Pagination<Comment>>*/ {
     const { postId, page, limit } = findAllCommentsDto;
+    //레디스에서 사용할 키
+    const cacheKey = `comments:${postId}-${page}-${limit}`;
+    //레디스에서 데이터가 있는지 확인하깅
+    const cachedComments = await this.cacheManager.get<string>(cacheKey);
+
+    if (cachedComments) {
+      return cachedComments;
+    }
 
     const post = await this.postRepository.findOne({ where: { id: postId } });
 
@@ -73,13 +91,16 @@ export class CommentService {
       throw new NotFoundException('존재하지 않는 포스트입니다.');
     }
 
-    const queryBuilder = this.commentRepository.createQueryBuilder('comment')
+    const queryBuilder = this.commentRepository
+      .createQueryBuilder('comment')
       .where('comment.postId = :postId', { postId })
       .orderBy('comment.id', 'ASC');
 
-    return paginate<Comment>(queryBuilder, { page, limit });
+    const comments = await paginate<Comment>(queryBuilder, { page, limit });
+    const ttl = 60 * 30;
+    await this.cacheManager.set(cacheKey, comments, { ttl });
+    return comments;
   }
-
 
   // 댓글 수정 API
   async updateComment(
@@ -94,15 +115,19 @@ export class CommentService {
       throw new NotFoundException('댓글을 찾을 수 없습니다.');
     }
 
-    const post = await this.postRepository.findOne({ where: { id: comment.postId } });
+    const post = await this.postRepository.findOne({
+      where: { id: comment.postId },
+    });
     if (!post) {
       throw new NotFoundException('포스트를 찾을 수 없습니다.');
     }
 
     if (post.visibility === VisibilityType.PRIVATE) {
-      throw new BadRequestException('비공개 포스트에는 댓글을 수정 할 수 없습니다.');
+      throw new BadRequestException(
+        '비공개 포스트에는 댓글을 수정 할 수 없습니다.'
+      );
     }
-    
+
     const updatedComment = await this.commentRepository.save({
       id: comment.id,
       ...updateCommentDto,
@@ -124,7 +149,12 @@ export class CommentService {
     await queryRunner.startTransaction();
 
     try {
-      await queryRunner.manager.decrement(Post, { id: comment.postId }, 'commentCount', 1);
+      await queryRunner.manager.decrement(
+        Post,
+        { id: comment.postId },
+        'commentCount',
+        1
+      );
 
       await queryRunner.manager.softDelete(Comment, { id: comment.id });
 

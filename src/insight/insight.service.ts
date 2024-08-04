@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DailyInsight } from './entities/daily-insight.entity';
-import { LessThan, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
 import { MonthlyInsight } from './entities/monthly-insight.entity';
 import { Post } from 'src/post/entities/post.entity';
 import { format, sub } from 'date-fns';

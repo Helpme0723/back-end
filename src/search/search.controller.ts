@@ -19,6 +19,11 @@ export class SearchController {
     await this.searchService.deleteIndexing();
   }
 
+  /**
+   * 엘라스틱 서치 포스트 검색
+   * @param searchDto
+   * @returns
+   */
   @Get()
   async searchPosts(@Query() searchDto: SearchDto) {
     const data = this.searchService.searchPosts(searchDto);

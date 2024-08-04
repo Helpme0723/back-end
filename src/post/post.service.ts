@@ -1,6 +1,8 @@
 import {
   BadRequestException,
   ConflictException,
+  ForbiddenException,
+  Inject,
   Injectable,
   InternalServerErrorException,
   NotFoundException,
@@ -17,7 +19,8 @@ import { Series } from 'src/series/entities/series.entity';
 import { PostLike } from './entities/post-like.entity';
 import { PurchaseList } from 'src/purchase/entities/purchase-list.entity';
 import { paginate } from 'nestjs-typeorm-paginate';
-import { FindAllPostDto } from './dto/findall-post-by-channel-id.dto';
+import { FindAllPostDto } from './dto/find-all-post-by-channel-id.dto';
+import { Cache, CACHE_MANAGER } from '@nestjs/cache-manager';
 
 @Injectable()
 export class PostService {
@@ -29,10 +32,11 @@ export class PostService {
     @InjectRepository(Series)
     private readonly seriesRepository: Repository<Series>,
     @InjectRepository(PostLike)
-    private readonly postLikeRepositroy: Repository<PostLike>,
+    private readonly postLikeRepository: Repository<PostLike>,
     @InjectRepository(PurchaseList)
     private readonly purchaseListRepository: Repository<PurchaseList>,
-    private readonly dataSource: DataSource
+    private readonly dataSource: DataSource,
+    @Inject(CACHE_MANAGER) private readonly cacheManager: Cache
   ) {}
 
   async create(userId: number, createPostDto: CreatePostDto) {
@@ -61,6 +65,15 @@ export class PostService {
 
   async findAll(findAllPostDto: FindAllPostDto) {
     const { channelId, page, limit, sort } = findAllPostDto;
+
+    const cacheKey = `posts:${channelId}-${page}-${limit}-${sort}`;
+
+    const cachedPosts = await this.cacheManager.get<string>(cacheKey);
+
+    if (cachedPosts) {
+      return cachedPosts;
+    }
+
     const channel = await this.channelRepository.findOne({
       where: { id: channelId },
     });
@@ -83,61 +96,115 @@ export class PostService {
       }
     );
 
-    return {
-      posts: items.map((item) => ({
-        id: item.id,
-        userId: item.userId,
-        channelId: item.channelId,
-        seriesId: item.seriesId,
-        categoryId: item.categoryId,
-        title: item.title,
-        preview: item.preview,
-        content: item.content,
-        price: item.price,
-        visibility: item.visibility,
-        viewCount: item.visibility,
-        likeCount: item.likeCount,
-        commentCount: item.commentCount,
-        salesCount: item.salesCount,
-        createdAt: item.createdAt,
-        updatedAt: item.updatedAt,
-      })),
-      meta,
-    };
+    const posts = items.map((item) => ({
+      id: item.id,
+      userId: item.userId,
+      channelId: item.channelId,
+      seriesId: item.seriesId,
+      categoryId: item.categoryId,
+      title: item.title,
+      preview: item.preview,
+      price: item.price,
+      visibility: item.visibility,
+      viewCount: item.viewCount,
+      likeCount: item.likeCount,
+      commentCount: item.commentCount,
+      createdAt: item.createdAt,
+    }));
+
+    const returnValue = { posts, meta };
+
+    const ttl = 60 * 5;
+    await this.cacheManager.set(cacheKey, returnValue, { ttl });
+
+    return returnValue;
   }
 
+  // 포스트 상세 조회
   async findOne(userId: number, id: number) {
+    // 해당 포스트 찾기
     const post = await this.postRepository.findOne({
       relations: { comments: true },
       where: { id },
       withDeleted: true,
     });
-    const purchasedPost = await this.purchaseListRepository.findOne({
-      where: { postId: id, userId },
-    });
 
+    console.log('$$$$$$$$$$', post);
+
+    // 해당하는 아이디의 포스터가 없으면 오류 반환
     if (!post) {
       throw new NotFoundException('포스트를 찾을수 없습니다.');
     }
-    if (
-      purchasedPost?.postId !== post.id &&
-      post.visibility === VisibilityType.PRIVATE &&
-      post.userId !== userId
-    ) {
-      throw new NotFoundException('비공개 처리된 포스트입니다.');
-    }
-    if (purchasedPost?.postId !== post.id && post.price > 0) {
-      post.content = '구매시 볼수있는 내용입니다';
-    }
-    if (post.deletedAt && purchasedPost?.postId !== post.id) {
-      throw new NotFoundException('삭제된 포스트입니다.');
+
+    // 반환값 정렬
+    const mappedPost = {
+      postId: post.id,
+      userId: post.userId,
+      channelId: post.channelId,
+      seriesId: post.seriesId,
+      title: post.title,
+      preview: post.preview,
+      content: post.content,
+      price: post.price,
+      viewCount: post.viewCount,
+      likeCount: post.likeCount,
+      commentCount: post.commentCount,
+      createdAt: post.createdAt,
+      comments: post.comments.splice(0, 5).map((comment) => ({
+        id: comment.id,
+        content: comment.content,
+        likeCount: comment.likeCount,
+        createdAt: comment.createdAt,
+      })),
+    };
+
+    // 포스트 작성자고, 삭제되지 않은 포스트라면 전체 포스트 반환
+    if (!post.deletedAt && post.userId === userId) {
+      return mappedPost;
     }
 
-    post.deletedAt = undefined;
-    post.comments = post.comments.splice(0, 5);
-    console.log(post.comments);
+    // 비공개 포스트거나, 삭제된 포스트
+    if (post.visibility === VisibilityType.PRIVATE || post.deletedAt) {
+      // 구매 이력이 있는지 확인
+      const purchasedPost = await this.purchaseListRepository.findOneBy({
+        postId: id,
+        userId,
+      });
 
-    return post;
+      // 구매 이력이 없다면 접근 권한 오류
+      if (!purchasedPost) {
+        throw new ForbiddenException('삭제 또는 비공개 된 포스트입니다.');
+      }
+
+      // 구매 이력이 있다면 전체 내용 반환
+      if (purchasedPost) {
+        return mappedPost;
+      }
+    }
+
+    // 유료 포스트일 경우
+    if (post?.price !== 0) {
+      // 구매 이력이 있는지 확인
+      const purchasedPost = await this.purchaseListRepository.findOneBy({
+        postId: id,
+        userId,
+      });
+
+      // 구매 이력이 있다면 전체 포스트 반환
+      if (purchasedPost) {
+        return mappedPost;
+      }
+
+      // 구매 이력이 없다면 전체 내용을 제외하고 반환
+      if (!purchasedPost) {
+        const { content: _content, ...etc } = mappedPost;
+
+        return etc;
+      }
+    }
+
+    // 삭제되지 않았고, 내 포스트가 아니며, 무료 포스트일 때 반환
+    return mappedPost;
   }
 
   async readOne(id: number) {
@@ -216,13 +283,13 @@ export class PostService {
     if (channelId && channelId !== channel?.id) {
       throw new UnauthorizedException('채널접근 권한이없습니다');
     }
-    const sereis = await this.seriesRepository.findOne({
+    const series = await this.seriesRepository.findOne({
       where: { id: seriesId },
     });
-    if (!sereis) {
+    if (!series) {
       throw new NotFoundException('존재하지 않은 시리즈입니다.');
     }
-    if (seriesId && sereis.userId !== userId) {
+    if (seriesId && series.userId !== userId) {
       throw new UnauthorizedException('접근권한이 없는 시리즈입니다.');
     }
     const newPost = {
@@ -274,7 +341,7 @@ export class PostService {
     }
 
     //이미 포스트에 좋아요를 했는지 확인하기
-    const existPostLike = await this.postLikeRepositroy.findOne({
+    const existPostLike = await this.postLikeRepository.findOne({
       where: { postId: post.id, userId },
     });
     if (existPostLike) {
@@ -289,12 +356,12 @@ export class PostService {
       //post 라이크카운트 1씩 증가해주기
       await queryRunner.manager.increment(Post, { id }, 'likeCount', 1);
 
-      //postlike 테이블에 포스트아이디 유저아이디 저장해주기
-      const postlikedata = this.postLikeRepositroy.create({
+      //postLike 테이블에 포스트아이디 유저아이디 저장해주기
+      const postLikeData = this.postLikeRepository.create({
         userId,
         postId: id,
       });
-      await queryRunner.manager.save(PostLike, postlikedata);
+      await queryRunner.manager.save(PostLike, postLikeData);
 
       await queryRunner.commitTransaction();
       await queryRunner.release();
@@ -307,7 +374,7 @@ export class PostService {
   }
 
   async deletePostLike(userId: number, id: number) {
-    const likeData = await this.postLikeRepositroy.findOne({
+    const likeData = await this.postLikeRepository.findOne({
       where: { userId, postId: id },
     });
     if (!likeData) {

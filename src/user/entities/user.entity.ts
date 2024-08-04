@@ -1,12 +1,10 @@
 import { Channel } from 'src/channel/entities/channel.entity';
-import { RefreshToken } from 'src/auth/entities/refresh-token.entity';
 import {
   Column,
   CreateDateColumn,
   DeleteDateColumn,
   Entity,
   OneToMany,
-  OneToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
@@ -77,9 +75,6 @@ export class User {
 
   @DeleteDateColumn({ select: false })
   deletedAt: Date;
-
-  @OneToOne(() => RefreshToken, (refreshToken) => refreshToken.user)
-  refreshToken: RefreshToken;
 
   @OneToMany(() => Channel, (channel) => channel.user, { cascade: true })
   channels: Channel[];
