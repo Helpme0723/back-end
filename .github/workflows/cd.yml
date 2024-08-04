@@ -74,7 +74,7 @@ jobs:
             echo "PRODUCTION_URL=${{ secrets.PRODUCTION_URL }}" >> .env
             echo "DEVELOP_URL=${{ secrets.DEVELOP_URL }}" >> .env
 
-            # 의존성 설치
+            # 의존성 설치1
             npm ci
             # npm ci
 
