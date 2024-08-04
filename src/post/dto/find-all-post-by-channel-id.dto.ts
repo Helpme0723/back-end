@@ -21,4 +21,9 @@ export class FindAllPostDto {
   @IsOptional()
   @IsEnum(OrderType, { message: '잘못된 필드입니다.' })
   sort?: OrderType = OrderType.DESC;
+
+  @IsOptional()
+  @IsNumber()
+  @Type(() => Number)
+  categoryId?: number;
 }
