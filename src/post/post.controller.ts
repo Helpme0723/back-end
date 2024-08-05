@@ -49,7 +49,7 @@ export class PostController {
    */
   @Get()
   async findAll(@Query() findAllPostDto: FindAllPostDto) {
-    console.log('@@@@@');
+    console.log('@@@');
     const data = await this.postService.findAll(findAllPostDto);
     return {
       status: HttpStatus.OK,
@@ -100,11 +100,11 @@ export class PostController {
   }
 
   /**
-   * 로그인안된 유저의 상세보기
+   * 로그인하지 않은 유저의 상세보기
    * @param id
    * @returns
    */
-  @Get('unlogin/:id')
+  @Get(':id/unlogin')
   async readOne(@Param('id', ParseIntPipe) id: number) {
     const data = await this.postService.readOne(id);
     await this.postService.incrementViewCount(id);
