@@ -92,6 +92,7 @@ export class SearchService {
     // 반환값 정렬
     const posts = data.body.hits.hits.map((hit) => ({
       id: hit._source.id,
+      userId: hit._source.userId,
       title: hit._source.title,
       preview: hit._source.preview,
       price: hit._source.price,
@@ -106,10 +107,13 @@ export class SearchService {
 
     return {
       posts,
-      total: totalCount, // 총 검색 결과
-      page, // 현재 페이지
-      limit, // 페이지당 게시글 수
-      totalPage: Math.ceil(totalCount / limit), // 총 페이지 수
+      meta: {
+        totalItems: totalCount, // 총 검색 결과
+        itemCount: posts.length,
+        itemPerPage: limit, // 페이지당 게시글 수
+        totalPages: Math.ceil(totalCount / limit), // 총 페이지 수
+        currentPage: page, // 현재 페이지
+      },
     };
   }
 

@@ -55,7 +55,10 @@ export class User {
   @Column()
   nickname: string;
 
-  @Column({ default: '기본 이미지.jpg' })
+  @Column({
+    default:
+      'https://talentversebucket.s3.ap-northeast-2.amazonaws.com/ba21f7f8-226f-4307-8e8b-a2dba2e848c7.webp',
+  })
   profileUrl: string;
 
   @Column({ default: '안녕하세요.' })
