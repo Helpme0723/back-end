@@ -69,7 +69,10 @@ export class Channel {
 
   @IsOptional()
   @IsString()
-  @Column({ default: '임시 이미지.jpg' })
+  @Column({
+    default:
+      'https://talentversebucket.s3.ap-northeast-2.amazonaws.com/10ebcc18-43fc-4f94-8e44-4cd95422a84d.png',
+  })
   imageUrl: string;
 
   @Column({ default: 0 })
@@ -99,10 +102,16 @@ export class Channel {
   @OneToMany(() => MonthlyInsight, (monthlyInsights) => monthlyInsights.channel)
   monthlyInsights: MonthlyInsight[];
 
-  @OneToMany(() => ChannelDailyInsight, (channelDailyInsight) => channelDailyInsight.channel)
+  @OneToMany(
+    () => ChannelDailyInsight,
+    (channelDailyInsight) => channelDailyInsight.channel
+  )
   channelDailyInsights: ChannelDailyInsight[];
 
-  @OneToMany(() => ChannelMonthlyInsight, (channelMonthlyInsight) => channelMonthlyInsight.channel)
+  @OneToMany(
+    () => ChannelMonthlyInsight,
+    (channelMonthlyInsight) => channelMonthlyInsight.channel
+  )
   channelMonthlyInsights: ChannelMonthlyInsight[];
 
   @ManyToOne(() => User, (user) => user.channels)

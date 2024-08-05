@@ -20,6 +20,7 @@ export class SearchService {
       where: { visibility: VisibilityType.PUBLIC },
     });
 
+    // TODO: fuzziness 찾아보기
     const body = posts.flatMap((post) => [
       { index: { _index: 'posts', _id: post.id } },
       post,
@@ -92,6 +93,7 @@ export class SearchService {
     const posts = data.body.hits.hits.map((hit) => ({
       id: hit._source.id,
       title: hit._source.title,
+      preview: hit._source.preview,
       price: hit._source.price,
       viewCount: hit._source.viewCount,
       likeCount: hit._source.likeCount,
