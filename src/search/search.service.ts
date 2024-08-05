@@ -18,10 +18,27 @@ export class SearchService {
   async postsIndexing() {
     const posts = await this.postRepository.find({
       where: { visibility: VisibilityType.PUBLIC },
+      relations: {
+        user: true,
+      },
     });
 
+    const mappedPosts = posts.map((post) => ({
+      id: post.id,
+      userId: post.userId,
+      nickname: post.user.nickname,
+      profileUrl: post.user.profileUrl,
+      title: post.title,
+      preview: post.preview,
+      price: post.price,
+      viewCount: post.viewCount,
+      likeCount: post.likeCount,
+      commentCount: post.commentCount,
+      createdAt: post.createdAt,
+    }));
+
     // TODO: fuzziness 찾아보기
-    const body = posts.flatMap((post) => [
+    const body = mappedPosts.flatMap((post) => [
       { index: { _index: 'posts', _id: post.id } },
       post,
     ]);
@@ -93,6 +110,8 @@ export class SearchService {
     const posts = data.body.hits.hits.map((hit) => ({
       id: hit._source.id,
       userId: hit._source.userId,
+      nickname: hit._source.nickname,
+      profileUrl: hit._source.profileUrl,
       title: hit._source.title,
       preview: hit._source.preview,
       price: hit._source.price,
