@@ -94,6 +94,7 @@ export class PostService {
         order: {
           createdAt: sort,
         },
+        relations: { user: true },
       }
     );
 
@@ -111,8 +112,10 @@ export class PostService {
       likeCount: item.likeCount,
       commentCount: item.commentCount,
       createdAt: item.createdAt,
+      userName: item.user.nickname,
+      userImage: item.user.profileUrl,
     }));
-
+    console.log(posts);
     const returnValue = { posts, meta };
 
     const ttl = 60 * 5;
@@ -125,7 +128,7 @@ export class PostService {
   async findOne(userId: number, id: number) {
     // 해당 포스트 찾기
     const post = await this.postRepository.findOne({
-      relations: { comments: true },
+      relations: { comments: true, user: true },
       where: { id },
       withDeleted: true,
     });
@@ -141,6 +144,8 @@ export class PostService {
     const mappedPost = {
       postId: post.id,
       userId: post.userId,
+      userName: post.user.nickname,
+      userImage: post.user.profileUrl,
       channelId: post.channelId,
       seriesId: post.seriesId,
       title: post.title,
@@ -210,7 +215,7 @@ export class PostService {
 
   async readOne(id: number) {
     const post = await this.postRepository.findOne({
-      relations: { comments: true },
+      relations: { comments: true, user: true },
       where: { id, deletedAt: null, visibility: VisibilityType.PUBLIC },
     });
     if (!post) {
@@ -233,6 +238,7 @@ export class PostService {
     const { channelId, page, limit, sort } = findAllPostDto;
 
     const channel = await this.channelRepository.findOne({
+      relations: { user: true },
       where: { id: channelId, userId },
     });
 
@@ -242,8 +248,13 @@ export class PostService {
 
     const { items, meta } = await paginate<Post>(
       this.postRepository,
+
       { page, limit },
-      { where: { userId, channelId }, order: { createdAt: sort } }
+      {
+        where: { userId, channelId },
+        order: { createdAt: sort },
+        relations: { user: true },
+      }
     );
 
     return {
@@ -264,6 +275,8 @@ export class PostService {
         salesCount: item.salesCount,
         createdAt: item.createdAt,
         updatedAt: item.updatedAt,
+        userName: item.user.nickname,
+        userImage: item.user.profileUrl,
       })),
       meta,
     };

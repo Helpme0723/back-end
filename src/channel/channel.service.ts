@@ -293,11 +293,26 @@ export class ChannelService {
           channelId,
           date,
         },
+        relations: {
+          post: true,
+        },
         order: { [sort]: 'DESC' },
       }
     );
 
-    return { items, meta };
+    const returnValue = items.map((item) => ({
+      id: item.id,
+      channelId: item.channelId,
+      postId: item.postId,
+      title: item.post.title,
+      viewCount: item.viewCount,
+      likeCount: item.likeCount,
+      commentCount: item.commentCount,
+      salesCount: item.salesCount,
+      date: item.date,
+    }));
+
+    return { items: returnValue, meta };
   }
 
   // 월별 포스트 통계 전체 조회
