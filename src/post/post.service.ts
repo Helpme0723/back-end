@@ -101,7 +101,6 @@ export class PostService {
     const posts = items.map((item) => ({
       id: item.id,
       userId: item.userId,
-      nicname: item.user.nickname,
       channelId: item.channelId,
       seriesId: item.seriesId,
       categoryId: item.categoryId,
@@ -113,8 +112,10 @@ export class PostService {
       likeCount: item.likeCount,
       commentCount: item.commentCount,
       createdAt: item.createdAt,
+      userName: item.user.nickname,
+      userImage: item.user.profileUrl,
     }));
-
+    console.log(posts);
     const returnValue = { posts, meta };
 
     const ttl = 60 * 5;
@@ -143,7 +144,8 @@ export class PostService {
     const mappedPost = {
       postId: post.id,
       userId: post.userId,
-      nickname: post.user.nickname,
+      userName: post.user.nickname,
+      userImage: post.user.profileUrl,
       channelId: post.channelId,
       seriesId: post.seriesId,
       title: post.title,
@@ -259,7 +261,6 @@ export class PostService {
       posts: items.map((item) => ({
         id: item.id,
         userId: item.userId,
-        nickname: item.user.nickname,
         channelId: item.channelId,
         seriesId: item.seriesId,
         categoryId: item.categoryId,
@@ -274,6 +275,8 @@ export class PostService {
         salesCount: item.salesCount,
         createdAt: item.createdAt,
         updatedAt: item.updatedAt,
+        userName: item.user.nickname,
+        userImage: item.user.profileUrl,
       })),
       meta,
     };
