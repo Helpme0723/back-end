@@ -94,12 +94,14 @@ export class PostService {
         order: {
           createdAt: sort,
         },
+        relations: { user: true },
       }
     );
 
     const posts = items.map((item) => ({
       id: item.id,
       userId: item.userId,
+      nicname: item.user.nickname,
       channelId: item.channelId,
       seriesId: item.seriesId,
       categoryId: item.categoryId,
@@ -125,7 +127,7 @@ export class PostService {
   async findOne(userId: number, id: number) {
     // 해당 포스트 찾기
     const post = await this.postRepository.findOne({
-      relations: { comments: true },
+      relations: { comments: true, user: true },
       where: { id },
       withDeleted: true,
     });
@@ -141,6 +143,7 @@ export class PostService {
     const mappedPost = {
       postId: post.id,
       userId: post.userId,
+      nickname: post.user.nickname,
       channelId: post.channelId,
       seriesId: post.seriesId,
       title: post.title,
@@ -210,7 +213,7 @@ export class PostService {
 
   async readOne(id: number) {
     const post = await this.postRepository.findOne({
-      relations: { comments: true },
+      relations: { comments: true, user: true },
       where: { id, deletedAt: null, visibility: VisibilityType.PUBLIC },
     });
     if (!post) {
@@ -233,6 +236,7 @@ export class PostService {
     const { channelId, page, limit, sort } = findAllPostDto;
 
     const channel = await this.channelRepository.findOne({
+      relations: { user: true },
       where: { id: channelId, userId },
     });
 
@@ -242,14 +246,20 @@ export class PostService {
 
     const { items, meta } = await paginate<Post>(
       this.postRepository,
+
       { page, limit },
-      { where: { userId, channelId }, order: { createdAt: sort } }
+      {
+        where: { userId, channelId },
+        order: { createdAt: sort },
+        relations: { user: true },
+      }
     );
 
     return {
       posts: items.map((item) => ({
         id: item.id,
         userId: item.userId,
+        nickname: item.user.nickname,
         channelId: item.channelId,
         seriesId: item.seriesId,
         categoryId: item.categoryId,
