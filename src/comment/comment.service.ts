@@ -60,10 +60,21 @@ export class CommentService {
       const commentData = this.commentRepository.create(createCommentDto);
       const comment = await queryRunner.manager.save(Comment, commentData);
 
+      // 댓글에 대한 유저 정보 포함하여 재조회
+      const fullComment = await queryRunner.manager.findOne(Comment, {
+        where: { id: comment.id },
+        relations: ['user'], // 유저 정보를 포함하여 조회
+      });
+
       await queryRunner.commitTransaction();
       await queryRunner.release();
 
-      return comment;
+      if (!fullComment)
+        throw new InternalServerErrorException('댓글 로드 실패');
+
+      return {
+        ...fullComment
+      };
     } catch (error) {
       await queryRunner.rollbackTransaction();
       await queryRunner.release();
@@ -93,6 +104,7 @@ export class CommentService {
 
     const queryBuilder = this.commentRepository
       .createQueryBuilder('comment')
+      .leftJoinAndSelect('comment.user', 'user')
       .where('comment.postId = :postId', { postId })
       .orderBy('comment.id', 'ASC');
 
