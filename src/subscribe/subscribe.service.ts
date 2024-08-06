@@ -208,7 +208,7 @@ export class SubscribeService {
     const returnValue = { posts, meta };
 
     // 레디스에 저장된 데이터 없으면 레디스에 저장
-    const ttl = 60 * 30;
+    const ttl = 60 * 5;
     await this.cacheManager.set(cacheKey, returnValue, { ttl });
 
     return returnValue;

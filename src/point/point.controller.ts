@@ -1,5 +1,14 @@
-
-import { Controller, Get, UseGuards, HttpStatus, Post,Query, Body, Param, ParseIntPipe } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  UseGuards,
+  HttpStatus,
+  Post,
+  Query,
+  Body,
+  Param,
+  ParseIntPipe,
+} from '@nestjs/common';
 import { PointService } from './point.service';
 import { ApiBearerAuth, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
@@ -28,12 +37,19 @@ export class PointController {
   async getHistory(
     @UserInfo() user: User,
     @Query('type') type?: PointHistoryType,
-    @Query('sort') sort?: string,
+    @Query('sort') sort?: string
   ) {
     const userId = user.id; // 인증된 사용자의 ID를 가져옴
     const sortLowerCase = sort ? sort.toUpperCase() : 'DESC';
-    const validSort = sortLowerCase === 'ASC' || sortLowerCase === 'DESC' ? sortLowerCase : 'DESC';
-    const data = await this.pointService.findPointHistory(userId, type, validSort);
+    const validSort =
+      sortLowerCase === 'ASC' || sortLowerCase === 'DESC'
+        ? sortLowerCase
+        : 'DESC';
+    const data = await this.pointService.findPointHistory(
+      userId,
+      type,
+      validSort
+    );
     return {
       status: HttpStatus.OK,
       message: '포인트 히스토리 조회 성공',
@@ -60,7 +76,10 @@ export class PointController {
   @ApiBearerAuth()
   @UseGuards(AuthGuard('jwt'))
   @Get('/details/:id')
-  async getPurchaseDetails(@UserInfo() user: User, @Param('id', ParseIntPipe) id: number) {
+  async getPurchaseDetails(
+    @UserInfo() user: User,
+    @Param('id', ParseIntPipe) id: number
+  ) {
     console.log('여긴오나?');
     const userId = user.id;
     const data = await this.pointService.getDetail(userId, id);
