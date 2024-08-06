@@ -90,11 +90,11 @@ export class SeriesController {
   }
 
   /**
-   * 로그인안한 유저의 상세보기
+   * 타유저의 시리즈 상세보기
    * @param id
    * @returns
    */
-  @Get('unlogin/:id')
+  @Get('/:id')
   async findOne(@Param('id', ParseIntPipe) id: number) {
     const data = await this.seriesService.findOne(id);
 
@@ -113,7 +113,7 @@ export class SeriesController {
    */
   @ApiBearerAuth()
   @UseGuards(AuthGuard('jwt'))
-  @Get('/:id')
+  @Get('/:id/me')
   async readOne(@UserInfo() user: User, @Param('id', ParseIntPipe) id: number) {
     const userId = user.id;
     const data = await this.seriesService.readOne(userId, id);
