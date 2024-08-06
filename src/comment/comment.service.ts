@@ -60,10 +60,21 @@ export class CommentService {
       const commentData = this.commentRepository.create(createCommentDto);
       const comment = await queryRunner.manager.save(Comment, commentData);
 
+      // 댓글에 대한 유저 정보 포함하여 재조회
+      const fullComment = await queryRunner.manager.findOne(Comment, {
+        where: { id: comment.id },
+        relations: ['user'], // 유저 정보를 포함하여 조회
+      });
+
       await queryRunner.commitTransaction();
       await queryRunner.release();
 
-      return comment;
+      if (!fullComment)
+        throw new InternalServerErrorException('댓글 로드 실패');
+
+      return {
+        ...fullComment
+      };
     } catch (error) {
       await queryRunner.rollbackTransaction();
       await queryRunner.release();
@@ -93,6 +104,7 @@ export class CommentService {
 
     const queryBuilder = this.commentRepository
       .createQueryBuilder('comment')
+      .leftJoinAndSelect('comment.user', 'user')
       .where('comment.postId = :postId', { postId })
       .orderBy('comment.id', 'ASC');
 
@@ -175,36 +187,48 @@ export class CommentService {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
-  
+
     try {
       const comment = await queryRunner.manager.findOne(Comment, {
         where: { id: commentId },
       });
-  
+
       if (!comment) {
-        throw new NotFoundException(`댓글을 찾을 수 없습니다. commentId: ${commentId}`);
+        throw new NotFoundException(
+          `댓글을 찾을 수 없습니다. commentId: ${commentId}`
+        );
       }
-  
+
       if (comment.userId === userId) {
-        throw new BadRequestException('본인의 댓글에는 좋아요를 누를 수 없습니다.');
+        throw new BadRequestException(
+          '본인의 댓글에는 좋아요를 누를 수 없습니다.'
+        );
       }
-  
+
       const existingLike = await queryRunner.manager.findOne(CommentLike, {
         where: { userId, commentId },
       });
       if (existingLike) {
         throw new ConflictException('이미 이 댓글에 좋아요를 눌렀습니다.');
       }
-  
+
       const commentLike = queryRunner.manager.create(CommentLike, {
         userId,
         commentId,
       });
-  
+
       // likeCount 증가를 원자적 연산으로 처리
-      await queryRunner.manager.increment(Comment, { id: commentId }, 'likeCount', 1);
-      const savedCommentLike = await queryRunner.manager.save(CommentLike, commentLike);
-  
+      await queryRunner.manager.increment(
+        Comment,
+        { id: commentId },
+        'likeCount',
+        1
+      );
+      const savedCommentLike = await queryRunner.manager.save(
+        CommentLike,
+        commentLike
+      );
+
       await queryRunner.commitTransaction();
       await queryRunner.release();
       return savedCommentLike;
@@ -217,33 +241,39 @@ export class CommentService {
       throw new InternalServerErrorException(`서버 에러: ${error.message}`);
     }
   }
-  
 
   // 댓글 좋아요 삭제 API
   async deleteCommentLike(userId: number, commentId: number) {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
-  
+
     try {
       const comment = await queryRunner.manager.findOne(Comment, {
         where: { id: commentId },
       });
       if (!comment) {
-        throw new NotFoundException(`댓글을 찾을 수 없습니다. commentId: ${commentId}`);
+        throw new NotFoundException(
+          `댓글을 찾을 수 없습니다. commentId: ${commentId}`
+        );
       }
-  
+
       const commentLike = await queryRunner.manager.findOne(CommentLike, {
         where: { userId, commentId },
       });
       if (!commentLike) {
         throw new ConflictException('좋아요를 누르지 않았습니다.');
       }
-  
+
       // likeCount 감소를 원자적 연산으로 처리
-      await queryRunner.manager.decrement(Comment, { id: commentId }, 'likeCount', 1);
+      await queryRunner.manager.decrement(
+        Comment,
+        { id: commentId },
+        'likeCount',
+        1
+      );
       await queryRunner.manager.remove(CommentLike, commentLike);
-  
+
       await queryRunner.commitTransaction();
       await queryRunner.release();
       return true;
