@@ -30,6 +30,7 @@ export class SearchService {
       profileUrl: post.user.profileUrl,
       title: post.title,
       preview: post.preview,
+      content: post.content,
       price: post.price,
       viewCount: post.viewCount,
       likeCount: post.likeCount,
