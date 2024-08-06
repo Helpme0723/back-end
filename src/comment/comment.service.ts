@@ -76,14 +76,14 @@ export class CommentService {
     findAllCommentsDto: FindAllCommentsDto
   ) /*: Promise<Pagination<Comment>>*/ {
     const { postId, page, limit } = findAllCommentsDto;
-    //레디스에서 사용할 키
-    const cacheKey = `comments:${postId}-${page}-${limit}`;
-    //레디스에서 데이터가 있는지 확인하깅
-    const cachedComments = await this.cacheManager.get<string>(cacheKey);
+    // //레디스에서 사용할 키
+    // const cacheKey = `comments:${postId}-${page}-${limit}`;
+    // //레디스에서 데이터가 있는지 확인하깅
+    // const cachedComments = await this.cacheManager.get<string>(cacheKey);
 
-    if (cachedComments) {
-      return cachedComments;
-    }
+    // if (cachedComments) {
+    //   return cachedComments;
+    // }
 
     const post = await this.postRepository.findOne({ where: { id: postId } });
 
@@ -97,8 +97,8 @@ export class CommentService {
       .orderBy('comment.id', 'ASC');
 
     const comments = await paginate<Comment>(queryBuilder, { page, limit });
-    const ttl = 60 * 30;
-    await this.cacheManager.set(cacheKey, comments, { ttl });
+    // const ttl = 60 * 30;
+    // await this.cacheManager.set(cacheKey, comments, { ttl });
     return comments;
   }
 
@@ -175,36 +175,48 @@ export class CommentService {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
-  
+
     try {
       const comment = await queryRunner.manager.findOne(Comment, {
         where: { id: commentId },
       });
-  
+
       if (!comment) {
-        throw new NotFoundException(`댓글을 찾을 수 없습니다. commentId: ${commentId}`);
+        throw new NotFoundException(
+          `댓글을 찾을 수 없습니다. commentId: ${commentId}`
+        );
       }
-  
+
       if (comment.userId === userId) {
-        throw new BadRequestException('본인의 댓글에는 좋아요를 누를 수 없습니다.');
+        throw new BadRequestException(
+          '본인의 댓글에는 좋아요를 누를 수 없습니다.'
+        );
       }
-  
+
       const existingLike = await queryRunner.manager.findOne(CommentLike, {
         where: { userId, commentId },
       });
       if (existingLike) {
         throw new ConflictException('이미 이 댓글에 좋아요를 눌렀습니다.');
       }
-  
+
       const commentLike = queryRunner.manager.create(CommentLike, {
         userId,
         commentId,
       });
-  
+
       // likeCount 증가를 원자적 연산으로 처리
-      await queryRunner.manager.increment(Comment, { id: commentId }, 'likeCount', 1);
-      const savedCommentLike = await queryRunner.manager.save(CommentLike, commentLike);
-  
+      await queryRunner.manager.increment(
+        Comment,
+        { id: commentId },
+        'likeCount',
+        1
+      );
+      const savedCommentLike = await queryRunner.manager.save(
+        CommentLike,
+        commentLike
+      );
+
       await queryRunner.commitTransaction();
       await queryRunner.release();
       return savedCommentLike;
@@ -217,33 +229,39 @@ export class CommentService {
       throw new InternalServerErrorException(`서버 에러: ${error.message}`);
     }
   }
-  
 
   // 댓글 좋아요 삭제 API
   async deleteCommentLike(userId: number, commentId: number) {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
-  
+
     try {
       const comment = await queryRunner.manager.findOne(Comment, {
         where: { id: commentId },
       });
       if (!comment) {
-        throw new NotFoundException(`댓글을 찾을 수 없습니다. commentId: ${commentId}`);
+        throw new NotFoundException(
+          `댓글을 찾을 수 없습니다. commentId: ${commentId}`
+        );
       }
-  
+
       const commentLike = await queryRunner.manager.findOne(CommentLike, {
         where: { userId, commentId },
       });
       if (!commentLike) {
         throw new ConflictException('좋아요를 누르지 않았습니다.');
       }
-  
+
       // likeCount 감소를 원자적 연산으로 처리
-      await queryRunner.manager.decrement(Comment, { id: commentId }, 'likeCount', 1);
+      await queryRunner.manager.decrement(
+        Comment,
+        { id: commentId },
+        'likeCount',
+        1
+      );
       await queryRunner.manager.remove(CommentLike, commentLike);
-  
+
       await queryRunner.commitTransaction();
       await queryRunner.release();
       return true;
