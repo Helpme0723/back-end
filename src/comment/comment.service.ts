@@ -106,7 +106,7 @@ export class CommentService {
       .createQueryBuilder('comment')
       .leftJoinAndSelect('comment.user', 'user')
       .where('comment.postId = :postId', { postId })
-      .orderBy('comment.id', 'ASC');
+      .orderBy('comment.createdAt', 'DESC');
 
     const comments = await paginate<Comment>(queryBuilder, { page, limit });
     // const ttl = 60 * 30;
