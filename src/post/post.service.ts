@@ -224,6 +224,7 @@ export class PostService {
     if (post.price > 0) {
       post.content = '로그인후 확인하실수 있습니다..';
     }
+    //TODO:콘솔지우기
     console.log(post);
     post.comments = post.comments.splice(0, 5);
 

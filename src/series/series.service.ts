@@ -98,16 +98,16 @@ export class SeriesService {
   }
 
   async readOne(userId: number, id: number) {
-    const sereis = await this.seriesRepository.findOne({
+    const series = await this.seriesRepository.findOne({
       relations: { posts: true },
       where: { userId, id },
       withDeleted: true,
     });
-    if (!sereis) {
+    if (!series) {
       throw new NotFoundException('시리즈를 찾지못했습니다');
     }
-    sereis.posts = sereis.posts.splice(0, 5);
-    return sereis;
+    series.posts = series.posts.splice(0, 5);
+    return series;
   }
 
   async update(id: number, userId: number, updateSeriesDto: UpdateSeriesDto) {
