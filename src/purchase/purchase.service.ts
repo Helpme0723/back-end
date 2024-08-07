@@ -83,7 +83,7 @@ export class PurchaseService {
         amount: post.price,
         type: PointHistoryType.OUTGOING,
         postId,
-        description: `포스트 구매 - ${post.title}`,
+        description: post.title,
       });
 
       // salesCount 증가
