@@ -82,12 +82,14 @@ export class SearchService {
         { match: { preview: { query: keyword, fuzziness: 'AUTO' } } },
         { match: { content: { query: keyword, fuzziness: 'AUTO' } } }
       );
-    } else {
+    } else if(field === 'all') {
       condition.push(
         { match: { title: { query: keyword, fuzziness: 'AUTO' } } },
         { match: { preview: { query: keyword, fuzziness: 'AUTO' } } },
         { match: { content: { query: keyword, fuzziness: 'AUTO' } } }
       );
+    }else {
+      // handle unexpected field values if necessary
     }
 
     // 페이지네이션 용
