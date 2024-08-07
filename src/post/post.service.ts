@@ -21,9 +21,12 @@ import { PurchaseList } from 'src/purchase/entities/purchase-list.entity';
 import { paginate } from 'nestjs-typeorm-paginate';
 import { FindAllPostDto } from './dto/find-all-post-by-channel-id.dto';
 import { Cache, CACHE_MANAGER } from '@nestjs/cache-manager';
+import { createClient, RedisClientType } from 'redis';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class PostService {
+  private redisClient: RedisClientType;
   constructor(
     @InjectRepository(Post)
     private readonly postRepository: Repository<Post>,
@@ -36,8 +39,19 @@ export class PostService {
     @InjectRepository(PurchaseList)
     private readonly purchaseListRepository: Repository<PurchaseList>,
     private readonly dataSource: DataSource,
-    @Inject(CACHE_MANAGER) private readonly cacheManager: Cache
-  ) {}
+    @Inject(CACHE_MANAGER) private readonly cacheManager: Cache,
+    private readonly configService: ConfigService
+  ) {
+    this.redisClient = createClient({
+      socket: {
+        host: configService.get<string>('REDIS_HOST'),
+        port: configService.get<number>('REDIS_PORT'),
+      },
+      username: configService.get<string>('REDIS_USERNAME'),
+      password: configService.get<string>('REDIS_PASSWORD'),
+    });
+    this.redisClient.connect().catch(console.error);
+  }
 
   async create(userId: number, createPostDto: CreatePostDto) {
     const { channelId, seriesId, ...postData } = createPostDto;
@@ -115,12 +129,10 @@ export class PostService {
       userName: item.user.nickname,
       userImage: item.user.profileUrl,
     }));
-    console.log(posts);
     const returnValue = { posts, meta };
 
     const ttl = 60 * 5;
     await this.cacheManager.set(cacheKey, returnValue, { ttl });
-
     return returnValue;
   }
 
@@ -132,8 +144,6 @@ export class PostService {
       where: { id },
       withDeleted: true,
     });
-
-    console.log('$$$$$$$$$$', post);
 
     // 해당하는 아이디의 포스터가 없으면 오류 반환
     if (!post) {
@@ -225,6 +235,7 @@ export class PostService {
     if (post.price > 0) {
       post.content = '로그인후 확인하실수 있습니다..';
     }
+    //TODO:콘솔지우기
     console.log(post);
     post.comments = post.comments.splice(0, 5);
 
@@ -338,8 +349,28 @@ export class PostService {
       throw new NotFoundException('포스트 를 찾지못했습니다.');
     }
     await this.postRepository.softDelete({ id });
+    const cacheKey = `posts:*`;
+    console.log(cacheKey);
+    await this.deleteKeysByPattern(cacheKey);
   }
 
+  private async deleteKeysByPattern(pattern: string): Promise<void> {
+    // cacheManager의 Redis 클라이언트 접근
+    const keys = [];
+    for await (const key of this.redisClient.scanIterator({
+      MATCH: pattern,
+      COUNT: 100, // 한 번에 검색할 키의 수
+    })) {
+      keys.push(key);
+    }
+    if (keys.length) {
+      await this.redisClient.del(keys);
+    }
+  }
+  // 스캔 이터레이터로 검색하고 매치를 통해 키값을 찾아내고 최대 100개까지 pattern = cachekey
+  // scanIterator = 역활 == 레디스에 있는 키를 검색
+  //매치에 와일드 카드 posts:*
+  //레디스에 저장되어있는 json형태로 저장되어있는 데이터를 찔끔찔끔
   async createPostLike(userId: number, id: number) {
     const post = await this.postRepository.findOne({
       where: { id },

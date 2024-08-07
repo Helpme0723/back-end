@@ -12,7 +12,6 @@ import { UpdateSeriesDto } from './dtos/update-series-dto';
 import { Channel } from 'src/channel/entities/channel.entity';
 import { FindAllSeriesDto } from './dtos/find-all-series.dto';
 import { paginate } from 'nestjs-typeorm-paginate';
-import { VisibilityType } from 'src/post/types/visibility.type';
 
 @Injectable()
 export class SeriesService {
