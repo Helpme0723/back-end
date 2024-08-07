@@ -140,7 +140,7 @@ export class PostService {
   async findOne(userId: number, id: number) {
     // 해당 포스트 찾기
     const post = await this.postRepository.findOne({
-      relations: { comments: true, user: true },
+      relations: { comments: true, user: true, channel: true, series: true },
       where: { id },
       withDeleted: true,
     });
@@ -150,14 +150,15 @@ export class PostService {
       throw new NotFoundException('포스트를 찾을수 없습니다.');
     }
 
-    // 반환값 정렬
     const mappedPost = {
       postId: post.id,
       userId: post.userId,
       userName: post.user.nickname,
       userImage: post.user.profileUrl,
       channelId: post.channelId,
+      channelName: post.channel ? post.channel.title : null,
       seriesId: post.seriesId,
+      seriesName: post.series ? post.series.title : null,
       title: post.title,
       preview: post.preview,
       content: post.content,
