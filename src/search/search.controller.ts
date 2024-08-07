@@ -1,4 +1,4 @@
-import { Controller, Delete, Get, Query } from '@nestjs/common';
+import { Controller, Get, Query } from '@nestjs/common';
 import { SearchService } from './search.service';
 import { Cron } from '@nestjs/schedule';
 import { SearchDto } from './dtos/search.dto';
@@ -7,17 +7,17 @@ import { SearchDto } from './dtos/search.dto';
 export class SearchController {
   constructor(private readonly searchService: SearchService) {}
 
-  // @Cron('* * * * *')
-  // async postsIndexing() {
-  //   console.log('*****포스트 인덱싱*****');
-  //   await this.searchService.postsIndexing();
-  // }
+  @Cron('* * * * *')
+  async postsIndexing() {
+    console.log('*****포스트 인덱싱*****');
+    await this.searchService.postsIndexing();
+  }
 
-  // @Cron('* * * * *')
-  // async deleteIndexing() {
-  //   console.log('*****삭제된 포스트, 비공개된 포스트 인덱싱 삭제*****');
-  //   await this.searchService.deleteIndexing();
-  // }
+  @Cron('* * * * *')
+  async deleteIndexing() {
+    console.log('*****삭제된 포스트, 비공개된 포스트 인덱싱 삭제*****');
+    await this.searchService.deleteIndexing();
+  }
 
   /**
    * 엘라스틱 서치 포스트 검색
