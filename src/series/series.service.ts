@@ -12,7 +12,6 @@ import { UpdateSeriesDto } from './dtos/update-series-dto';
 import { Channel } from 'src/channel/entities/channel.entity';
 import { FindAllSeriesDto } from './dtos/find-all-series.dto';
 import { paginate } from 'nestjs-typeorm-paginate';
-import { VisibilityType } from 'src/post/types/visibility.type';
 
 @Injectable()
 export class SeriesService {
@@ -82,31 +81,41 @@ export class SeriesService {
 
   async findOne(id: number) {
     const series = await this.seriesRepository.findOne({
-      relations: { posts: true },
       where: {
         id,
+      },
+      relations: {
         posts: {
-          visibility: VisibilityType.PUBLIC,
+          category: true,
         },
       },
     });
+
     if (!series) {
       throw new NotFoundException('해당시리즈가 존재하지 않습니다');
     }
 
     return series;
   }
-
+  /* findOne과 readOne의 차이? = join으로 가져오는 포스트가
+   * public만 있냐, private도 있냐의 차이
+   */
   async readOne(userId: number, id: number) {
     const series = await this.seriesRepository.findOne({
-      relations: { posts: true },
+      relations: {
+        posts: {
+          category: true,
+        },
+      },
       where: { userId, id },
-      withDeleted: true,
     });
+
     if (!series) {
       throw new NotFoundException('시리즈를 찾지못했습니다');
     }
+
     series.posts = series.posts.splice(0, 5);
+
     return series;
   }
 
