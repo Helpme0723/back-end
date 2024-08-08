@@ -38,7 +38,7 @@ export class LibraryService {
    * 추후에, 다른사람의 좋아요한 포스트를 확인하는 API 구현시 사용할수 있도록 userId 기반으로 구현
    * 조회된 값이 없을경우, 빈 배열 리턴
    */
-  async findLikedPostsByUesrId(userId: number, pagiNationDto: PaginationDto) {
+  async findLikedPostsByUserId(userId: number, pagiNationDto: PaginationDto) {
     const { page, limit, order } = pagiNationDto;
     const options: IPaginationOptions = {
       page,
@@ -96,6 +96,7 @@ export class LibraryService {
       where: { user: { id: userId } },
       relations: ['user', 'post'],
       order: this.getDateOrder(order),
+      withDeleted: true, // 소프트 삭제된 포스트도 포함
     });
   }
 }
