@@ -7,17 +7,17 @@ import { SearchDto } from './dtos/search.dto';
 export class SearchController {
   constructor(private readonly searchService: SearchService) {}
 
-  // @Cron('* * * * *')
-  // async postsIndexing() {
-  //   console.log('*****포스트 인덱싱*****');
-  //   await this.searchService.postsIndexing();
-  // }
+  @Cron('*/5 * * * *')
+  async postsIndexing() {
+    console.log('*****포스트 인덱싱*****');
+    await this.searchService.postsIndexing();
+  }
 
-  // @Cron('* * * * *')
-  // async deleteIndexing() {
-  //   console.log('*****삭제된 포스트, 비공개된 포스트 인덱싱 삭제*****');
-  //   await this.searchService.deleteIndexing();
-  // }
+  @Cron('*/5 * * * *')
+  async deleteIndexing() {
+    console.log('*****삭제된 포스트, 비공개된 포스트 인덱싱 삭제*****');
+    await this.searchService.deleteIndexing();
+  }
 
   /**
    * 엘라스틱 서치 포스트 검색
