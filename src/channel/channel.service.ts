@@ -297,21 +297,23 @@ export class ChannelService {
           post: true,
         },
         order: { [sort]: 'DESC' },
-        withDeleted: true,
       }
     );
 
-    const returnValue = items.map((item) => ({
-      id: item.id,
-      channelId: item.channelId,
-      postId: item.postId,
-      title: item.post.title,
-      viewCount: item.viewCount,
-      likeCount: item.likeCount,
-      commentCount: item.commentCount,
-      salesCount: item.salesCount,
-      date: item.date,
-    }));
+    // 아이템에 post가 있을 때만(삭제된 포스트가 아닐 때만) 맵핑해서 반환
+    const returnValue = items
+      .filter((item) => item.post)
+      .map((item) => ({
+        id: item.id,
+        channelId: item.channelId,
+        postId: item.postId,
+        title: item.post.title,
+        viewCount: item.viewCount,
+        likeCount: item.likeCount,
+        commentCount: item.commentCount,
+        salesCount: item.salesCount,
+        date: item.date,
+      }));
 
     return { items: returnValue, meta };
   }
