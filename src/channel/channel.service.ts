@@ -297,6 +297,7 @@ export class ChannelService {
           post: true,
         },
         order: { [sort]: 'DESC' },
+        withDeleted: true,
       }
     );
 
