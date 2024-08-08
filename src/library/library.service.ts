@@ -20,7 +20,7 @@ export class LibraryService {
   ) {}
 
   /**
-   * 정렬방식 선택 
+   * 정렬방식 선택
    * @param DESC, ACS 를 입력받음
    * @returns 정렬결과값
    */
@@ -45,11 +45,19 @@ export class LibraryService {
       limit,
     };
 
-    return paginate<PostLike>(this.postLikeRepository, options, {
-      where: { user: { id: userId } },
-      relations: ['post'],
-      order: this.getDateOrder(order),
-    });
+    const { items, meta } = await paginate<PostLike>(
+      this.postLikeRepository,
+      options,
+      {
+        where: { user: { id: userId } },
+        relations: ['post'],
+        order: this.getDateOrder(order),
+      }
+    );
+
+    const returnPosts = items.filter((item) => item.post);
+
+    return { returnPosts, meta };
   }
 
   /**
