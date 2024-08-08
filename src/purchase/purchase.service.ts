@@ -45,13 +45,15 @@ export class PurchaseService {
       if (!user) {
         throw new NotFoundException('사용자를 찾을 수 없습니다.');
       }
-      
+
       if (post.visibility === VisibilityType.PRIVATE) {
         throw new BadRequestException('비공개 포스트는 구매할 수 없습니다.');
       }
 
       if (post.price === 0) {
-        throw new BadRequestException('가격이 0원인 포스트는 구매할 수 없습니다.');
+        throw new BadRequestException(
+          '가격이 0원인 포스트는 구매할 수 없습니다.'
+        );
       }
 
       // 본인의 포스트인지 확인
@@ -83,12 +85,12 @@ export class PurchaseService {
         amount: post.price,
         type: PointHistoryType.OUTGOING,
         postId,
-        description: `포스트 구매 - ${post.title}`,
+        description: post.title,
       });
 
       // salesCount 증가
       await this.postRepository.increment({ id: postId }, 'salesCount', 1);
-
+      //TODO: 인크리먼트 도 쿼리 로 묶으면 좋을거같아요
       await queryRunner.manager.save(User, user);
       await queryRunner.manager.save(PurchaseList, purchase);
       await queryRunner.manager.save(PointHistory, pointHistory);

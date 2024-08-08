@@ -1,4 +1,4 @@
-import { Controller, Delete, Get, Query } from '@nestjs/common';
+import { Controller, Get, Query } from '@nestjs/common';
 import { SearchService } from './search.service';
 import { Cron } from '@nestjs/schedule';
 import { SearchDto } from './dtos/search.dto';
