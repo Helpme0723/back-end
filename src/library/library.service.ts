@@ -57,7 +57,7 @@ export class LibraryService {
 
     const returnPosts = items.filter((item) => item.post);
 
-    return { returnPosts, meta };
+    return { items: returnPosts, meta };
   }
 
   /**
