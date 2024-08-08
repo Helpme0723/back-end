@@ -49,7 +49,6 @@ export class PostController {
    */
   @Get()
   async findAll(@Query() findAllPostDto: FindAllPostDto) {
-    console.log('@@@');
     const data = await this.postService.findAll(findAllPostDto);
     return {
       status: HttpStatus.OK,

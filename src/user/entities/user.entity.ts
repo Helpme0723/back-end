@@ -17,7 +17,13 @@ import { Subscribe } from 'src/subscribe/entities/subscribe.entity';
 import { PointHistory } from 'src/point/entities/point-history.entity';
 import { PurchaseList } from 'src/purchase/entities/purchase-list.entity';
 import { UserRole } from '../types/user-role.type';
-import { IsEmail, IsNotEmpty, IsNumber, IsString } from 'class-validator';
+import {
+  IsEmail,
+  IsNotEmpty,
+  IsNumber,
+  IsString,
+  IsStrongPassword,
+} from 'class-validator';
 import { PointOrder } from 'src/point/entities/point-order.entity';
 import { Type } from 'class-transformer';
 
@@ -43,6 +49,13 @@ export class User {
    */
   @IsString()
   @IsNotEmpty({ message: '비밀번호를 입력해주세요.' })
+  @IsStrongPassword(
+    {},
+    {
+      message:
+        '비밀번호는 영문 알파벳 대,소문자, 숫자, 특수문자(!@#$%^&*)를 포함해서 8자리 이상으로 입력해야 합니다.',
+    }
+  )
   @Column({ select: false })
   password: string;
 
@@ -64,7 +77,7 @@ export class User {
   @Column({ default: '안녕하세요.' })
   description: string;
 
-  @Column()
+  @Column({ default: 500000 })
   point: number;
 
   @Column({ type: 'enum', enum: UserRole, default: UserRole.USER })

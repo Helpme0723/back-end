@@ -48,6 +48,7 @@ export class InsightService {
       .groupBy('insight.postId')
       .getRawMany();
 
+    //빈 맵 객체
     const existingInsightMap = new Map();
 
     for (const insight of existingInsights) {

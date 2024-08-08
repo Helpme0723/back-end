@@ -38,7 +38,7 @@ export class MailService {
       this.transporter.sendMail({
         // from: 'rlashdmf123@gmail.com', // 보내는 사람의 이메일 주소를 설정
         to: to, // 받는 사람의 이메일 주소를 설정
-        subject: `TraVerse 회원가입 이메일 인증입니다.`, // 메일의 제목 설정
+        subject: `TalentVerse 회원가입 이메일 인증입니다.`, // 메일의 제목 설정
         text: `TalentVerse 가입하기 - 이메일 인증,
 				인증 번호: ${randomNumber}`, // 메일의 내용 설정
       });
@@ -48,7 +48,7 @@ export class MailService {
       return {
         보낸사람: this.configService.get<string>('NODEMAILER_USER'),
         받는사람: to,
-        제목: `TraVerse 회원가입 이메일 인증입니다.`,
+        제목: `TalentVerse 회원가입 이메일 인증입니다.`,
         내용: `TalentVerse 가입하기 - 이메일 인증,
 				인증 번호: ${randomNumber}`,
       };

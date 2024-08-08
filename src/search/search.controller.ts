@@ -1,4 +1,4 @@
-import { Controller, Delete, Get, Query } from '@nestjs/common';
+import { Controller, Get, Query } from '@nestjs/common';
 import { SearchService } from './search.service';
 import { Cron } from '@nestjs/schedule';
 import { SearchDto } from './dtos/search.dto';
@@ -7,13 +7,13 @@ import { SearchDto } from './dtos/search.dto';
 export class SearchController {
   constructor(private readonly searchService: SearchService) {}
 
-  @Cron('* * * * *')
+  @Cron('*/5 * * * *')
   async postsIndexing() {
     console.log('*****포스트 인덱싱*****');
     await this.searchService.postsIndexing();
   }
 
-  @Cron('* * * * *')
+  @Cron('*/5 * * * *')
   async deleteIndexing() {
     console.log('*****삭제된 포스트, 비공개된 포스트 인덱싱 삭제*****');
     await this.searchService.deleteIndexing();

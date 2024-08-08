@@ -37,7 +37,7 @@ export class InsightController {
   // }
 
   // 매일 자정 5분 후마다 일별 포스트 통합 총 조회수 등 통계 저장
-  @Cron('0 5 * * *', {
+  @Cron('5 0 * * *', {
     timeZone: 'Asia/Seoul',
   })
   async channelDailyInsight() {
