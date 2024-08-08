@@ -26,7 +26,7 @@ jobs:
 
       # VM에 Node.js 설치
       - name: Setup Node.js environment # step의 이름 지정 2 cd 돌릴 때 어디서 오류나나 보려고 작성하는 건가
-        uses: actions/checkout@v4 # Node.js 설치를 위해 미리 정의 된 workflow를 불러와서 사용 이게 뭐지.....?
+        uses: actions/setup-node@v4 # Node.js 설치를 위해 미리 정의 된 workflow를 불러와서 사용 이게 뭐지.....?
         with:
           node-version: 20 # 설치 할 Node.js 버전 지정
           cache: 'npm' # 사용할 패키지 매니저를 지정해주는 건가
