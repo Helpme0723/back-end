@@ -35,7 +35,7 @@ export class LibraryController {
   @UseGuards(AuthGuard('jwt'))
   @Get('posts/likes')
   async findLikedPosts(@UserInfo() user: User, @Query() query: PaginationDto) {
-    const data = await this.libraryService.findLikedPostsByUesrId(
+    const data = await this.libraryService.findLikedPostsByUserId(
       user.id,
       query
     );
