@@ -1,7 +1,7 @@
 name: talentVerse CD
 
 on:
-  workflow_dispatch: # 수동 실행 너무 어려워요....
+  workflow_dispatch: # 수동 실행
   workflow_run: # 특정 workflow가 실행됐을 때
     workflows: ['talentVerse CI'] # CI workflow
     types: [completed] # 완료 되었을 때
