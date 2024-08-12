@@ -17,13 +17,13 @@ import { TAKE_COUNT } from 'src/constants/page.constant';
 import { paginate } from 'nestjs-typeorm-paginate';
 import { DailyInsight } from 'src/insight/entities/daily-insight.entity';
 import { MonthlyInsight } from 'src/insight/entities/monthly-insight.entity';
-import { format, isValid, sub } from 'date-fns';
+import { format, isValid } from 'date-fns';
 import { FindDailyInsightsDto } from './dtos/find-daily-insights.dto';
 import { FindMonthlyInsightsDto } from './dtos/find-monthly-insights.dto';
 import { ChannelDailyInsight } from 'src/insight/entities/channel-daily-insight.entity';
 import { ChannelMonthlyInsight } from 'src/insight/entities/channel-monthly-insight.entity';
-import { GetBucketPolicyStatusCommand } from '@aws-sdk/client-s3';
 import { InsightSort } from './types/insight-sort.type';
+import { calculateInsightCount } from 'src/utils/count.util';
 
 @Injectable()
 export class ChannelService {
@@ -223,6 +223,28 @@ export class ChannelService {
     return true;
   }
 
+  // 날짜 유효성 검증
+  private validateDate(date: string) {
+    if (!isValid(new Date(date))) {
+      throw new BadRequestException('유효하지 않은 날짜입니다.');
+    }
+    if (new Date(date) > new Date()) {
+      throw new BadRequestException('아직 통계가 계산되지 않은 날짜입니다.');
+    }
+  }
+
+  // 채널 존재 유효성 검증
+  private async validateChannel(userId: number, channelId: number) {
+    const channel = await this.channelRepository.findOneBy({
+      id: channelId,
+      userId,
+    });
+    if (!channel) {
+      throw new NotFoundException('해당 아이디의 내 채널이 존재하지 않습니다.');
+    }
+    return channel;
+  }
+
   // 채널 통계 조회
   async findInsights(userId: number, channelId: number) {
     const channel = await this.channelRepository.findOneBy({
@@ -267,26 +289,9 @@ export class ChannelService {
     // 쿼리로 받은 정보 중에 date가 없다면 오늘 날짜로 설정
     const date = findDailyInsightsDto.date ?? today;
 
-    // date가 유효한 날짜인지 체크
-    const validDate = isValid(new Date(date));
+    this.validateDate(date);
 
-    if (!validDate) {
-      throw new BadRequestException('유효하지 않은 날짜입니다.');
-    }
-
-    // 오늘 이후의 날짜라면 오류
-    if (new Date(date) > new Date()) {
-      throw new BadRequestException('아직 통계가 계산되지 않은 날짜입니다.');
-    }
-
-    const channel = await this.channelRepository.findOneBy({
-      id: channelId,
-      userId,
-    });
-
-    if (!channel) {
-      throw new NotFoundException('해당 아이디의 내 채널이 없습니다.');
-    }
+    await this.validateChannel(userId, channelId);
 
     // date가 오늘 날짜라면 realTimeInsights로 계산해서 반환
     if (date === today) {
@@ -348,24 +353,9 @@ export class ChannelService {
 
     const dateTime = `${date}-01`;
 
-    const validDate = isValid(new Date(dateTime));
+    this.validateDate(dateTime);
 
-    if (!validDate) {
-      throw new BadRequestException('유효하지 않은 날짜입니다.');
-    }
-
-    if (new Date(dateTime) > new Date()) {
-      throw new BadRequestException('아직 통계가 계산되지 않은 달입니다.');
-    }
-
-    const channel = await this.channelRepository.findOneBy({
-      id: channelId,
-      userId,
-    });
-
-    if (!channel) {
-      throw new NotFoundException('해당 아이디의 내 채널이 없습니다.');
-    }
+    await this.validateChannel(userId, channelId);
 
     if (date === thisMonth) {
       const insightData = await this.realTimeInsights(
@@ -418,33 +408,21 @@ export class ChannelService {
     // 모든 포스트를 찾기
     const posts = await this.postRepository.find({ where: { channelId } });
 
-    let existingInsights;
+    const insightRepository =
+      type === 'daily'
+        ? this.dailyInsightRepository
+        : this.monthlyInsightRepository;
 
-    if (type === 'daily') {
-      // type이 데일리면 일별 저장소에서 포스트별로 통계 합산 가져오기
-      existingInsights = await this.dailyInsightRepository
-        .createQueryBuilder('insight')
-        .select('insight.postId', 'postId')
-        .addSelect('SUM(insight.viewCount)', 'totalViews')
-        .addSelect('SUM(insight.likeCount)', 'totalLikes')
-        .addSelect('SUM(insight.commentCount)', 'totalComments')
-        .addSelect('SUM(insight.salesCount)', 'totalSales')
-        .where('insight.channelId = :channelId', { channelId })
-        .groupBy('insight.postId')
-        .getRawMany();
-    } else if (type === 'monthly') {
-      // type이 데일리면 월별 저장소에서 포스트별로 통계 합산 가져오기
-      existingInsights = await this.monthlyInsightRepository
-        .createQueryBuilder('insight')
-        .select('insight.postId', 'postId')
-        .addSelect('SUM(insight.viewCount)', 'totalViews')
-        .addSelect('SUM(insight.likeCount)', 'totalLikes')
-        .addSelect('SUM(insight.commentCount)', 'totalComments')
-        .addSelect('SUM(insight.salesCount)', 'totalSales')
-        .where('insight.channelId = :channelId', { channelId })
-        .groupBy('insight.postId')
-        .getRawMany();
-    }
+    const existingInsights = await insightRepository
+      .createQueryBuilder('insight')
+      .select('insight.postId', 'postId')
+      .addSelect('SUM(insight.viewCount)', 'totalViews')
+      .addSelect('SUM(insight.likeCount)', 'totalLikes')
+      .addSelect('SUM(insight.commentCount)', 'totalComments')
+      .addSelect('SUM(insight.salesCount)', 'totalSales')
+      .where('insight.channelId = :channelId', { channelId })
+      .groupBy('insight.postId')
+      .getRawMany();
 
     const existingInsightMap = new Map();
 
@@ -457,26 +435,13 @@ export class ChannelService {
     for (const post of posts) {
       const existingInsightData = existingInsightMap.get(post.id);
 
-      let viewCount = post.viewCount;
-      let likeCount = post.likeCount;
-      let commentCount = post.commentCount;
-      let salesCount = post.salesCount;
-
-      if (existingInsightData) {
-        viewCount -= existingInsightData.totalViews;
-        likeCount -= existingInsightData.totalLikes;
-        commentCount -= existingInsightData.totalComments;
-        salesCount -= existingInsightData.totalSales;
-      }
+      const counts = calculateInsightCount(post, existingInsightData);
 
       const data = {
         channelId,
         postId: post.id,
         title: post.title,
-        viewCount,
-        likeCount,
-        commentCount,
-        salesCount,
+        ...counts,
         date,
       };
 
@@ -498,24 +463,9 @@ export class ChannelService {
 
     const searchDate = date ?? today;
 
-    const validDate = isValid(new Date(searchDate));
+    this.validateDate(searchDate);
 
-    if (!validDate) {
-      throw new BadRequestException('유효하지 않은 날짜입니다.');
-    }
-
-    if (new Date(searchDate) > new Date()) {
-      throw new BadRequestException('아직 통계가 계산되지 않은 날짜입니다.');
-    }
-
-    const channel = await this.channelRepository.findOneBy({
-      id: channelId,
-      userId,
-    });
-
-    if (!channel) {
-      throw new NotFoundException('해당 아이디의 내 채널이 존재하지 않습니다.');
-    }
+    await this.validateChannel(userId, channelId);
 
     let dailyInsights;
 
@@ -549,24 +499,9 @@ export class ChannelService {
 
     const dateTime = `${searchDate}-01`;
 
-    const validDate = isValid(new Date(dateTime));
+    this.validateDate(dateTime);
 
-    if (!validDate) {
-      throw new BadRequestException('유효하지 않은 날짜입니다.');
-    }
-
-    if (new Date(dateTime) > new Date()) {
-      throw new BadRequestException('아직 통계가 계산되지 않은 날짜입니다.');
-    }
-
-    const channel = await this.channelRepository.findOneBy({
-      id: channelId,
-      userId,
-    });
-
-    if (!channel) {
-      throw new NotFoundException('해당 아이디의 내 채널이 존재하지 않습니다.');
-    }
+    await this.validateChannel(userId, channelId);
 
     let monthlyInsights;
 
@@ -598,48 +533,26 @@ export class ChannelService {
       .groupBy('post.channelId')
       .getRawOne();
 
-    let existingInsights;
+    const insightRepository =
+      type === 'daily'
+        ? this.dailyInsightRepository
+        : this.monthlyInsightRepository;
 
-    if (type === 'daily') {
-      existingInsights = await this.dailyInsightRepository
-        .createQueryBuilder('insight')
-        .select('SUM(insight.viewCount)', 'totalViews')
-        .addSelect('SUM(insight.likeCount)', 'totalLikes')
-        .addSelect('SUM(insight.commentCount)', 'totalComments')
-        .addSelect('SUM(insight.salesCount)', 'totalSales')
-        .where('insight.channelId = :channelId', { channelId })
-        .groupBy('insight.channelId')
-        .getRawOne();
-    } else if (type === 'monthly') {
-      existingInsights = await this.monthlyInsightRepository
-        .createQueryBuilder('insight')
-        .select('SUM(insight.viewCount)', 'totalViews')
-        .addSelect('SUM(insight.likeCount)', 'totalLikes')
-        .addSelect('SUM(insight.commentCount)', 'totalComments')
-        .addSelect('SUM(insight.salesCount)', 'totalSales')
-        .where('insight.channelId = :channelId', { channelId })
-        .groupBy('insight.channelId')
-        .getRawOne();
-    }
+    const existingInsights = await insightRepository
+      .createQueryBuilder('insight')
+      .select('SUM(insight.viewCount)', 'totalViews')
+      .addSelect('SUM(insight.likeCount)', 'totalLikes')
+      .addSelect('SUM(insight.commentCount)', 'totalComments')
+      .addSelect('SUM(insight.salesCount)', 'totalSales')
+      .where('insight.channelId = :channelId', { channelId })
+      .groupBy('insight.channelId')
+      .getRawOne();
 
-    let viewCount = allPostsInsight.totalViews;
-    let likeCount = allPostsInsight.totalLikes;
-    let commentCount = allPostsInsight.totalComments;
-    let salesCount = allPostsInsight.totalSales;
-
-    if (existingInsights) {
-      viewCount -= existingInsights.totalViews;
-      likeCount -= existingInsights.totalLikes;
-      commentCount -= existingInsights.totalComments;
-      salesCount -= existingInsights.totalSales;
-    }
+    const counts = calculateInsightCount(allPostsInsight, existingInsights);
 
     return {
       channelId,
-      viewCount,
-      likeCount,
-      commentCount,
-      salesCount,
+      ...counts,
       date,
     };
   }

@@ -224,7 +224,7 @@ export class ChannelController {
 
     return {
       status: HttpStatus.OK,
-      message: `${id}번 채널의 데일리 통계를 조회했습니다.`,
+      message: `${id}번 채널의 포스트별 데일리 통계를 조회했습니다.`,
       data,
     };
   }
@@ -252,7 +252,7 @@ export class ChannelController {
 
     return {
       status: HttpStatus.OK,
-      message: `${id}번 채널의 먼슬리 통계를 조회했습니다.`,
+      message: `${id}번 채널의 포스트별 먼슬리 통계를 조회했습니다.`,
       data,
     };
   }
@@ -279,7 +279,7 @@ export class ChannelController {
 
     return {
       status: HttpStatus.OK,
-      message: `${id}번 채널의 먼슬리 통계를 조회했습니다.`,
+      message: `${id}번 채널의 데일리 통합 통계를 조회했습니다.`,
       data,
     };
   }
@@ -306,7 +306,7 @@ export class ChannelController {
 
     return {
       status: HttpStatus.OK,
-      message: `${id}번 채널의 먼슬리 통계를 조회했습니다.`,
+      message: `${id}번 채널의 먼슬리 통합 통계를 조회했습니다.`,
       data,
     };
   }
