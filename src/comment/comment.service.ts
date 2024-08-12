@@ -73,7 +73,7 @@ export class CommentService {
         throw new InternalServerErrorException('댓글 로드 실패');
 
       return {
-        ...fullComment
+        ...fullComment,
       };
     } catch (error) {
       await queryRunner.rollbackTransaction();
