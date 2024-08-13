@@ -13,7 +13,7 @@ export class InsightController {
     timeZone: 'Asia/Seoul',
   })
   async dailyInsight() {
-    console.log('데일리 통계');
+    console.log(`데일리 통계 ${new Date()}`);
 
     await this.insightService.calculateDailyInsight();
   }
@@ -23,7 +23,7 @@ export class InsightController {
     timeZone: 'Asia/Seoul',
   })
   async monthlyInsight() {
-    console.log('먼슬리 통계');
+    console.log(`먼슬리 통계 ${new Date()}`);
 
     await this.insightService.calculateMonthlyInsight();
   }
@@ -41,7 +41,7 @@ export class InsightController {
     timeZone: 'Asia/Seoul',
   })
   async channelDailyInsight() {
-    console.log('포스트 통합 총 데일리 통계 저장');
+    console.log(`포스트 통합 총 데일리 통계 저장 ${new Date()}`);
 
     await this.insightService.calculateChannelDailyInsight();
   }
@@ -51,7 +51,7 @@ export class InsightController {
     timeZone: 'Asia/Seoul',
   })
   async channelMonthlyInsight() {
-    console.log('포스트 통합 총 먼슬리 통계 저장');
+    console.log(`포스트 통합 총 먼슬리 통계 저장 ${new Date()}`);
 
     await this.insightService.calculateChannelMonthlyInsight();
   }
