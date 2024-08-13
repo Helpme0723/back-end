@@ -7,6 +7,7 @@ import { Post } from 'src/post/entities/post.entity';
 import { format, sub } from 'date-fns';
 import { ChannelDailyInsight } from './entities/channel-daily-insight.entity';
 import { ChannelMonthlyInsight } from './entities/channel-monthly-insight.entity';
+import { calculateInsightCount } from 'src/utils/count.util';
 import { toZonedTime } from 'date-fns-tz';
 
 @Injectable()
@@ -65,25 +66,12 @@ export class InsightService {
     for (const post of posts) {
       const existingInsightData = existingInsightMap.get(post.id);
 
-      let viewCount = post.viewCount;
-      let likeCount = post.likeCount;
-      let commentCount = post.commentCount;
-      let salesCount = post.salesCount;
-
-      if (existingInsightData) {
-        viewCount -= existingInsightData.totalViews;
-        likeCount -= existingInsightData.totalLikes;
-        commentCount -= existingInsightData.totalComments;
-        salesCount -= existingInsightData.totalSales;
-      }
+      const counts = calculateInsightCount(post, existingInsightData);
 
       const dailyInsight = this.dailyInsightRepository.create({
         channelId: post.channelId,
         postId: post.id,
-        viewCount,
-        likeCount,
-        commentCount,
-        salesCount,
+        ...counts,
         date,
       });
 
@@ -134,25 +122,12 @@ export class InsightService {
     for (const post of posts) {
       const existingInsightData = existingInsightMap.get(post.id);
 
-      let viewCount = post.viewCount;
-      let likeCount = post.likeCount;
-      let commentCount = post.commentCount;
-      let salesCount = post.salesCount;
-
-      if (existingInsightData) {
-        viewCount -= existingInsightData.totalViews;
-        likeCount -= existingInsightData.totalLikes;
-        commentCount -= existingInsightData.totalComments;
-        salesCount -= existingInsightData.totalSales;
-      }
+      const counts = calculateInsightCount(post, existingInsightData);
 
       const MonthlyInsight = this.monthlyInsightRepository.create({
         channelId: post.channelId,
         postId: post.id,
-        viewCount,
-        likeCount,
-        commentCount,
-        salesCount,
+        ...counts,
         date,
       });
 
