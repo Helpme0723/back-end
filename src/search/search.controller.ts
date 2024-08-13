@@ -45,7 +45,7 @@ export class SearchController {
    * 검색랭킹데이DB업데이트
    * @returns
    */
-  @Cron('*/5 * * * *')
+  @Cron('*/10 * * * *')
   @Post('ranking')
   async addsearchRanking() {
     console.log('*****검색랭킹 데이터 업데이트*****');
