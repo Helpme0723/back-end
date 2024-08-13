@@ -21,6 +21,8 @@ import { InsightModule } from './insight/insight.module';
 import { MailModule } from './mail/mail.module';
 import { SearchModule } from './search/search.module';
 import { RedisModule } from '@nestjs-modules/ioredis';
+import { APP_INTERCEPTOR } from '@nestjs/core';
+import { SentryWebhookInterceptor } from './webhook.interceptor';
 
 @Module({
   imports: [
@@ -48,6 +50,11 @@ import { RedisModule } from '@nestjs-modules/ioredis';
     RedisModule,
   ],
   controllers: [AppController],
-  providers: [],
+  providers: [
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: SentryWebhookInterceptor,
+    },
+  ],
 })
 export class AppModule {}
