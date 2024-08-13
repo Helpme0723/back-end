@@ -1,4 +1,4 @@
-import { Controller, Get, Query } from '@nestjs/common';
+import { Controller, Get, Post, Query } from '@nestjs/common';
 import { SearchService } from './search.service';
 import { Cron } from '@nestjs/schedule';
 import { SearchDto } from './dtos/search.dto';
@@ -28,6 +28,28 @@ export class SearchController {
   async searchPosts(@Query() searchDto: SearchDto) {
     const data = this.searchService.searchPosts(searchDto);
 
+    return data;
+  }
+
+  /**
+   * 검색랭킹불러오기
+   * @returns
+   */
+  @Get('ranking')
+  async getsearchRanking() {
+    const data = await this.searchService.getsearchRankings();
+    return data;
+  }
+
+  /**
+   * 검색랭킹데이DB업데이트
+   * @returns
+   */
+  @Cron('*/5 * * * *')
+  @Post('ranking')
+  async addsearchRanking() {
+    console.log('*****검색랭킹 데이터 업데이트*****');
+    const data = await this.searchService.addsearchRankings();
     return data;
   }
 

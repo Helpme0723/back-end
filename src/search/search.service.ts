@@ -5,13 +5,18 @@ import { Post } from 'src/post/entities/post.entity';
 import { VisibilityType } from 'src/post/types/visibility.type';
 import { Repository } from 'typeorm';
 import { SearchDto } from './dtos/search.dto';
+import { RedisService } from 'src/redis/redis.service';
+import { Search } from './entities/search.entity';
 
 @Injectable()
 export class SearchService {
   constructor(
     @InjectRepository(Post)
     private readonly postRepository: Repository<Post>,
-    private readonly elasticsearchService: ElasticsearchService
+    private readonly elasticsearchService: ElasticsearchService,
+    private readonly redisService: RedisService,
+    @InjectRepository(Search)
+    private readonly searchRepository: Repository<Search>
   ) {}
 
   // 포스트 데이터 인덱싱
@@ -126,6 +131,21 @@ export class SearchService {
 
     // 총 데이터 개수
     const totalCount = data.body.hits.total.value;
+    // 서치테이블에 키워드저장
+    // const searchdata = this.searchRepository.create({
+    //   keyword,
+    //   count: 1,
+    // });
+    // const existKeyWord = await this.searchRepository.findOne({
+    //   where: { keyword },
+    // });
+    // if (existKeyWord) {
+    //   await this.searchRepository.increment({ keyword }, 'count', 1);
+    // } else if (!existKeyWord) {
+    //   await this.searchRepository.save(searchdata);
+    // }
+
+    await this.redisService.searchData('ranking', 1, keyword);
 
     return {
       posts,
@@ -137,6 +157,29 @@ export class SearchService {
         currentPage: page, // 현재 페이지
       },
     };
+  }
+
+  async getsearchRankings() {
+    console.log('@@@@@@@', await this.redisService.check('key'));
+    return this.redisService.zrange('ranking', 2);
+  }
+
+  async addsearchRankings() {
+    const searchedDatas = await this.redisService.findData('ranking');
+    searchedDatas.forEach(async (item) => {
+      let data = await this.searchRepository.findOne({
+        where: { keyword: item.value },
+      });
+      if (!data) {
+        data = this.searchRepository.create({
+          keyword: item.value,
+          count: item.score,
+        });
+      } else {
+        data.count = item.score;
+      }
+      await this.searchRepository.save(data);
+    });
   }
 
   // // db에서 바로 검색

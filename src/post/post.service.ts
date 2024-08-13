@@ -350,7 +350,6 @@ export class PostService {
     }
     await this.postRepository.softDelete({ id });
     const cacheKey = `posts:*`;
-    console.log(cacheKey);
     await this.deleteKeysByPattern(cacheKey);
   }
 
@@ -367,6 +366,7 @@ export class PostService {
       await this.redisClient.del(keys);
     }
   }
+
   // 스캔 이터레이터로 검색하고 매치를 통해 키값을 찾아내고 최대 100개까지 pattern = cachekey
   // scanIterator = 역활 == 레디스에 있는 키를 검색
   //매치에 와일드 카드 posts:*

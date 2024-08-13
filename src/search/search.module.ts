@@ -5,10 +5,12 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { Post } from 'src/post/entities/post.entity';
 import { ElasticsearchModule } from '@nestjs/elasticsearch';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { RedisService } from 'src/redis/redis.service';
+import { Search } from './entities/search.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Post]),
+    TypeOrmModule.forFeature([Post, Search]),
     ElasticsearchModule.registerAsync({
       imports: [ConfigModule],
       useFactory: async (configService: ConfigService) => ({
@@ -26,7 +28,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
   ],
 
   controllers: [SearchController],
-  providers: [SearchService],
+  providers: [SearchService, RedisService],
   exports: [ElasticsearchModule],
 })
 export class SearchModule {}
