@@ -10,10 +10,11 @@ import { JwtStrategy } from './strategies/jwt.strategy';
 import { CacheModule } from '@nestjs/cache-manager';
 import { CacheConfigService } from 'src/configs/cache.config';
 import { RefreshTokenStrategy } from './strategies/refresh.strategy';
+import { PointHistory } from 'src/point/entities/point-history.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([User]),
+    TypeOrmModule.forFeature([User, PointHistory]),
     CacheModule.registerAsync({
       isGlobal: true,
       useClass: CacheConfigService,

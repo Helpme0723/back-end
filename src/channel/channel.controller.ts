@@ -22,6 +22,7 @@ import { User } from 'src/user/entities/user.entity';
 import { FindAllMyChannelsDto } from './dtos/find-all-my-channels.dto';
 import { FindDailyInsightsDto } from './dtos/find-daily-insights.dto';
 import { FindMonthlyInsightsDto } from './dtos/find-monthly-insights.dto';
+import { SummaryInsightDto } from './dtos/summary-insight.dto';
 
 @ApiTags('03.채널')
 @Controller('channels')
@@ -223,7 +224,7 @@ export class ChannelController {
 
     return {
       status: HttpStatus.OK,
-      message: `${id}번 채널의 데일리 통계를 조회했습니다.`,
+      message: `${id}번 채널의 포스트별 데일리 통계를 조회했습니다.`,
       data,
     };
   }
@@ -251,7 +252,61 @@ export class ChannelController {
 
     return {
       status: HttpStatus.OK,
-      message: `${id}번 채널의 먼슬리 통계를 조회했습니다.`,
+      message: `${id}번 채널의 포스트별 먼슬리 통계를 조회했습니다.`,
+      data,
+    };
+  }
+
+  /**
+   * 일간 포스트 통합 통계
+   * @param param1
+   * @param date
+   * @returns
+   */
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard('jwt'))
+  @Get(':id/insights/daily/summary')
+  async findDailyChannelInsights(
+    @UserInfo() user: User,
+    @Param() { id }: ChannelIdDto,
+    @Query() { date }: SummaryInsightDto
+  ) {
+    const data = await this.channelService.findDailyChannelInsights(
+      user.id,
+      id,
+      date
+    );
+
+    return {
+      status: HttpStatus.OK,
+      message: `${id}번 채널의 데일리 통합 통계를 조회했습니다.`,
+      data,
+    };
+  }
+
+  /**
+   * 월간 포스트 통합 통계
+   * @param param1
+   * @param date
+   * @returns
+   */
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard('jwt'))
+  @Get(':id/insights/monthly/summary')
+  async findMonthlyChannelInsights(
+    @UserInfo() user: User,
+    @Param() { id }: ChannelIdDto,
+    @Query() { date }: SummaryInsightDto
+  ) {
+    const data = await this.channelService.findMonthlyChannelInsights(
+      user.id,
+      id,
+      date
+    );
+
+    return {
+      status: HttpStatus.OK,
+      message: `${id}번 채널의 먼슬리 통합 통계를 조회했습니다.`,
       data,
     };
   }
