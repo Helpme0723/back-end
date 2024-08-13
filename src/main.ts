@@ -3,7 +3,8 @@ import { AppModule } from './app.module';
 import { ConfigService } from '@nestjs/config';
 import { ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import { init as SentryInit } from '@sentry/node';
+import * as Sentry from '@sentry/node';
+import { AllExceptionsFilter } from './all-exceptions.filter';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, { cors: true });
@@ -11,7 +12,7 @@ async function bootstrap() {
   const port = configService.get<number>('SERVER_PORT');
 
   // connect Sentry
-  SentryInit({
+  Sentry.init({
     dsn: configService.get<string>('SENTRY_DSN'),
   });
 
@@ -52,6 +53,8 @@ async function bootstrap() {
       operationsSorter: 'alpha', // API 그룹 내 정렬을 알파벳 순으로
     },
   });
+
+  app.useGlobalFilters(new AllExceptionsFilter());
 
   await app.listen(port);
 }

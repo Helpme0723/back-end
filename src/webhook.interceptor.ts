@@ -3,26 +3,28 @@ import {
   ExecutionContext,
   Injectable,
   NestInterceptor,
+  HttpException,
+  HttpStatus,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as Sentry from '@sentry/node';
 import { IncomingWebhook } from '@slack/client';
-import { catchError } from 'rxjs';
+import { catchError, Observable, throwError } from 'rxjs';
 
 @Injectable()
 export class SentryWebhookInterceptor implements NestInterceptor {
   constructor(private readonly configService: ConfigService) {}
 
-  intercept(_: ExecutionContext, next: CallHandler) {
+  intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
     return next.handle().pipe(
       catchError((error) => {
-        //Sentry에 에러를 기록
+        // Sentry에 에러를 기록
         Sentry.captureException(error);
-        //IncomingWebhook으로 인해 Slack으로 메시지를 보냄
+
+        // Slack으로 메시지를 보냄
         const slackWebhook = this.configService.get<string>('SLACK_WEBHOOk');
         const webhook = new IncomingWebhook(slackWebhook);
         webhook.send({
-          // 메시지를 어떻게 보낼것인지
           attachments: [
             {
               color: 'danger',
@@ -34,13 +36,23 @@ export class SentryWebhookInterceptor implements NestInterceptor {
                   short: false,
                 },
               ],
-              // 메시지가 전송된 시간
               ts: Math.floor(new Date().getTime() / 1000).toString(),
             },
           ],
         });
-        // 요청의 흐름을 null로 인해 중단시킴.
-        return null;
+
+        // 에러를 다시 throw하여 NestJS의 예외 처리 시스템이 처리하도록 함
+        if (error instanceof HttpException) {
+          return throwError(() => error);
+        } else {
+          return throwError(
+            () =>
+              new HttpException(
+                error.message || 'Internal server error',
+                HttpStatus.INTERNAL_SERVER_ERROR
+              )
+          );
+        }
       })
     );
   }
