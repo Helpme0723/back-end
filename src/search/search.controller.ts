@@ -42,8 +42,10 @@ export class SearchController {
     const date = format(oneDayAgo, 'yyyy-MM-dd');
 
     console.log('^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^');
-    console.log(`$$$$$ today ${formattedDate} $$$$$`);
+    console.log(`%%%%%%%% today ${today} %%%%%%%%`);
+    console.log(`&&&&& oneDayAgo time ${oneDayAgo} &&&&&`);
     console.log(`@@@@@ one Day Ago ${date} @@@@@`);
+    console.log(`$$$$$ formattedDate ${formattedDate} $$$$$`);
     console.log('^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^');
   }
 
