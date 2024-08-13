@@ -7,6 +7,7 @@ import { Repository } from 'typeorm';
 import { SearchDto } from './dtos/search.dto';
 import { RedisService } from 'src/redis/redis.service';
 import { Search } from './entities/search.entity';
+import moment from 'moment';
 
 @Injectable()
 export class SearchService {
@@ -145,7 +146,24 @@ export class SearchService {
     //   await this.searchRepository.save(searchdata);
     // }
 
-    await this.redisService.searchData('ranking', 1, keyword);
+    // const currentday = toZonedTime(new Date(), 'Asia/Seoul');
+    // console.log('넌어떤식으로 나오니', currentday);
+    // const month = currentday.getUTCMonth();
+    // console.log(month);
+    // const year = currentday.getFullYear();
+    // const hour = currentday.getHours();
+    // const minutes = currentday.getMinutes();
+    // const timeKey = year + ':' + month + ':' + hour + ':' + minutes;
+    // console.log('시간이나오나?', timeKey);
+    console.log(
+      '@@@@@@@@@@',
+      new Date(`ranking:Tue Aug 13 2024 16:10:00 GMT+0900`).getTime()
+    );
+    const roundedTime = moment()
+      .startOf('minute')
+      .minute(Math.floor(moment().minute() / 10) * 10);
+    console.log('@@@@@@@', roundedTime);
+    await this.redisService.searchData(`ranking:${roundedTime}`, 1, keyword);
 
     return {
       posts,
@@ -160,12 +178,13 @@ export class SearchService {
   }
 
   async getsearchRankings() {
-    console.log('@@@@@@@', await this.redisService.check('key'));
-    return this.redisService.zrange('ranking', 2);
+    await this.redisService.gatherData();
+    return this.redisService.zrange('dest_key', 2);
   }
 
   async addsearchRankings() {
-    const searchedDatas = await this.redisService.findData('ranking');
+    const searchedDatas = await this.redisService.findData('dest_key');
+    console.log(searchedDatas);
     searchedDatas.forEach(async (item) => {
       let data = await this.searchRepository.findOne({
         where: { keyword: item.value },
