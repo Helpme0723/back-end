@@ -1,7 +1,7 @@
 name: talentVerse CD
 
 on:
-  workflow_dispatch: # 수동 실행 
+  workflow_dispatch: # 수동 실행
   workflow_run: # 특정 workflow가 실행됐을 때
     workflows: ['talentVerse CI'] # CI workflow
     types: [completed] # 완료 되었을 때
@@ -62,6 +62,9 @@ jobs:
 
       - name: Copy file to EC2 # 뭐지....
         run: rsync -avzP -e ssh ./dist ec2:${{ env.PROJECT_DIR }}/
+
+      - name: Copy file to EC2 # 뭐지....
+        run: rsync -avzP -e ssh ./node_modules ec2:${{ env.PROJECT_DIR }}/
 
       - name: Restart PM2 # 프로젝트 디렉토리로 이동하고 run.sh 파일을 실행해서 배포하는 건가
         run: ssh ec2 'cd ${{ env.PROJECT_DIR }} && ./scripts/run.sh'
