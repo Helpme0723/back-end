@@ -24,6 +24,7 @@ import { ChannelDailyInsight } from 'src/insight/entities/channel-daily-insight.
 import { ChannelMonthlyInsight } from 'src/insight/entities/channel-monthly-insight.entity';
 import { InsightSort } from './types/insight-sort.type';
 import { calculateInsightCount } from 'src/utils/count.util';
+import { toZonedTime } from 'date-fns-tz';
 
 @Injectable()
 export class ChannelService {
@@ -256,9 +257,10 @@ export class ChannelService {
       throw new NotFoundException('해당 아이디의 내 채널이 존재하지 않습니다.');
     }
 
-    const daily = format(new Date(), 'yyyy-MM-dd');
+    const today = toZonedTime(new Date(), 'Asia/Seoul');
+    const daily = format(today, 'yyyy-MM-dd');
 
-    const monthly = format(new Date(), 'yyyy-MM');
+    const monthly = format(today, 'yyyy-MM');
 
     const dailyInsights = await this.realTimeChannelInsights(
       channelId,
@@ -284,7 +286,8 @@ export class ChannelService {
     const { sort, page, limit } = findDailyInsightsDto;
 
     // 오늘 날짜 구하기
-    const today = format(new Date(), 'yyyy-MM-dd');
+    const day = toZonedTime(new Date(), 'Asia/Seoul');
+    const today = format(day, 'yyyy-MM-dd');
 
     // 쿼리로 받은 정보 중에 date가 없다면 오늘 날짜로 설정
     const date = findDailyInsightsDto.date ?? today;
@@ -347,7 +350,8 @@ export class ChannelService {
   ) {
     const { sort, page, limit } = findMonthlyInsightsDto;
 
-    const thisMonth = format(new Date(), 'yyyy-MM');
+    const today = toZonedTime(new Date(), 'Asia/Seoul');
+    const thisMonth = format(today, 'yyyy-MM');
 
     const date = findMonthlyInsightsDto.date ?? thisMonth;
 
@@ -459,7 +463,8 @@ export class ChannelService {
     channelId: number,
     date: string
   ) {
-    const today = format(new Date(), 'yyyy-MM-dd');
+    const day = toZonedTime(new Date(), 'Asia/Seoul');
+    const today = format(day, 'yyyy-MM-dd');
 
     const searchDate = date ?? today;
 
@@ -493,7 +498,8 @@ export class ChannelService {
     channelId: number,
     date: string
   ) {
-    const thisMonth = format(new Date(), 'yyyy-MM');
+    const today = toZonedTime(new Date(), 'Asia/Seoul');
+    const thisMonth = format(today, 'yyyy-MM');
 
     const searchDate = date ?? thisMonth;
 
