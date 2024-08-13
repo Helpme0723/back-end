@@ -58,7 +58,7 @@ export class InsightService {
 
     const dailyInsightData = [];
 
-    const oneDayAgo = sub(new Date(), { days: 1 });
+    const oneDayAgo = sub(new Date(), { hours: 1 });
     const date = format(oneDayAgo, 'yyyy-MM-dd');
 
     for (const post of posts) {
@@ -150,7 +150,7 @@ export class InsightService {
 
   // 매일 자정마다 +5분마다 일별 포스트 통합 총 조회수 등 통계 저장
   async calculateChannelDailyInsight() {
-    const oneDayAgo = sub(new Date(), { days: 1 });
+    const oneDayAgo = sub(new Date(), { hours: 1 });
     const daily = format(oneDayAgo, 'yyyy-MM-dd');
 
     const existingInsights = await this.dailyInsightRepository
