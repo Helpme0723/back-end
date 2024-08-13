@@ -2,8 +2,6 @@ import { Controller, Get, Query } from '@nestjs/common';
 import { SearchService } from './search.service';
 import { Cron } from '@nestjs/schedule';
 import { SearchDto } from './dtos/search.dto';
-import { format, toZonedTime } from 'date-fns-tz';
-import { sub } from 'date-fns';
 
 @Controller('search')
 export class SearchController {
@@ -31,22 +29,6 @@ export class SearchController {
     const data = this.searchService.searchPosts(searchDto);
 
     return data;
-  }
-
-  @Cron('* * * * *')
-  async insightTest() {
-    const today = toZonedTime(new Date(), 'Asia/Seoul');
-
-    const formattedDate = format(today, 'yyyy-MM-dd');
-    const oneDayAgo = sub(today, { days: 1 });
-    const date = format(oneDayAgo, 'yyyy-MM-dd');
-
-    console.log('^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^');
-    console.log(`%%%%%%%% today ${today} %%%%%%%%`);
-    console.log(`&&&&& oneDayAgo time ${oneDayAgo} &&&&&`);
-    console.log(`@@@@@ one Day Ago ${date} @@@@@`);
-    console.log(`$$$$$ formattedDate ${formattedDate} $$$$$`);
-    console.log('^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^');
   }
 
   // // db에서 바로 검색 테스트용
