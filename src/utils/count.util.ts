@@ -1,8 +1,8 @@
 export const calculateInsightCount = (newInsight, existingInsight) => {
-  let viewCount = newInsight.totalViews;
-  let likeCount = newInsight.totalLikes;
-  let commentCount = newInsight.totalComments;
-  let salesCount = newInsight.totalSales;
+  let viewCount = newInsight.viewCount;
+  let likeCount = newInsight.likeCount;
+  let commentCount = newInsight.commentCount;
+  let salesCount = newInsight.salesCount;
 
   if (existingInsight) {
     viewCount -= existingInsight.totalViews;
