@@ -11,6 +11,8 @@ import { CacheModule } from '@nestjs/cache-manager';
 import { CacheConfigService } from 'src/configs/cache.config';
 import { RefreshTokenStrategy } from './strategies/refresh.strategy';
 import { PointHistory } from 'src/point/entities/point-history.entity';
+import { NaverStrategy } from './strategies/naver.strategy';
+import { UtilsModule } from 'src/utils/utils.module';
 
 @Module({
   imports: [
@@ -21,8 +23,15 @@ import { PointHistory } from 'src/point/entities/point-history.entity';
     }),
     PassportModule,
     JwtModule.register({}),
+    UtilsModule,
   ],
   controllers: [AuthController],
-  providers: [AuthService, LocalStrategy, JwtStrategy, RefreshTokenStrategy],
+  providers: [
+    AuthService,
+    LocalStrategy,
+    JwtStrategy,
+    RefreshTokenStrategy,
+    NaverStrategy,
+  ],
 })
 export class AuthModule {}
