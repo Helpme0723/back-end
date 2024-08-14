@@ -59,7 +59,7 @@ export class PostService {
   }
 
   async create(userId: number, createPostDto: CreatePostDto) {
-    const { channelId, seriesId, ...postData } = createPostDto;
+    const { channelId, seriesId, price, ...postData } = createPostDto;
     const channel = await this.channelRepository.findOne({
       where: { userId, id: channelId },
     });
@@ -71,6 +71,9 @@ export class PostService {
     });
     if (seriesId && seriesId !== series?.id) {
       throw new UnauthorizedException('시리즈에 접근 권한이 없습니다');
+    }
+    if (price > 500000) {
+      throw new BadRequestException('가격은 500000포인트를 초과할수 없습니다.');
     }
     const post = this.postRepository.create({
       userId,
@@ -300,7 +303,7 @@ export class PostService {
   }
 
   async update(userId: number, id: number, updatePostDto: UpdatePostDto) {
-    const { channelId, seriesId } = updatePostDto;
+    const { channelId, seriesId, price } = updatePostDto;
     const post = await this.postRepository.findOne({
       where: { id, userId },
     });
@@ -322,6 +325,9 @@ export class PostService {
     }
     if (seriesId && series.userId !== userId) {
       throw new UnauthorizedException('접근권한이 없는 시리즈입니다.');
+    }
+    if (price > 500000) {
+      throw new BadRequestException('가격은 500000포인트를 초과할수 없습니다.');
     }
     const newPost = {
       ...post,
