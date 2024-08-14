@@ -26,6 +26,8 @@ import {
 } from 'class-validator';
 import { PointOrder } from 'src/point/entities/point-order.entity';
 import { Type } from 'class-transformer';
+import { NotificationSettings } from 'src/notification/entities/notification-settings.entity';
+import { Notification } from 'src/notification/entities/notification.entity'; // 알림 엔티티 추가
 
 @Entity('users')
 export class User {
@@ -127,4 +129,10 @@ export class User {
     cascade: true,
   })
   purchaseLists: PurchaseList[];
+
+  @OneToMany(() => NotificationSettings, (settings) => settings.user, { cascade: true })
+  notificationSettings: NotificationSettings[];
+
+  @OneToMany(() => Notification, (notification) => notification.user, { cascade: true }) // 알림 관계 추가
+  notifications: Notification[];
 }

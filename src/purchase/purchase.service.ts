@@ -71,13 +71,13 @@ export class PurchaseService {
       if (existingPurchase) {
         throw new BadRequestException('이미 구매한 포스트입니다.');
       }
-
+      //예외처리를 끝나고 트랜잭션을 시작해도 됨
       const purchase = this.purchaseRepository.create({
         userId,
         postId,
         price: post.price,
       });
-
+      //TODO:decrement를 써보기
       user.point -= post.price;
       // 포인트 히스토리 생성
       const pointHistory = this.pointHistoryRepository.create({
@@ -90,7 +90,7 @@ export class PurchaseService {
 
       // salesCount 증가
       await this.postRepository.increment({ id: postId }, 'salesCount', 1);
-      //TODO: 인크리먼트 도 쿼리 로 묶으면 좋을거같아요
+      //TODO: 인크리먼트 도 쿼리 로 묶으면 좋을거같아요(위에 salescount는 적용이 안됨)
       await queryRunner.manager.save(User, user);
       await queryRunner.manager.save(PurchaseList, purchase);
       await queryRunner.manager.save(PointHistory, pointHistory);
