@@ -13,6 +13,7 @@ import { RefreshTokenStrategy } from './strategies/refresh.strategy';
 import { PointHistory } from 'src/point/entities/point-history.entity';
 import { NaverStrategy } from './strategies/naver.strategy';
 import { UtilsModule } from 'src/utils/utils.module';
+import { KakaoStrategy } from './strategies/kakao.strategy';
 
 @Module({
   imports: [
@@ -32,6 +33,7 @@ import { UtilsModule } from 'src/utils/utils.module';
     JwtStrategy,
     RefreshTokenStrategy,
     NaverStrategy,
+    KakaoStrategy,
   ],
 })
 export class AuthModule {}
