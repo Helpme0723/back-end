@@ -3,14 +3,18 @@ import { Strategy } from 'passport-kakao';
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as _ from 'lodash';
+import { AuthService } from '../auth.service';
 
 @Injectable()
-export class KakaoStrategy extends PassportStrategy(Strategy) {
-  constructor(private readonly configService: ConfigService) {
+export class KakaoStrategy extends PassportStrategy(Strategy, 'kakao') {
+  constructor(
+    private readonly configService: ConfigService,
+    private readonly authService: AuthService
+  ) {
     super({
       clientID: configService.get<string>('KAKAO_REST_API_KEY'),
       clientSecret: configService.get<string>('KAKAO_CLIENT_SECRET'),
-      callbackURL: configService.get<string>('KAKAO_REDIRECT_URI'),
+      callbackURL: configService.get<string>('KAKAO_CALLBACK_URI'),
     });
   }
 
@@ -20,15 +24,23 @@ export class KakaoStrategy extends PassportStrategy(Strategy) {
     const properties = _.mapKeys(_json.properties, (v, k) => {
       return _.camelCase(k);
     });
+    const userEmail = _json.kakao_account.email;
+    const userNickname = profile.displayName;
+    const userProfileImg = _json.properties.profile_image;
 
-    const payload = {
-      profile: profileRest,
-      properties,
-      token: {
-        accessToken,
-        refreshToken,
-      },
-    };
-    done(null, payload);
+    const user = await this.authService.findUserByEmail(userEmail);
+    if (!user) {
+      await this.authService.createSocialUser(
+        userEmail,
+        userNickname,
+        userProfileImg,
+        'kakao'
+      );
+    }
+
+    if (!user.kakao) {
+      await this.authService.changeProvider(userEmail, 'kakao');
+    }
+    return done(null, user);
   }
 }

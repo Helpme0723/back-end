@@ -395,7 +395,6 @@ export class AuthService {
   async createCode(userId: number) {
     // 코드를 키로 갖고, 유저아이디를 밸류로 갖기
     const code = this.utilsService.getUUID();
-
     // 코드 유효 시간
     const ttl = 30;
     // 코드 저장
