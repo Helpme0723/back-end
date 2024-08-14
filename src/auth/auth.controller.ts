@@ -130,12 +130,11 @@ export class AuthController {
   @ApiBearerAuth()
   @UseGuards(AuthGuard('refresh'))
   @Post('tokens')
-  async tokenReIssue(
-    @Headers('Authorization') token: string,
-    @UserInfo() user: User
-  ) {
-    const refreshToken = token.split(' ')[1];
-    const data = await this.authService.tokenReIssue(refreshToken, user.id);
+  async tokenReIssue(@UserInfo() user: User & { refreshToken: string }) {
+    const data = await this.authService.tokenReIssue(
+      user.refreshToken,
+      user.id
+    );
     return {
       status: HttpStatus.OK,
       message: '토큰 재발급에 성공했습니다.',
