@@ -77,15 +77,17 @@ export class CommentService {
       // 트랜잭션 커밋
       await queryRunner.commitTransaction();
   
-       // 알림 설정 확인
-       const notificationSettings = await this.notificationsService.getSettingsForUser(post.user.id);
-       if (notificationSettings?.commentNotifications) {
-         // 알림 전송
-         this.notificationsService.sendNotification(
-           post.user.id,
-            `당신의 포스트 "${post.title}"에 새로운 댓글이 달렸습니다: ${fullComment.content}`
-         );
-       }
+       // 알림 설정 확인 및 본인 포스트 여부 확인
+    if (post.user.id !== createCommentDto.userId) {
+      const notificationSettings = await this.notificationsService.getSettingsForUser(post.user.id);
+      if (notificationSettings?.commentNotifications) {
+        // 알림 전송
+        this.notificationsService.sendNotification(
+          post.user.id,
+          `당신의 포스트 "${post.title}"에 새로운 댓글이 달렸습니다: ${fullComment.content}`
+        );
+      }
+    }
   
       return {
         ...fullComment,
