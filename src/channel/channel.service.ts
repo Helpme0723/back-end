@@ -17,11 +17,14 @@ import { TAKE_COUNT } from 'src/constants/page.constant';
 import { paginate } from 'nestjs-typeorm-paginate';
 import { DailyInsight } from 'src/insight/entities/daily-insight.entity';
 import { MonthlyInsight } from 'src/insight/entities/monthly-insight.entity';
-import { format, isValid, sub } from 'date-fns';
+import { format, isValid } from 'date-fns';
 import { FindDailyInsightsDto } from './dtos/find-daily-insights.dto';
 import { FindMonthlyInsightsDto } from './dtos/find-monthly-insights.dto';
 import { ChannelDailyInsight } from 'src/insight/entities/channel-daily-insight.entity';
 import { ChannelMonthlyInsight } from 'src/insight/entities/channel-monthly-insight.entity';
+import { InsightSort } from './types/insight-sort.type';
+import { calculateInsightCount } from 'src/utils/count.util';
+import { toZonedTime } from 'date-fns-tz';
 
 @Injectable()
 export class ChannelService {
@@ -221,6 +224,28 @@ export class ChannelService {
     return true;
   }
 
+  // 날짜 유효성 검증
+  private validateDate(date: string) {
+    if (!isValid(new Date(date))) {
+      throw new BadRequestException('유효하지 않은 날짜입니다.');
+    }
+    if (new Date(date) > new Date()) {
+      throw new BadRequestException('아직 통계가 계산되지 않은 날짜입니다.');
+    }
+  }
+
+  // 채널 존재 유효성 검증
+  private async validateChannel(userId: number, channelId: number) {
+    const channel = await this.channelRepository.findOneBy({
+      id: channelId,
+      userId,
+    });
+    if (!channel) {
+      throw new NotFoundException('해당 아이디의 내 채널이 존재하지 않습니다.');
+    }
+    return channel;
+  }
+
   // 채널 통계 조회
   async findInsights(userId: number, channelId: number) {
     const channel = await this.channelRepository.findOneBy({
@@ -232,24 +257,22 @@ export class ChannelService {
       throw new NotFoundException('해당 아이디의 내 채널이 존재하지 않습니다.');
     }
 
-    const oneDayAgo = sub(new Date(), { days: 1 });
-    const daily = format(oneDayAgo, 'yyyy-MM-dd');
+    const today = toZonedTime(new Date(), 'Asia/Seoul');
+    const daily = format(today, 'yyyy-MM-dd');
 
-    const oneMonthAgo = sub(new Date(), { months: 1 });
-    const monthly = format(oneMonthAgo, 'yyyy-MM');
+    const monthly = format(today, 'yyyy-MM');
 
-    // 일별 포스트 전체 합산
-    const dailyInsights = await this.channelDailyInsightRepository.findOneBy({
+    const dailyInsights = await this.realTimeChannelInsights(
       channelId,
-      date: daily,
-    });
+      daily,
+      'daily'
+    );
 
-    // 월별 포스트 전체 합산
-    const monthlyInsights =
-      await this.channelMonthlyInsightRepository.findOneBy({
-        channelId,
-        date: monthly,
-      });
+    const monthlyInsights = await this.realTimeChannelInsights(
+      channelId,
+      monthly,
+      'monthly'
+    );
 
     return { dailyInsights, monthlyInsights };
   }
@@ -262,48 +285,108 @@ export class ChannelService {
   ) {
     const { sort, page, limit } = findDailyInsightsDto;
 
-    const oneDayAgo = sub(new Date(), { days: 1 });
+    // 오늘 날짜 구하기
+    const day = toZonedTime(new Date(), 'Asia/Seoul');
+    const today = format(day, 'yyyy-MM-dd');
 
-    const date = findDailyInsightsDto.date ?? format(oneDayAgo, 'yyyy-MM-dd');
+    // 쿼리로 받은 정보 중에 date가 없다면 오늘 날짜로 설정
+    const date = findDailyInsightsDto.date ?? today;
 
-    const validDate = isValid(new Date(date));
+    this.validateDate(date);
 
-    if (!validDate) {
-      throw new BadRequestException('유효하지 않은 날짜입니다.');
+    await this.validateChannel(userId, channelId);
+
+    // date가 오늘 날짜라면 realTimeInsights로 계산해서 반환
+    if (date === today) {
+      const insightData = await this.realTimeInsights(
+        channelId,
+        date,
+        'daily',
+        sort
+      );
+
+      return insightData;
+    } else {
+      // 오늘 이전의 날짜라면 db에서 데이터 가져오기
+      const { items, meta } = await paginate<DailyInsight>(
+        this.dailyInsightRepository,
+        { page, limit },
+        {
+          where: {
+            channelId,
+            date,
+          },
+          relations: {
+            post: true,
+          },
+          order: { [sort]: 'DESC' },
+        }
+      );
+
+      // 아이템에 post가 있을 때만(삭제된 포스트가 아닐 때만) 맵핑해서 반환
+      const returnValue = items
+        .filter((item) => item.post)
+        .map((item) => ({
+          id: item.id,
+          channelId: item.channelId,
+          postId: item.postId,
+          title: item.post.title,
+          viewCount: item.viewCount,
+          likeCount: item.likeCount,
+          commentCount: item.commentCount,
+          salesCount: item.salesCount,
+          date: item.date,
+        }));
+
+      return { items: returnValue, meta };
     }
+  }
 
-    if (new Date(date) > oneDayAgo) {
-      throw new BadRequestException('아직 통계가 계산되지 않은 날짜입니다.');
-    }
+  // 월별 포스트 통계 전체 조회
+  async findMonthlyInsights(
+    userId: number,
+    channelId: number,
+    findMonthlyInsightsDto: FindMonthlyInsightsDto
+  ) {
+    const { sort, page, limit } = findMonthlyInsightsDto;
 
-    const channel = await this.channelRepository.findOneBy({
-      id: channelId,
-      userId,
-    });
+    const today = toZonedTime(new Date(), 'Asia/Seoul');
+    const thisMonth = format(today, 'yyyy-MM');
 
-    if (!channel) {
-      throw new NotFoundException('해당 아이디의 내 채널이 없습니다.');
-    }
+    const date = findMonthlyInsightsDto.date ?? thisMonth;
 
-    const { items, meta } = await paginate<DailyInsight>(
-      this.dailyInsightRepository,
-      { page, limit },
-      {
-        where: {
-          channelId,
-          date,
-        },
-        relations: {
-          post: true,
-        },
-        order: { [sort]: 'DESC' },
-      }
-    );
+    const dateTime = `${date}-01`;
 
-    // 아이템에 post가 있을 때만(삭제된 포스트가 아닐 때만) 맵핑해서 반환
-    const returnValue = items
-      .filter((item) => item.post)
-      .map((item) => ({
+    this.validateDate(dateTime);
+
+    await this.validateChannel(userId, channelId);
+
+    if (date === thisMonth) {
+      const insightData = await this.realTimeInsights(
+        channelId,
+        date,
+        'monthly',
+        sort
+      );
+
+      return insightData;
+    } else {
+      const { items, meta } = await paginate<MonthlyInsight>(
+        this.monthlyInsightRepository,
+        { page, limit },
+        {
+          where: {
+            channelId,
+            date,
+          },
+          relations: {
+            post: true,
+          },
+          order: { [sort]: 'DESC' },
+        }
+      );
+
+      const returnValue = items.map((item) => ({
         id: item.id,
         channelId: item.channelId,
         postId: item.postId,
@@ -315,69 +398,168 @@ export class ChannelService {
         date: item.date,
       }));
 
-    return { items: returnValue, meta };
+      return { items: returnValue, meta };
+    }
   }
 
-  // 월별 포스트 통계 전체 조회
-  async findMonthlyInsights(
+  // 실시간 포스트별 데이터 계산
+  async realTimeInsights(
+    channelId: number,
+    date: string,
+    type: string,
+    sort: InsightSort
+  ) {
+    // 모든 포스트를 찾기
+    const posts = await this.postRepository.find({ where: { channelId } });
+
+    const insightRepository =
+      type === 'daily'
+        ? this.dailyInsightRepository
+        : this.monthlyInsightRepository;
+
+    const existingInsights = await insightRepository
+      .createQueryBuilder('insight')
+      .select('insight.postId', 'postId')
+      .addSelect('SUM(insight.viewCount)', 'totalViews')
+      .addSelect('SUM(insight.likeCount)', 'totalLikes')
+      .addSelect('SUM(insight.commentCount)', 'totalComments')
+      .addSelect('SUM(insight.salesCount)', 'totalSales')
+      .where('insight.channelId = :channelId', { channelId })
+      .groupBy('insight.postId')
+      .getRawMany();
+
+    const existingInsightMap = new Map();
+
+    for (const insight of existingInsights) {
+      existingInsightMap.set(insight.postId, insight);
+    }
+
+    const insightData = [];
+
+    for (const post of posts) {
+      const existingInsightData = existingInsightMap.get(post.id);
+
+      const counts = calculateInsightCount(post, existingInsightData);
+
+      const data = {
+        channelId,
+        postId: post.id,
+        title: post.title,
+        ...counts,
+        date,
+      };
+
+      insightData.push(data);
+    }
+
+    insightData.sort((a, b) => b[sort] - a[sort]);
+
+    return { items: insightData };
+  }
+
+  // 일별 포스트 통합 통계 조회
+  async findDailyChannelInsights(
     userId: number,
     channelId: number,
-    findMonthlyInsightsDto: FindMonthlyInsightsDto
+    date: string
   ) {
-    const { sort, page, limit } = findMonthlyInsightsDto;
+    const day = toZonedTime(new Date(), 'Asia/Seoul');
+    const today = format(day, 'yyyy-MM-dd');
 
-    const oneMonthAgo = sub(new Date(), { months: 1 });
+    const searchDate = date ?? today;
 
-    const date = findMonthlyInsightsDto.date ?? format(oneMonthAgo, 'yyyy-MM');
+    this.validateDate(searchDate);
 
-    const dateTime = `${date}-01`;
+    await this.validateChannel(userId, channelId);
 
-    const validDate = isValid(new Date(dateTime));
+    let dailyInsights;
 
-    if (!validDate) {
-      throw new BadRequestException('유효하지 않은 날짜입니다.');
+    if (today === searchDate) {
+      dailyInsights = await this.realTimeChannelInsights(
+        channelId,
+        searchDate,
+        'daily'
+      );
+
+      return dailyInsights;
+    } else {
+      dailyInsights = await this.channelDailyInsightRepository.findOneBy({
+        channelId,
+        date: searchDate,
+      });
     }
 
-    if (new Date(dateTime) > oneMonthAgo) {
-      throw new BadRequestException('아직 통계가 계산되지 않은 달입니다.');
+    return dailyInsights;
+  }
+
+  // 월별 포스트 통합 통계 조회
+  async findMonthlyChannelInsights(
+    userId: number,
+    channelId: number,
+    date: string
+  ) {
+    const today = toZonedTime(new Date(), 'Asia/Seoul');
+    const thisMonth = format(today, 'yyyy-MM');
+
+    const searchDate = date ?? thisMonth;
+
+    const dateTime = `${searchDate}-01`;
+
+    this.validateDate(dateTime);
+
+    await this.validateChannel(userId, channelId);
+
+    let monthlyInsights;
+
+    if (thisMonth === searchDate) {
+      monthlyInsights = await this.realTimeChannelInsights(
+        channelId,
+        searchDate,
+        'monthly'
+      );
+    } else {
+      monthlyInsights = await this.channelMonthlyInsightRepository.findOneBy({
+        channelId,
+        date: searchDate,
+      });
     }
 
-    const channel = await this.channelRepository.findOneBy({
-      id: channelId,
-      userId,
-    });
+    return monthlyInsights;
+  }
 
-    if (!channel) {
-      throw new NotFoundException('해당 아이디의 내 채널이 없습니다.');
-    }
+  // 실시간 포스트 통합 통계 데이터 계산
+  async realTimeChannelInsights(channelId: number, date: string, type: string) {
+    const allPostsInsight = await this.postRepository
+      .createQueryBuilder('post')
+      .select('SUM(post.viewCount)', 'totalViews')
+      .addSelect('SUM(post.likeCount)', 'totalLikes')
+      .addSelect('SUM(post.commentCount)', 'totalComments')
+      .addSelect('SUM(post.salesCount)', 'totalSales')
+      .where('post.channelId = :channelId', { channelId })
+      .groupBy('post.channelId')
+      .getRawOne();
 
-    const { items, meta } = await paginate<MonthlyInsight>(
-      this.monthlyInsightRepository,
-      { page, limit },
-      {
-        where: {
-          channelId,
-          date,
-        },
-        relations: {
-          post: true,
-        },
-        order: { [sort]: 'DESC' },
-      }
-    );
+    const insightRepository =
+      type === 'daily'
+        ? this.dailyInsightRepository
+        : this.monthlyInsightRepository;
 
-    const returnValue = items.map((item) => ({
-      id: item.id,
-      channelId: item.channelId,
-      postId: item.postId,
-      title: item.post.title,
-      viewCount: item.viewCount,
-      likeCount: item.likeCount,
-      commentCount: item.commentCount,
-      salesCount: item.salesCount,
-      date: item.date,
-    }));
+    const existingInsights = await insightRepository
+      .createQueryBuilder('insight')
+      .select('SUM(insight.viewCount)', 'totalViews')
+      .addSelect('SUM(insight.likeCount)', 'totalLikes')
+      .addSelect('SUM(insight.commentCount)', 'totalComments')
+      .addSelect('SUM(insight.salesCount)', 'totalSales')
+      .where('insight.channelId = :channelId', { channelId })
+      .groupBy('insight.channelId')
+      .getRawOne();
 
-    return { items: returnValue, meta };
+    const counts = calculateInsightCount(allPostsInsight, existingInsights);
+
+    return {
+      channelId,
+      ...counts,
+      date,
+    };
   }
 }

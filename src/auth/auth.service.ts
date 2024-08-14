@@ -16,6 +16,8 @@ import { SignInDto } from './dtos/sign-in.dto';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { Cache, CACHE_MANAGER } from '@nestjs/cache-manager';
+import { PointHistory } from 'src/point/entities/point-history.entity';
+import { PointHistoryType } from 'src/point/types/point-history.type';
 
 @Injectable()
 export class AuthService {
@@ -25,7 +27,9 @@ export class AuthService {
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
     private readonly dataSource: DataSource,
-    @Inject(CACHE_MANAGER) private readonly cacheManager: Cache
+    @Inject(CACHE_MANAGER) private readonly cacheManager: Cache,
+    @InjectRepository(PointHistory)
+    private readonly pointHistoryRepository: Repository<PointHistory>
   ) {}
 
   /**
@@ -57,6 +61,14 @@ export class AuthService {
       ...etc,
       password: hashedPassword,
     });
+
+    this.pointHistoryRepository.save({
+      userId: user.id,
+      amount: user.point,
+      type: PointHistoryType.INCOME,
+      description: '회원가입 축하금',
+    });
+
     user.password = undefined;
     user.deletedAt = undefined;
     return user;

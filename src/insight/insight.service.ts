@@ -7,6 +7,8 @@ import { Post } from 'src/post/entities/post.entity';
 import { format, sub } from 'date-fns';
 import { ChannelDailyInsight } from './entities/channel-daily-insight.entity';
 import { ChannelMonthlyInsight } from './entities/channel-monthly-insight.entity';
+import { calculateInsightCount } from 'src/utils/count.util';
+import { toZonedTime } from 'date-fns-tz';
 
 @Injectable()
 export class InsightService {
@@ -57,31 +59,19 @@ export class InsightService {
 
     const dailyInsightData = [];
 
-    const oneDayAgo = sub(new Date(), { days: 1 });
+    const today = toZonedTime(new Date(), 'Asia/Seoul');
+    const oneDayAgo = sub(today, { days: 1 });
     const date = format(oneDayAgo, 'yyyy-MM-dd');
 
     for (const post of posts) {
       const existingInsightData = existingInsightMap.get(post.id);
 
-      let viewCount = post.viewCount;
-      let likeCount = post.likeCount;
-      let commentCount = post.commentCount;
-      let salesCount = post.salesCount;
-
-      if (existingInsightData) {
-        viewCount -= existingInsightData.totalViews;
-        likeCount -= existingInsightData.totalLikes;
-        commentCount -= existingInsightData.totalComments;
-        salesCount -= existingInsightData.totalSales;
-      }
+      const counts = calculateInsightCount(post, existingInsightData);
 
       const dailyInsight = this.dailyInsightRepository.create({
         channelId: post.channelId,
         postId: post.id,
-        viewCount,
-        likeCount,
-        commentCount,
-        salesCount,
+        ...counts,
         date,
       });
 
@@ -125,31 +115,19 @@ export class InsightService {
 
     const monthlyInsightData = [];
 
-    const oneMonthAgo = sub(new Date(), { months: 1 });
+    const today = toZonedTime(new Date(), 'Asia/Seoul');
+    const oneMonthAgo = sub(today, { months: 1 });
     const date = format(oneMonthAgo, 'yyyy-MM');
 
     for (const post of posts) {
       const existingInsightData = existingInsightMap.get(post.id);
 
-      let viewCount = post.viewCount;
-      let likeCount = post.likeCount;
-      let commentCount = post.commentCount;
-      let salesCount = post.salesCount;
-
-      if (existingInsightData) {
-        viewCount -= existingInsightData.totalViews;
-        likeCount -= existingInsightData.totalLikes;
-        commentCount -= existingInsightData.totalComments;
-        salesCount -= existingInsightData.totalSales;
-      }
+      const counts = calculateInsightCount(post, existingInsightData);
 
       const MonthlyInsight = this.monthlyInsightRepository.create({
         channelId: post.channelId,
         postId: post.id,
-        viewCount,
-        likeCount,
-        commentCount,
-        salesCount,
+        ...counts,
         date,
       });
 
@@ -175,7 +153,8 @@ export class InsightService {
 
   // 매일 자정마다 +5분마다 일별 포스트 통합 총 조회수 등 통계 저장
   async calculateChannelDailyInsight() {
-    const oneDayAgo = sub(new Date(), { days: 1 });
+    const today = toZonedTime(new Date(), 'Asia/Seoul');
+    const oneDayAgo = sub(today, { days: 1 });
     const daily = format(oneDayAgo, 'yyyy-MM-dd');
 
     const existingInsights = await this.dailyInsightRepository
@@ -212,7 +191,8 @@ export class InsightService {
 
   // 매월 1일 자정 +5분 마다 월별 포스트 통합 총 조회수 등 통계 계산 후 저장
   async calculateChannelMonthlyInsight() {
-    const oneMonthAgo = sub(new Date(), { months: 1 });
+    const today = toZonedTime(new Date(), 'Asia/Seoul');
+    const oneMonthAgo = sub(today, { months: 1 });
     const monthly = format(oneMonthAgo, 'yyyy-MM');
 
     const existingInsights = await this.monthlyInsightRepository

@@ -21,6 +21,8 @@ import { InsightModule } from './insight/insight.module';
 import { MailModule } from './mail/mail.module';
 import { SearchModule } from './search/search.module';
 import { NotificationsModule } from './notification/notification.module';
+import { RedisModule } from '@nestjs-modules/ioredis';
+
 
 @Module({
   imports: [
@@ -46,6 +48,7 @@ import { NotificationsModule } from './notification/notification.module';
     MailModule,
     SearchModule,
     NotificationsModule,
+    RedisModule,
   ],
   controllers: [AppController],
   providers: [],
