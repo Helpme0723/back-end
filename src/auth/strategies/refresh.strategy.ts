@@ -4,6 +4,7 @@ import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { JwtPayload } from '../interfaces/jwt-payload.interface';
 import { AuthService } from '../auth.service';
+import { Request } from 'express';
 
 @Injectable()
 export class RefreshTokenStrategy extends PassportStrategy(
@@ -17,11 +18,13 @@ export class RefreshTokenStrategy extends PassportStrategy(
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       secretOrKey: configService.get<string>('REFRESH_TOKEN_SECRET'),
+      passReqToCallback: true,
     });
   }
-  async validate(payload: JwtPayload) {
+  async validate(req: Request, payload: JwtPayload) {
+    const refreshToken = req.headers.authorization.split(' ')[1];
     const userId = await this.authService.findRefreshTokenById(payload.id);
 
-    return { id: userId };
+    return { id: userId, refreshToken };
   }
 }
