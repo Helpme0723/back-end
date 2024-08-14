@@ -1,14 +1,14 @@
-import { IsNumber, IsOptional } from 'class-validator';
+import { IsInt, Min } from 'class-validator';
 import { Type } from 'class-transformer';
 
 export class FindAllNotificationsDto {
-  @IsNumber()
-  @IsOptional()
+  @IsInt()
+  @Min(1)
   @Type(() => Number)
-  page?: number = 1;
+  page: number = 1;
 
-  @IsNumber()
-  @IsOptional()
+  @IsInt()
+  @Min(1)
   @Type(() => Number)
-  limit?: number = 10;
+  limit: number = 10;
 }

@@ -1,4 +1,13 @@
-import { Controller, Get, Post, Sse, Delete, Query, UnauthorizedException, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Sse,
+  Delete,
+  Query,
+  UnauthorizedException,
+  UseGuards,
+} from '@nestjs/common';
 import { NotificationsService } from './notification.service';
 import { Observable } from 'rxjs';
 import { MessageEvent } from '@nestjs/common';
@@ -6,6 +15,7 @@ import { JwtService } from '@nestjs/jwt';
 import { UserInfo } from 'src/auth/decorators/user-info.decorator';
 import { User } from 'src/user/entities/user.entity';
 import { AuthGuard } from '@nestjs/passport';
+import { FindAllNotificationsDto } from './dtos/FindAllNotifications-dto';
 
 @Controller('notifications')
 export class NotificationsController {
@@ -40,88 +50,99 @@ export class NotificationsController {
     }
   }
 
-   // 읽지 않은 알림 조회
-   @UseGuards(AuthGuard('jwt'))
-   @Get('unread')
-   async getUnreadNotifications(@UserInfo() user: User) {
-     const notifications = await this.notificationsService.getUnreadNotifications(user.id);
-     return {
-       statusCode: 200,
-       message: '읽지 않은 알림들입니다.',
-       data: notifications,
-     };
-   }
- 
-   // 모든 알림 조회
-   @UseGuards(AuthGuard('jwt'))
-   @Get('all')
-   async getAllNotifications(@UserInfo() user: User) {
-     const notifications = await this.notificationsService.getAllNotifications(user.id);
-     return {
-       statusCode: 200,
-       message: '모든 알림을 조회합니다',
-       data: notifications,
-     };
-   }
- 
-   // 알림 읽음 처리
-   @UseGuards(AuthGuard('jwt'))
-   @Post('read')
-   async markNotificationsAsRead(@UserInfo() user: User) {
-     await this.notificationsService.markNotificationsAsRead(user.id);
-     return {
-       statusCode: 200,
-       message: '읽음 상태로 처리완료',
-     };
-   }
- 
-   // 댓글 알림 설정 토글
-   @UseGuards(AuthGuard('jwt'))
-   @Post('settings/comment')
-   async toggleCommentNotifications(@UserInfo() user: User) {
-     const updatedSettings = await this.notificationsService.toggleCommentNotifications(user.id);
-     return {
-       statusCode: 200,
-       message: '상태변경 성공',
-       data: {
-         commentNotifications: updatedSettings.commentNotifications,
-       },
-     };
-   }
- 
-   // 댓글 좋아요 알림 설정 토글
-   @UseGuards(AuthGuard('jwt'))
-   @Post('settings/comment/like')
-   async toggleLikeNotifications(@UserInfo() user: User) {
-     const updatedSettings = await this.notificationsService.toggleLikeNotifications(user.id);
-     return {
-       statusCode: 200,
-       message: '상태변경 성공',
-       data: {
-         commentlikeNotifications: updatedSettings.commentlikeNotifications,
-       },
-     };
-   }
- 
-   // 포스트 좋아요 알림 설정 토글
-   @UseGuards(AuthGuard('jwt'))
-   @Post('settings/post/like')
-   async togglePostLikeNotifications(@UserInfo() user: User) {
-     const updatedSettings = await this.notificationsService.togglePostLikeNotifications(user.id);
-     return {
-       statusCode: 200,
-       message: '상태변경 성공',
-       data: {
-         postLikeNotifications: updatedSettings.postLikeNotifications,
-       },
-     };
-   }
+  // 읽지 않은 알림 조회
+  @UseGuards(AuthGuard('jwt'))
+  @Get('unread')
+  async getUnreadNotifications(@UserInfo() user: User) {
+    const notifications =
+      await this.notificationsService.getUnreadNotifications(user.id);
+    return {
+      statusCode: 200,
+      message: '읽지 않은 알림들입니다.',
+      data: notifications,
+    };
+  }
 
-   // 구독 알림 설정 토글
+  // 모든 알림 조회 - 페이지네이션 적용
+  @UseGuards(AuthGuard('jwt'))
+  @Get('all')
+  async getAllNotifications(
+    @UserInfo() user: User,
+    @Query() findAllNotificationsDto: FindAllNotificationsDto
+  ) {
+    const notifications = await this.notificationsService.getAllNotifications(
+      user.id,
+      findAllNotificationsDto
+    );
+    return {
+      statusCode: 200,
+      message: '모든 알림을 조회합니다',
+      data: notifications,
+    };
+  }
+
+  // 알림 읽음 처리
+  @UseGuards(AuthGuard('jwt'))
+  @Post('read')
+  async markNotificationsAsRead(@UserInfo() user: User) {
+    await this.notificationsService.markNotificationsAsRead(user.id);
+    return {
+      statusCode: 200,
+      message: '읽음 상태로 처리완료',
+    };
+  }
+
+  // 댓글 알림 설정 토글
+  @UseGuards(AuthGuard('jwt'))
+  @Post('settings/comment')
+  async toggleCommentNotifications(@UserInfo() user: User) {
+    const updatedSettings =
+      await this.notificationsService.toggleCommentNotifications(user.id);
+    return {
+      statusCode: 200,
+      message: '상태변경 성공',
+      data: {
+        commentNotifications: updatedSettings.commentNotifications,
+      },
+    };
+  }
+
+  // 댓글 좋아요 알림 설정 토글
+  @UseGuards(AuthGuard('jwt'))
+  @Post('settings/comment/like')
+  async toggleLikeNotifications(@UserInfo() user: User) {
+    const updatedSettings =
+      await this.notificationsService.toggleLikeNotifications(user.id);
+    return {
+      statusCode: 200,
+      message: '상태변경 성공',
+      data: {
+        commentlikeNotifications: updatedSettings.commentlikeNotifications,
+      },
+    };
+  }
+
+  // 포스트 좋아요 알림 설정 토글
+  @UseGuards(AuthGuard('jwt'))
+  @Post('settings/post/like')
+  async togglePostLikeNotifications(@UserInfo() user: User) {
+    const updatedSettings =
+      await this.notificationsService.togglePostLikeNotifications(user.id);
+    return {
+      statusCode: 200,
+      message: '상태변경 성공',
+      data: {
+        postLikeNotifications: updatedSettings.postLikeNotifications,
+      },
+    };
+  }
+
+  // 구독 알림 설정 토글
   @UseGuards(AuthGuard('jwt'))
   @Post('settings/subscribe')
   async toggleSubscribeNotifications(@UserInfo() user: User) {
-    const updatedSettings = await this.notificationsService.toggleSubscribeNotifications(user.id);
+    const updatedSettings =
+      await this.notificationsService.toggleSubscribeNotifications(user.id);
     return {
       statusCode: 200,
       message: '구독 알림 설정이 성공적으로 변경되었습니다.',
@@ -130,17 +151,18 @@ export class NotificationsController {
       },
     };
   }
- 
-   // 알림 설정 조회
-   @UseGuards(AuthGuard('jwt'))
-   @Get('settings')
-   async getNotificationSettings(@UserInfo() user: User) {
-     const settings = await this.notificationsService.getSettingsForUser(user.id);
-     return {
-       statusCode: 200,
-       message: '내 알림 설정을 조회합니다.',
-       data: settings,
-     };
-   }
- }
- 
+
+  // 알림 설정 조회
+  @UseGuards(AuthGuard('jwt'))
+  @Get('settings')
+  async getNotificationSettings(@UserInfo() user: User) {
+    const settings = await this.notificationsService.getSettingsForUser(
+      user.id
+    );
+    return {
+      statusCode: 200,
+      message: '내 알림 설정을 조회합니다.',
+      data: settings,
+    };
+  }
+}

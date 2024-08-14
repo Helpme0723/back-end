@@ -7,6 +7,8 @@ import { Repository } from 'typeorm';
 import { NotificationSettings } from './entities/notification-settings.entity';
 import { Notification } from './entities/notification.entity'; // 알림 엔티티 추가
 import { filter, map } from 'rxjs/operators';
+import { paginate, Pagination } from 'nestjs-typeorm-paginate';
+import { FindAllNotificationsDto } from './dtos/FindAllNotifications-dto';
 
 interface NotificationMessage {
   userId: number;
@@ -111,13 +113,20 @@ async toggleSubscribeNotifications(userId: number): Promise<NotificationSettings
     });
   }
 
-  // 모든 알림 조회 (읽음 포함)
-  async getAllNotifications(userId: number): Promise<Notification[]> {
-    return this.notificationRepository.find({
-      where: { user: { id: userId } },
-      order: { createdAt: 'DESC' },
-    });
-  }
+    // 모든 알림 조회 (읽음 포함) - 페이지네이션 적용
+async getAllNotifications(userId: number, findAllNotificationsDto: FindAllNotificationsDto): Promise<Pagination<Notification>> {
+  const { page, limit } = findAllNotificationsDto;
+
+  const queryBuilder = this.notificationRepository
+    .createQueryBuilder('notification')
+    .leftJoinAndSelect('notification.user', 'user')
+    .where('notification.user.id = :userId', { userId })
+    .orderBy('notification.createdAt', 'DESC');
+
+  const pagination = await paginate<Notification>(queryBuilder, { page, limit });
+  return pagination;
+}
+
 
   // 알림 읽음 처리
   async markNotificationsAsRead(userId: number) {
