@@ -396,9 +396,9 @@ export class AuthService {
     // 코드를 키로 갖고, 유저아이디를 밸류로 갖기
     const code = this.utilsService.getUUID();
 
-    // 리프레쉬 토큰 만료 시간 설정
+    // 코드 유효 시간
     const ttl = 30;
-    // 암호화된 리프레쉬 토큰 저장
+    // 코드 저장
     await this.cacheManager.set(code, userId, {
       ttl,
     });
