@@ -176,12 +176,12 @@ export class AuthController {
   }
 
   /**
-   * 네이버 소셜 로그인
+   * 소셜 로그인 토큰 발급
    * @param code
    * @returns
    */
   @Post('social/token')
-  async naverToken(@Query('code') code: string) {
+  async socialToken(@Query('code') code: string) {
     const data = await this.authService.createToken(code);
 
     return {
