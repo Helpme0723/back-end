@@ -164,7 +164,7 @@ export class AuthController {
   async kakaoAuth(@Req() _req: Request) {}
 
   /* Get kakao Auth Callback */
-  @Get('/auth/kakao/callback')
+  @Get('kakao/callback')
   @UseGuards(AuthGuard('kakao'))
   async kakaoAuthCallback(
     @Req() req: KakaoRequest,
@@ -174,13 +174,14 @@ export class AuthController {
     const { user } = req;
     console.log(user);
     return this.authService.kakaoLogin(req, res);
+  }
+
   // 네이버 로그인창
   @UseGuards(NaverAuthGuard)
   @Get('naver')
   async naverLogin() {
     return;
   }
-}
 
   // 네이버 로그인 콜백
   @UseGuards(NaverAuthGuard)
