@@ -18,6 +18,8 @@ import { ConfigService } from '@nestjs/config';
 import { Cache, CACHE_MANAGER } from '@nestjs/cache-manager';
 import { PointHistory } from 'src/point/entities/point-history.entity';
 import { PointHistoryType } from 'src/point/types/point-history.type';
+import { UtilsService } from 'src/utils/utils.service';
+import { SocialProvider } from './types/social.type';
 
 @Injectable()
 export class AuthService {
@@ -29,7 +31,8 @@ export class AuthService {
     private readonly dataSource: DataSource,
     @Inject(CACHE_MANAGER) private readonly cacheManager: Cache,
     @InjectRepository(PointHistory)
-    private readonly pointHistoryRepository: Repository<PointHistory>
+    private readonly pointHistoryRepository: Repository<PointHistory>,
+    private readonly utilsService: UtilsService
   ) {}
 
   /**
@@ -324,5 +327,72 @@ export class AuthService {
     await this.findUserById(userId);
 
     return userId;
+  }
+
+  // 소셜 로그인 해당 유저 있는지 찾기
+  async findUserByEmail(email: string) {
+    const user = await this.userRepository.findOne({
+      select: { id: true, deletedAt: true },
+      where: { email },
+      withDeleted: true,
+    });
+
+    if (user && user?.deletedAt !== null) {
+      throw new BadRequestException('탈퇴한 회원입니다.');
+    }
+
+    return user;
+  }
+
+  // 가입하지 않은 이메일의 유저라면 유저 생성
+  async createSocialUser(
+    userId: string,
+    userNickname: string,
+    userProfileImg: string,
+    provider: SocialProvider
+  ) {
+    const newSocialUser = this.userRepository.create({
+      email: userId,
+      nickname: userNickname,
+      profileUrl: userProfileImg,
+      [provider]: true,
+    });
+
+    return await this.userRepository.save(newSocialUser);
+  }
+
+  // 유저는 있지만 소셜 회원이 아니면 true로 변경해주기
+  async changeProvider(email: string, provider: SocialProvider) {
+    const user = await this.userRepository.findOneBy({ email });
+
+    await this.userRepository.save({ ...user, [provider]: true });
+  }
+
+  // 소셜 로그인 액세스 토큰 발급용 코드 생성
+  async createCode(userId: number) {
+    // 코드를 키로 갖고, 유저아이디를 밸류로 갖기
+    const code = this.utilsService.getUUID();
+
+    // 리프레쉬 토큰 만료 시간 설정
+    const ttl = 30;
+    // 암호화된 리프레쉬 토큰 저장
+    await this.cacheManager.set(code, userId, {
+      ttl,
+    });
+
+    return code;
+  }
+
+  // 소셜 로그인 토큰 생성
+  async createToken(code: string) {
+    const userId = await this.cacheManager.get<number>(code);
+
+    if (!userId) {
+      throw new NotFoundException('유효하지 않은 코드입니다.');
+    }
+
+    const data = await this.signIn(userId);
+
+    return data;
   }
 }
