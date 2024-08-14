@@ -8,6 +8,13 @@ import { SearchDto } from './dtos/search.dto';
 import { RedisService } from 'src/redis/redis.service';
 import { Search } from './entities/search.entity';
 import moment from 'moment';
+import {
+  format,
+  getMinutes,
+  setMinutes,
+  startOfMinute,
+  subMinutes,
+} from 'date-fns';
 
 @Injectable()
 export class SearchService {
@@ -155,14 +162,24 @@ export class SearchService {
     // const minutes = currentday.getMinutes();
     // const timeKey = year + ':' + month + ':' + hour + ':' + minutes;
     // console.log('시간이나오나?', timeKey);
-    console.log(
-      '@@@@@@@@@@',
-      new Date(`ranking:Tue Aug 13 2024 16:10:00 GMT+0900`).getTime()
+    // console.log(
+    //   '@@@@@@@@@@',
+    //   new Date(`ranking:Tue Aug 13 2024 16:10:00 GMT+0900`).getTime()
+    // );
+    // const roundedTime = moment()
+    //   .startOf('minute')
+    //   .minute(Math.floor(moment().minute() / 10) * 10);
+    // console.log('@@@@@@@', roundedTime);
+    // await this.redisService.searchData(`ranking:${roundedTime}`, 1, keyword);
+
+    const now = new Date();
+    const roundedMinutes = Math.floor(getMinutes(now) / 10) * 10;
+    const roundedTime = format(
+      setMinutes(startOfMinute(now), roundedMinutes),
+      'yyyyMMdd-HH:MM:SS'
     );
-    const roundedTime = moment()
-      .startOf('minute')
-      .minute(Math.floor(moment().minute() / 10) * 10);
-    console.log('@@@@@@@', roundedTime);
+
+    console.log('@@@@@@@@', roundedTime);
     await this.redisService.searchData(`ranking:${roundedTime}`, 1, keyword);
 
     return {
@@ -182,10 +199,37 @@ export class SearchService {
     return this.redisService.zrange('dest_key', 2);
   }
 
-  async addsearchRankings() {
-    const searchedDatas = await this.redisService.findData('dest_key');
+  async saveDataAtDateBase() {
+    // const searchedDatas = await this.redisService.findData('dest_key');
+    // console.log(searchedDatas);
+    // searchedDatas.forEach(async (item) => {
+    //   let data = await this.searchRepository.findOne({
+    //     where: { keyword: item.value },
+    //   });
+    //   if (!data) {
+    //     data = this.searchRepository.create({
+    //       keyword: item.value,
+    //       count: item.score,
+    //     });
+    //   } else {
+    //     data.count = item.score;
+    //   }
+    //   await this.searchRepository.save(data);
+    // });
+    // 현재 시간에서 10분 전 시간 계산
+    const now = new Date();
+    const tenMinutesAgo = subMinutes(now, 10);
+    const roundedMinutes = Math.floor(getMinutes(tenMinutesAgo) / 10) * 10;
+    const roundedTime = format(
+      setMinutes(startOfMinute(tenMinutesAgo), roundedMinutes),
+      'yyyyMMdd-HH:mm:ss'
+    );
+    console.log('저장용키', roundedTime);
+    const redisKey = `ranking:${roundedTime}`;
+    const searchedDatas = await this.redisService.findData(redisKey);
     console.log(searchedDatas);
-    searchedDatas.forEach(async (item) => {
+
+    for (const item of searchedDatas) {
       let data = await this.searchRepository.findOne({
         where: { keyword: item.value },
       });
@@ -198,7 +242,7 @@ export class SearchService {
         data.count = item.score;
       }
       await this.searchRepository.save(data);
-    });
+    }
   }
 
   // // db에서 바로 검색

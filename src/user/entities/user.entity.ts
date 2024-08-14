@@ -86,6 +86,9 @@ export class User {
   @Column({ default: false })
   naver: boolean;
 
+  @Column({ default: false })
+  kakao: boolean;
+
   @CreateDateColumn()
   createdAt: Date;
 

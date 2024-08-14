@@ -8,8 +8,10 @@ import {
   UseGuards,
   Headers,
   Get,
-  Res,
+  HttpCode,
+  Req,
   Query,
+  Res,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { SignUpDto } from './dtos/sign-up.dto';
@@ -24,6 +26,7 @@ import { VerifyCodeDto } from './dtos/verify-code.dto';
 import { NaverAuthGuard } from './guards/naver-auth.guard';
 import { Response } from 'express';
 import { ConfigService } from '@nestjs/config';
+import { KakaoAuthGuard } from './guards/kakao-auth.guard';
 
 @ApiTags('01.auth')
 @Controller('auth')
@@ -155,6 +158,47 @@ export class AuthController {
       message: '삭제에 성공했습니다.',
       data: data,
     };
+  }
+
+  // @Get('/user/login/kakao')
+  // @UseGuards(AuthGuard('kakao'))
+  // async kakaoAuth(@Req() _req: Request) {}
+
+  // /* Get kakao Auth Callback */
+  // @Get('kakao/callback')
+  // @UseGuards(AuthGuard('kakao'))
+  // async kakaoAuthCallback(
+  //   @Req() req: KakaoRequest,
+  //   // @Res({ passthrough: true }) res: Response,
+  //   @Res() res: Response // : Promise<KakaoLoginAuthOutputDto>
+  // ) {
+  //   const { user } = req;
+  //   console.log(user);
+  //   return this.authService.kakaoLogin(req, res);
+  // }
+
+  /**
+   * kakao
+   * @returns
+   */
+  // 카카오로 로그인창
+  @UseGuards(KakaoAuthGuard)
+  @Get('kakao')
+  async kakaoLogin() {
+    return;
+  }
+
+  // 카카오 로그인 콜백
+  @UseGuards(KakaoAuthGuard)
+  @Get('kakao/callback')
+  async kakaoCallback(@UserInfo() user: User, @Res() res: Response) {
+    const code = await this.authService.createCode(user.id);
+    console.log('코드 생성하기', code);
+
+    const redirectUrl = this.configService.get<string>('SOCIAL_REDIRECT_URL');
+    console.log(redirectUrl);
+
+    return res.redirect(`${redirectUrl}?code=${code}`);
   }
 
   // 네이버 로그인창

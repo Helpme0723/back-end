@@ -21,6 +21,7 @@ export class NaverStrategy extends PassportStrategy(Strategy) {
     accessToken: string,
     refreshToken: string,
     profile: any,
+    // eslint-disable-next-line @typescript-eslint/ban-types
     done: Function
   ) {
     const userEmail = profile._json.email;
