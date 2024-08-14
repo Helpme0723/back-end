@@ -58,7 +58,7 @@ export class User {
         '비밀번호는 영문 알파벳 대,소문자, 숫자, 특수문자(!@#$%^&*)를 포함해서 8자리 이상으로 입력해야 합니다.',
     }
   )
-  @Column({ select: false })
+  @Column({ select: false, nullable: true })
   password: string;
 
   /**
@@ -84,6 +84,9 @@ export class User {
 
   @Column({ type: 'enum', enum: UserRole, default: UserRole.USER })
   role: UserRole;
+
+  @Column({ default: false })
+  naver: boolean;
 
   @CreateDateColumn()
   createdAt: Date;
