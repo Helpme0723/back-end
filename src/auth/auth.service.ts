@@ -358,7 +358,30 @@ export class AuthService {
       [provider]: true,
     });
 
-    return await this.userRepository.save(newSocialUser);
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      const newUser = await queryRunner.manager.save(User, newSocialUser);
+
+      await queryRunner.manager.save(PointHistory, {
+        userId: newUser.id,
+        amount: newUser.point,
+        type: PointHistoryType.INCOME,
+        description: '회원가입 축하금',
+      });
+
+      await queryRunner.commitTransaction();
+      await queryRunner.release();
+
+      return newUser;
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      await queryRunner.release();
+
+      throw new InternalServerErrorException('인터넷 서버 에러');
+    }
   }
 
   // 유저는 있지만 소셜 회원이 아니면 true로 변경해주기
