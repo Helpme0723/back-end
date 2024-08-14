@@ -66,6 +66,13 @@ export class NotificationsService {
     return this.notificationSettingsRepository.save(settings);
   }
 
+   // 구독 알림 설정 토글
+async toggleSubscribeNotifications(userId: number): Promise<NotificationSettings> {
+  const settings = await this.getSettingsForUser(userId);
+  settings.subscribeNotifications = !settings.subscribeNotifications;
+  return this.notificationSettingsRepository.save(settings);
+}
+
    // 특정 사용자에 대한 알림 스트림 제공
   getNotificationsForUser(userId: number): Observable<MessageEvent> {
     this.activeConnections.set(userId, true); // 연결 시작 시 활성화 상태로 설정

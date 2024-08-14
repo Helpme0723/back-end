@@ -19,4 +19,7 @@ export class NotificationSettings {
 
   @Column({ default: true })
   postLikeNotifications: boolean;
+
+  @Column({ default: true }) 
+  subscribeNotifications: boolean;
 }

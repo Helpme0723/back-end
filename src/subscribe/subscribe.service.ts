@@ -13,18 +13,23 @@ import { Channel } from 'src/channel/entities/channel.entity';
 import { paginate } from 'nestjs-typeorm-paginate';
 import { Post } from 'src/post/entities/post.entity';
 import { CACHE_MANAGER, Cache } from '@nestjs/cache-manager';
+import { NotificationsService } from 'src/notification/notification.service';
+import { User } from 'src/user/entities/user.entity';
 
 @Injectable()
 export class SubscribeService {
   constructor(
     @InjectRepository(Subscribe)
     private readonly subscribeRepository: Repository<Subscribe>,
+    private readonly notificationsService: NotificationsService,
     @InjectRepository(Channel)
     private readonly channelRepository: Repository<Channel>,
     @InjectRepository(Post)
     private readonly postRepository: Repository<Post>,
     private readonly dataSource: DataSource,
-    @Inject(CACHE_MANAGER) private readonly cacheManager: Cache
+    @Inject(CACHE_MANAGER) private readonly cacheManager: Cache,
+    @InjectRepository(User)
+    private readonly userRepository: Repository<User>,
   ) {}
 
   // 채널 구독
@@ -52,6 +57,12 @@ export class SubscribeService {
       throw new ConflictException('이미 구독한 채널입니다.');
     }
 
+    // 사용자 정보 조회
+  const user = await this.userRepository.findOneBy({ id: userId });
+  if (!user) {
+    throw new NotFoundException('사용자를 찾을 수 없습니다.');
+  }
+
     // 여기서부터 트랜잭션
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
@@ -72,6 +83,17 @@ export class SubscribeService {
         channelId,
       });
       await queryRunner.manager.save(Subscribe, subscribeData);
+
+      // 구독 알림 전송
+      const notificationSettings =
+        await this.notificationsService.getSettingsForUser(channel.userId);
+      if (notificationSettings.subscribeNotifications) {
+        const message = `${user.nickname}님이 당신의 채널 "${channel.title}"을 구독했습니다.`;
+        await this.notificationsService.sendNotification(
+          channel.userId,
+          message
+        );
+      }
 
       await queryRunner.commitTransaction();
       await queryRunner.release();

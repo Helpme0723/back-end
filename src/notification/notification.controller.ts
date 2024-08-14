@@ -116,6 +116,20 @@ export class NotificationsController {
        },
      };
    }
+
+   // 구독 알림 설정 토글
+  @UseGuards(AuthGuard('jwt'))
+  @Post('settings/subscribe')
+  async toggleSubscribeNotifications(@UserInfo() user: User) {
+    const updatedSettings = await this.notificationsService.toggleSubscribeNotifications(user.id);
+    return {
+      statusCode: 200,
+      message: '구독 알림 설정이 성공적으로 변경되었습니다.',
+      data: {
+        subscribeNotifications: updatedSettings.subscribeNotifications,
+      },
+    };
+  }
  
    // 알림 설정 조회
    @UseGuards(AuthGuard('jwt'))
