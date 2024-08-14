@@ -49,7 +49,7 @@ export class SearchController {
   @Post('ranking')
   async addsearchRanking() {
     console.log('*****검색랭킹 데이터 업데이트*****');
-    const data = await this.searchService.addsearchRankings();
+    const data = await this.searchService.saveDataAtDateBase();
     return data;
   }
 

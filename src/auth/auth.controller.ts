@@ -7,6 +7,10 @@ import {
   Post,
   UseGuards,
   Headers,
+  Get,
+  HttpCode,
+  Req,
+  Res,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { SignUpDto } from './dtos/sign-up.dto';
@@ -146,5 +150,22 @@ export class AuthController {
       message: '삭제에 성공했습니다.',
       data: data,
     };
+  }
+
+  @Get('/user/login/kakao')
+  @UseGuards(AuthGuard('kakao'))
+  async kakaoAuth(@Req() _req: Request) {}
+
+  /* Get kakao Auth Callback */
+  @Get('/auth/kakao/callback')
+  @UseGuards(AuthGuard('kakao'))
+  async kakaoAuthCallback(
+    @Req() req: KakaoRequest,
+    // @Res({ passthrough: true }) res: Response,
+    @Res() res: Response // : Promise<KakaoLoginAuthOutputDto>
+  ) {
+    const { user } = req;
+    console.log(user);
+    return this.authService.kakaoLogin(req, res);
   }
 }
