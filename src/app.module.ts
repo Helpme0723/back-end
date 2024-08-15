@@ -23,6 +23,7 @@ import { SearchModule } from './search/search.module';
 import { RedisModule } from '@nestjs-modules/ioredis';
 import { APP_INTERCEPTOR } from '@nestjs/core';
 import { SentryWebhookInterceptor } from './webhook.interceptor';
+import { PaymentsModule } from './payments/payments.module';
 
 @Module({
   imports: [
@@ -48,6 +49,7 @@ import { SentryWebhookInterceptor } from './webhook.interceptor';
     MailModule,
     SearchModule,
     RedisModule,
+    PaymentsModule,
   ],
   controllers: [AppController],
   providers: [

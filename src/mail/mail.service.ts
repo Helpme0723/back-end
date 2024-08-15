@@ -44,7 +44,7 @@ export class MailService {
       });
 
       console.log('메일이 전송되었습니다.');
-      this.cacheManager.set(`인증 번호:${to}`, randomNumber, { ttl });
+      this.cacheManager.set(`verifyCode:${to}`, randomNumber, { ttl });
       return {
         보낸사람: this.configService.get<string>('NODEMAILER_USER'),
         받는사람: to,
