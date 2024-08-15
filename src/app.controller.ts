@@ -8,4 +8,10 @@ export class AppController {
   healthCheck(): string {
     return 'This server is healthy';
   }
+
+  @Get('error')
+  getError() {
+    const lsw = null;
+    return lsw.toString();
+  }
 }
