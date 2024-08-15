@@ -7,6 +7,11 @@ import {
   Post,
   UseGuards,
   Headers,
+  Get,
+  HttpCode,
+  Req,
+  Query,
+  Res,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { SignUpDto } from './dtos/sign-up.dto';
@@ -18,11 +23,18 @@ import { UserInfo } from 'src/auth/decorators/user-info.decorator';
 import { AuthGuard } from '@nestjs/passport';
 import { EmailConflictDto } from './dtos/email-conflict.dto';
 import { VerifyCodeDto } from './dtos/verify-code.dto';
+import { NaverAuthGuard } from './guards/naver-auth.guard';
+import { Response } from 'express';
+import { ConfigService } from '@nestjs/config';
+import { KakaoAuthGuard } from './guards/kakao-auth.guard';
 
 @ApiTags('01.auth')
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    private readonly authService: AuthService,
+    private readonly configService: ConfigService
+  ) {}
 
   /**
    * 회원가입
@@ -118,12 +130,11 @@ export class AuthController {
   @ApiBearerAuth()
   @UseGuards(AuthGuard('refresh'))
   @Post('tokens')
-  async tokenReIssue(
-    @Headers('Authorization') token: string,
-    @UserInfo() user: User
-  ) {
-    const refreshToken = token.split(' ')[1];
-    const data = await this.authService.tokenReIssue(refreshToken, user.id);
+  async tokenReIssue(@UserInfo() user: User & { refreshToken: string }) {
+    const data = await this.authService.tokenReIssue(
+      user.refreshToken,
+      user.id
+    );
     return {
       status: HttpStatus.OK,
       message: '토큰 재발급에 성공했습니다.',
@@ -145,6 +156,81 @@ export class AuthController {
       status: HttpStatus.OK,
       message: '삭제에 성공했습니다.',
       data: data,
+    };
+  }
+
+  // @Get('/user/login/kakao')
+  // @UseGuards(AuthGuard('kakao'))
+  // async kakaoAuth(@Req() _req: Request) {}
+
+  // /* Get kakao Auth Callback */
+  // @Get('kakao/callback')
+  // @UseGuards(AuthGuard('kakao'))
+  // async kakaoAuthCallback(
+  //   @Req() req: KakaoRequest,
+  //   // @Res({ passthrough: true }) res: Response,
+  //   @Res() res: Response // : Promise<KakaoLoginAuthOutputDto>
+  // ) {
+  //   const { user } = req;
+  //   console.log(user);
+  //   return this.authService.kakaoLogin(req, res);
+  // }
+
+  /**
+   * kakao
+   * @returns
+   */
+  // 카카오로 로그인창
+  @UseGuards(KakaoAuthGuard)
+  @Get('kakao')
+  async kakaoLogin() {
+    return;
+  }
+
+  // 카카오 로그인 콜백
+  @UseGuards(KakaoAuthGuard)
+  @Get('kakao/callback')
+  async kakaoCallback(@UserInfo() user: User, @Res() res: Response) {
+    const code = await this.authService.createCode(user.id);
+    console.log('코드 생성하기', code);
+
+    const redirectUrl = this.configService.get<string>('SOCIAL_REDIRECT_URL');
+    console.log(redirectUrl);
+
+    return res.redirect(`${redirectUrl}?code=${code}`);
+  }
+
+  // 네이버 로그인창
+  @UseGuards(NaverAuthGuard)
+  @Get('naver')
+  async naverLogin() {
+    return;
+  }
+
+  // 네이버 로그인 콜백
+  @UseGuards(NaverAuthGuard)
+  @Get('naver/callback')
+  async naverCallback(@UserInfo() user: User, @Res() res: Response) {
+    const code = await this.authService.createCode(user.id);
+
+    const redirectUrl = this.configService.get<string>('SOCIAL_REDIRECT_URL');
+
+    return res.redirect(`${redirectUrl}?code=${code}`);
+  }
+
+  /**
+   * 소셜 로그인 토큰 발급
+   * @param code
+   * @returns
+   */
+  @Post('social/token')
+  async socialToken(@Query('code') code: string) {
+    const data = await this.authService.createToken(code);
+
+    return {
+      status: HttpStatus.OK,
+      message: '네이버 소셜 로그인에 성공했습니다.',
+      data,
     };
   }
 }

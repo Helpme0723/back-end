@@ -5,13 +5,26 @@ import { Post } from 'src/post/entities/post.entity';
 import { VisibilityType } from 'src/post/types/visibility.type';
 import { Repository } from 'typeorm';
 import { SearchDto } from './dtos/search.dto';
+import { RedisService } from 'src/redis/redis.service';
+import { Search } from './entities/search.entity';
+import moment from 'moment';
+import {
+  format,
+  getMinutes,
+  setMinutes,
+  startOfMinute,
+  subMinutes,
+} from 'date-fns';
 
 @Injectable()
 export class SearchService {
   constructor(
     @InjectRepository(Post)
     private readonly postRepository: Repository<Post>,
-    private readonly elasticsearchService: ElasticsearchService
+    private readonly elasticsearchService: ElasticsearchService,
+    private readonly redisService: RedisService,
+    @InjectRepository(Search)
+    private readonly searchRepository: Repository<Search>
   ) {}
 
   // 포스트 데이터 인덱싱
@@ -126,6 +139,48 @@ export class SearchService {
 
     // 총 데이터 개수
     const totalCount = data.body.hits.total.value;
+    // 서치테이블에 키워드저장
+    // const searchdata = this.searchRepository.create({
+    //   keyword,
+    //   count: 1,
+    // });
+    // const existKeyWord = await this.searchRepository.findOne({
+    //   where: { keyword },
+    // });
+    // if (existKeyWord) {
+    //   await this.searchRepository.increment({ keyword }, 'count', 1);
+    // } else if (!existKeyWord) {
+    //   await this.searchRepository.save(searchdata);
+    // }
+
+    // const currentday = toZonedTime(new Date(), 'Asia/Seoul');
+    // console.log('넌어떤식으로 나오니', currentday);
+    // const month = currentday.getUTCMonth();
+    // console.log(month);
+    // const year = currentday.getFullYear();
+    // const hour = currentday.getHours();
+    // const minutes = currentday.getMinutes();
+    // const timeKey = year + ':' + month + ':' + hour + ':' + minutes;
+    // console.log('시간이나오나?', timeKey);
+    // console.log(
+    //   '@@@@@@@@@@',
+    //   new Date(`ranking:Tue Aug 13 2024 16:10:00 GMT+0900`).getTime()
+    // );
+    // const roundedTime = moment()
+    //   .startOf('minute')
+    //   .minute(Math.floor(moment().minute() / 10) * 10);
+    // console.log('@@@@@@@', roundedTime);
+    // await this.redisService.searchData(`ranking:${roundedTime}`, 1, keyword);
+
+    const now = new Date();
+    const roundedMinutes = Math.floor(getMinutes(now) / 10) * 10;
+    const roundedTime = format(
+      setMinutes(startOfMinute(now), roundedMinutes),
+      'yyyyMMdd-HH:MM:SS'
+    );
+
+    console.log('@@@@@@@@', roundedTime);
+    await this.redisService.searchData(`ranking:${roundedTime}`, 1, keyword);
 
     return {
       posts,
@@ -137,6 +192,57 @@ export class SearchService {
         currentPage: page, // 현재 페이지
       },
     };
+  }
+
+  async getsearchRankings() {
+    await this.redisService.gatherData();
+    return this.redisService.zrange('dest_key', 2);
+  }
+
+  async saveDataAtDateBase() {
+    // const searchedDatas = await this.redisService.findData('dest_key');
+    // console.log(searchedDatas);
+    // searchedDatas.forEach(async (item) => {
+    //   let data = await this.searchRepository.findOne({
+    //     where: { keyword: item.value },
+    //   });
+    //   if (!data) {
+    //     data = this.searchRepository.create({
+    //       keyword: item.value,
+    //       count: item.score,
+    //     });
+    //   } else {
+    //     data.count = item.score;
+    //   }
+    //   await this.searchRepository.save(data);
+    // });
+    // 현재 시간에서 10분 전 시간 계산
+    const now = new Date();
+    const tenMinutesAgo = subMinutes(now, 10);
+    const roundedMinutes = Math.floor(getMinutes(tenMinutesAgo) / 10) * 10;
+    const roundedTime = format(
+      setMinutes(startOfMinute(tenMinutesAgo), roundedMinutes),
+      'yyyyMMdd-HH:mm:ss'
+    );
+    console.log('저장용키', roundedTime);
+    const redisKey = `ranking:${roundedTime}`;
+    const searchedDatas = await this.redisService.findData(redisKey);
+    console.log(searchedDatas);
+
+    for (const item of searchedDatas) {
+      let data = await this.searchRepository.findOne({
+        where: { keyword: item.value },
+      });
+      if (!data) {
+        data = this.searchRepository.create({
+          keyword: item.value,
+          count: item.score,
+        });
+      } else {
+        data.count = item.score;
+      }
+      await this.searchRepository.save(data);
+    }
   }
 
   // // db에서 바로 검색

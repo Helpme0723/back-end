@@ -3,11 +3,17 @@ import { AppModule } from './app.module';
 import { ConfigService } from '@nestjs/config';
 import { ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import * as Sentry from '@sentry/node';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, { cors: true });
   const configService = app.get(ConfigService);
   const port = configService.get<number>('SERVER_PORT');
+
+  // connect Sentry
+  Sentry.init({
+    dsn: configService.get<string>('SENTRY_DSN'),
+  });
 
   app.setGlobalPrefix('api', { exclude: ['/health-check'] });
   app.useGlobalPipes(
@@ -23,7 +29,10 @@ async function bootstrap() {
 
   // CORS 설정 추가
   app.enableCors({
-    origin: [configService.get<string>('PRODUCTION_URL'),configService.get<string>('DEVELOP_URL')],
+    origin: [
+      configService.get<string>('PRODUCTION_URL'),
+      configService.get<string>('DEVELOP_URL'),
+    ],
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
     credentials: true,
   });
