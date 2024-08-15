@@ -9,6 +9,8 @@ import { Tag } from './entities/tag.entity';
 import { Channel } from 'src/channel/entities/channel.entity';
 import { Series } from 'src/series/entities/series.entity';
 import { PurchaseList } from 'src/purchase/entities/purchase-list.entity';
+import { User } from 'src/user/entities/user.entity';
+import { NotificationsModule } from 'src/notification/notification.module';
 
 @Module({
   imports: [
@@ -20,7 +22,9 @@ import { PurchaseList } from 'src/purchase/entities/purchase-list.entity';
       Channel,
       Series,
       PurchaseList,
+      User,
     ]),
+    NotificationsModule,
   ],
   controllers: [PostController],
   providers: [PostService],

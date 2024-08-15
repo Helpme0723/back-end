@@ -23,6 +23,8 @@ import { FindAllPostDto } from './dto/find-all-post-by-channel-id.dto';
 import { Cache, CACHE_MANAGER } from '@nestjs/cache-manager';
 import { createClient, RedisClientType } from 'redis';
 import { ConfigService } from '@nestjs/config';
+import { User } from 'src/user/entities/user.entity';
+import { NotificationsService } from 'src/notification/notification.service';
 
 @Injectable()
 export class PostService {
@@ -40,7 +42,10 @@ export class PostService {
     private readonly purchaseListRepository: Repository<PurchaseList>,
     private readonly dataSource: DataSource,
     @Inject(CACHE_MANAGER) private readonly cacheManager: Cache,
-    private readonly configService: ConfigService
+    private readonly configService: ConfigService,
+    @InjectRepository(User)
+    private readonly userRepository: Repository<User>,
+    private readonly notificationsService: NotificationsService,
   ) {
     this.redisClient = createClient({
       socket: {
@@ -380,6 +385,7 @@ export class PostService {
   async createPostLike(userId: number, id: number) {
     const post = await this.postRepository.findOne({
       where: { id },
+      relations: ['user'],
     });
 
     if (post.visibility === VisibilityType.PRIVATE) {
@@ -415,7 +421,22 @@ export class PostService {
       });
       await queryRunner.manager.save(PostLike, postLikeData);
 
+       // 좋아요를 누른 사용자 정보 조회
+       const user = await this.userRepository.findOne({ where: { id: userId } });
+       if (!user) {
+         throw new NotFoundException(`사용자를 찾을 수 없습니다. userId: ${userId}`);
+       }
+
       await queryRunner.commitTransaction();
+       // 알림 전송 로직 추가 (좋아요 알림 설정 확인)
+       const notificationSettings = await this.notificationsService.getSettingsForUser(post.user.id);
+       if (notificationSettings?.postLikeNotifications) { // likeNotifications 설정 확인
+         this.notificationsService.sendNotification(
+           post.user.id,
+           `사용자 "${user.nickname}"님이 당신의 포스트 "${post.title}"에 좋아요를 눌렀습니다.`
+         );
+       }
+
       await queryRunner.release();
     } catch (error) {
       await queryRunner.rollbackTransaction();
