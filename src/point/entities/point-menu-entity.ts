@@ -4,7 +4,7 @@ import { IsNumber, IsString } from 'class-validator';
 
 @Entity('point_menu')
 export class PointMenu {
-  @PrimaryGeneratedColumn()
+  @PrimaryGeneratedColumn({ unsigned: true })
   id: number;
 
   /**
@@ -22,10 +22,6 @@ export class PointMenu {
   @IsNumber()
   @Column()
   price: number;
-
-  @IsString()
-  @Column()
-  merchantUid: string;
 
   @OneToMany(() => PointOrder, (pointOrder) => pointOrder.pointMenu)
   pointOrder: PointOrder[];
