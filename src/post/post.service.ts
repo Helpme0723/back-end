@@ -222,6 +222,7 @@ export class PostService {
 
       // 구매 이력이 없다면 전체 내용을 제외하고 반환
       if (!purchasedPost) {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const { content: _content, ...etc } = mappedPost;
 
         return etc;

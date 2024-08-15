@@ -1,7 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { createClient, RedisClientType } from 'redis';
 import { ConfigService } from '@nestjs/config';
-import { getTime } from 'date-fns';
 
 @Injectable()
 export class RedisService {
@@ -22,6 +21,7 @@ export class RedisService {
     return this.redisClient.zIncrBy(key, score, value);
   }
   //sortedSet 을 조회할때 사용할 zrange
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async zrange(key: string, max: number) {
     return this.redisClient.zRange(key, 0, 2, { REV: true });
   }
@@ -31,8 +31,6 @@ export class RedisService {
 
   async gatherData() {
     const keys = await this.redisClient.keys('ranking:*');
-
-    //new Date(getTime)
 
     keys.sort((a, b) => {
       return new Date(b).getTime() - new Date(a).getTime();
@@ -45,7 +43,9 @@ export class RedisService {
     const result = await this.redisClient.zRangeWithScores('dest_key', 0, -1);
 
     const willDeletedKey = keys.slice(6);
-    await this.redisClient.del(willDeletedKey);
+    if (willDeletedKey.length > 7) {
+      await this.redisClient.del(willDeletedKey);
+    }
     return result;
   }
 }

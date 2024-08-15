@@ -7,7 +7,6 @@ import { Repository } from 'typeorm';
 import { SearchDto } from './dtos/search.dto';
 import { RedisService } from 'src/redis/redis.service';
 import { Search } from './entities/search.entity';
-import moment from 'moment';
 import {
   format,
   getMinutes,
