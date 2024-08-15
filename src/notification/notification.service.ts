@@ -22,9 +22,9 @@ export class NotificationsService {
 
   constructor(
     @InjectRepository(Notification)
-    private readonly notificationRepository: Repository<Notification>, // Notification 저장소 주입
+    private readonly notificationRepository: Repository<Notification>,
     @InjectRepository(NotificationSettings)
-    private readonly notificationSettingsRepository: Repository<NotificationSettings>,
+    private readonly notificationSettingsRepository: Repository<NotificationSettings>
   ) {}
 
   // 특정 사용자의 알림 설정을 가져오기
@@ -48,7 +48,9 @@ export class NotificationsService {
   }
 
   // 댓글 알림 설정 토글
-  async toggleCommentNotifications(userId: number): Promise<NotificationSettings> {
+  async toggleCommentNotifications(
+    userId: number
+  ): Promise<NotificationSettings> {
     const settings = await this.getSettingsForUser(userId);
     settings.commentNotifications = !settings.commentNotifications;
     return this.notificationSettingsRepository.save(settings);
@@ -62,20 +64,24 @@ export class NotificationsService {
   }
 
   // 포스트 좋아요 알림 설정 토글
-  async togglePostLikeNotifications(userId: number): Promise<NotificationSettings> {
+  async togglePostLikeNotifications(
+    userId: number
+  ): Promise<NotificationSettings> {
     const settings = await this.getSettingsForUser(userId);
     settings.postLikeNotifications = !settings.postLikeNotifications;
     return this.notificationSettingsRepository.save(settings);
   }
 
-   // 구독 알림 설정 토글
-async toggleSubscribeNotifications(userId: number): Promise<NotificationSettings> {
-  const settings = await this.getSettingsForUser(userId);
-  settings.subscribeNotifications = !settings.subscribeNotifications;
-  return this.notificationSettingsRepository.save(settings);
-}
+  // 구독 알림 설정 토글
+  async toggleSubscribeNotifications(
+    userId: number
+  ): Promise<NotificationSettings> {
+    const settings = await this.getSettingsForUser(userId);
+    settings.subscribeNotifications = !settings.subscribeNotifications;
+    return this.notificationSettingsRepository.save(settings);
+  }
 
-   // 특정 사용자에 대한 알림 스트림 제공
+  // 특정 사용자에 대한 알림 스트림 제공
   getNotificationsForUser(userId: number): Observable<MessageEvent> {
     this.activeConnections.set(userId, true); // 연결 시작 시 활성화 상태로 설정
     return this.notifications.asObservable().pipe(
@@ -84,22 +90,22 @@ async toggleSubscribeNotifications(userId: number): Promise<NotificationSettings
         (notification) =>
           ({
             data: { message: notification.message },
-          } as MessageEvent),
-      ),
+          }) as MessageEvent
+      )
     );
   }
 
   // 알림 전송 및 저장 메서드
   async sendNotification(userId: number, message: string) {
     console.log(`Sending notification to user ${userId}: ${message}`);
-    
+
     // 모든 알림을 데이터베이스에 저장
     await this.notificationRepository.save({
       user: { id: userId },
       message,
       isRead: false, // 초기 상태는 읽지 않음
     });
-  
+
     // 실시간 알림 전송
     this.notifications.next({ userId, message });
     console.log(`Notification sent to user ${userId}`);
@@ -113,31 +119,36 @@ async toggleSubscribeNotifications(userId: number): Promise<NotificationSettings
     });
   }
 
-    // 모든 알림 조회 (읽음 포함) - 페이지네이션 적용
-async getAllNotifications(userId: number, findAllNotificationsDto: FindAllNotificationsDto): Promise<Pagination<Notification>> {
-  const { page, limit } = findAllNotificationsDto;
+  // 모든 알림 조회 (읽음 포함) - 페이지네이션 적용
+  async getAllNotifications(
+    userId: number,
+    findAllNotificationsDto: FindAllNotificationsDto
+  ): Promise<Pagination<Notification>> {
+    const { page, limit } = findAllNotificationsDto;
 
-  const queryBuilder = this.notificationRepository
-    .createQueryBuilder('notification')
-    .leftJoinAndSelect('notification.user', 'user')
-    .where('notification.user.id = :userId', { userId })
-    .orderBy('notification.createdAt', 'DESC');
+    const queryBuilder = this.notificationRepository
+      .createQueryBuilder('notification')
+      .leftJoinAndSelect('notification.user', 'user')
+      .where('notification.user.id = :userId', { userId })
+      .orderBy('notification.createdAt', 'DESC');
 
-  const pagination = await paginate<Notification>(queryBuilder, { page, limit });
-  return pagination;
-}
-
+    const pagination = await paginate<Notification>(queryBuilder, {
+      page,
+      limit,
+    });
+    return pagination;
+  }
 
   // 알림 읽음 처리
   async markNotificationsAsRead(userId: number) {
     await this.notificationRepository.update(
       { user: { id: userId }, isRead: false },
-      { isRead: true },
+      { isRead: true }
     );
   }
 
-   // 사용자 SSE 연결 해제 시 호출
-   disconnectUser(userId: number) {
+  // 사용자 SSE 연결 해제 시 호출
+  disconnectUser(userId: number) {
     console.log(`Disconnecting user: ${userId}`);
     this.activeConnections.delete(userId);
   }

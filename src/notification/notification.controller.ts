@@ -21,14 +21,14 @@ import { FindAllNotificationsDto } from './dtos/FindAllNotifications-dto';
 export class NotificationsController {
   constructor(
     private readonly notificationsService: NotificationsService,
-    private readonly jwtService: JwtService // JWT 서비스를 주입합니다.
+    private readonly jwtService: JwtService 
   ) {}
 
   // SSE 엔드포인트
   @Sse('stream')
   streamNotifications(@Query('token') token: string): Observable<MessageEvent> {
     try {
-      const payload = this.jwtService.verify(token); // 토큰을 검증하고 사용자 정보를 가져옵니다.
+      const payload = this.jwtService.verify(token); 
       return this.notificationsService.getNotificationsForUser(payload.id);
     } catch (error) {
       throw new UnauthorizedException('Invalid token');
