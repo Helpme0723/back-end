@@ -192,10 +192,8 @@ export class AuthController {
   @Get('kakao/callback')
   async kakaoCallback(@UserInfo() user: User, @Res() res: Response) {
     const code = await this.authService.createCode(user.id);
-    console.log('코드 생성하기', code);
 
     const redirectUrl = this.configService.get<string>('SOCIAL_REDIRECT_URL');
-    console.log(redirectUrl);
 
     return res.redirect(`${redirectUrl}?code=${code}`);
   }

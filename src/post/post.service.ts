@@ -45,7 +45,7 @@ export class PostService {
     private readonly configService: ConfigService,
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
-    private readonly notificationsService: NotificationsService,
+    private readonly notificationsService: NotificationsService
   ) {
     this.redisClient = createClient({
       socket: {
@@ -244,7 +244,6 @@ export class PostService {
       post.content = '로그인후 확인하실수 있습니다..';
     }
     //TODO:콘솔지우기
-    console.log(post);
     post.comments = post.comments.splice(0, 5);
 
     return post;
@@ -421,21 +420,25 @@ export class PostService {
       });
       await queryRunner.manager.save(PostLike, postLikeData);
 
-       // 좋아요를 누른 사용자 정보 조회
-       const user = await this.userRepository.findOne({ where: { id: userId } });
-       if (!user) {
-         throw new NotFoundException(`사용자를 찾을 수 없습니다. userId: ${userId}`);
-       }
+      // 좋아요를 누른 사용자 정보 조회
+      const user = await this.userRepository.findOne({ where: { id: userId } });
+      if (!user) {
+        throw new NotFoundException(
+          `사용자를 찾을 수 없습니다. userId: ${userId}`
+        );
+      }
 
       await queryRunner.commitTransaction();
-       // 알림 전송 로직 추가 (좋아요 알림 설정 확인)
-       const notificationSettings = await this.notificationsService.getSettingsForUser(post.user.id);
-       if (notificationSettings?.postLikeNotifications) { // likeNotifications 설정 확인
-         this.notificationsService.sendNotification(
-           post.user.id,
-           `사용자 "${user.nickname}"님이 당신의 포스트 "${post.title}"에 좋아요를 눌렀습니다.`
-         );
-       }
+      // 알림 전송 로직 추가 (좋아요 알림 설정 확인)
+      const notificationSettings =
+        await this.notificationsService.getSettingsForUser(post.user.id);
+      if (notificationSettings?.postLikeNotifications) {
+        // likeNotifications 설정 확인
+        this.notificationsService.sendNotification(
+          post.user.id,
+          `사용자 "${user.nickname}"님이 당신의 포스트 "${post.title}"에 좋아요를 눌렀습니다.`
+        );
+      }
 
       await queryRunner.release();
     } catch (error) {

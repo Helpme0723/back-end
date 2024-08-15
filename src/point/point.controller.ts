@@ -80,7 +80,7 @@ export class PointController {
     @UserInfo() user: User,
     @Param('id', ParseIntPipe) id: number
   ) {
-    console.log('여긴오나?');
+    ('여긴오나?');
     const userId = user.id;
     const data = await this.pointService.getDetail(userId, id);
     return data;
