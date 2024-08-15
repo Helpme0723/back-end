@@ -18,13 +18,18 @@ export class PointService {
     private readonly userRepository: Repository<User>
   ) {}
 
-  async findPointHistory(userId: number, type?: PointHistoryType, sort: 'ASC' | 'DESC' = 'DESC') {
+  async findPointHistory(
+    userId: number,
+    type?: PointHistoryType,
+    sort: 'ASC' | 'DESC' = 'DESC'
+  ) {
     const user = await this.userRepository.findOne({ where: { id: userId } });
     if (!user) {
       throw new NotFoundException('사용자를 찾을 수 없습니다.');
     }
 
-    const queryBuilder = this.pointHistoryRepository.createQueryBuilder('pointHistory')
+    const queryBuilder = this.pointHistoryRepository
+      .createQueryBuilder('pointHistory')
       .where('pointHistory.userId = :userId', { userId });
 
     if (type) {
@@ -49,14 +54,12 @@ export class PointService {
     const point = await this.pointMenuRepository.findOne({
       where: { id },
     });
-    console.log('222', point);
     if (!point) {
       throw new NotFoundException('구매정보를 불러오지 못했습니다');
     }
     const user = await this.userRepository.findOne({
       where: { id: userId },
     });
-    console.log('333', user);
     if (!user) {
       throw new NotFoundException('구매자 정보를 불러오지 못했습니다.');
     }

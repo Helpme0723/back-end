@@ -140,7 +140,6 @@ export class AuthService {
     const redisRefreshToken = await this.cacheManager.get<string>(
       `userId:${userId}`
     );
-    console.log(redisRefreshToken);
     // 이미 있으면 삭제
     if (redisRefreshToken) {
       await this.cacheManager.del(`userId:${userId}`);

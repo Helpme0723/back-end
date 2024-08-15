@@ -7,7 +7,6 @@ import { Repository } from 'typeorm';
 import { SearchDto } from './dtos/search.dto';
 import { RedisService } from 'src/redis/redis.service';
 import { Search } from './entities/search.entity';
-import moment from 'moment';
 import {
   format,
   getMinutes,
@@ -176,10 +175,9 @@ export class SearchService {
     const roundedMinutes = Math.floor(getMinutes(now) / 10) * 10;
     const roundedTime = format(
       setMinutes(startOfMinute(now), roundedMinutes),
-      'yyyyMMdd-HH:MM:SS'
+      'yyyyMMdd-HH:mm:ss'
     );
 
-    console.log('@@@@@@@@', roundedTime);
     await this.redisService.searchData(`ranking:${roundedTime}`, 1, keyword);
 
     return {
@@ -224,11 +222,8 @@ export class SearchService {
       setMinutes(startOfMinute(tenMinutesAgo), roundedMinutes),
       'yyyyMMdd-HH:mm:ss'
     );
-    console.log('저장용키', roundedTime);
     const redisKey = `ranking:${roundedTime}`;
     const searchedDatas = await this.redisService.findData(redisKey);
-    console.log(searchedDatas);
-
     for (const item of searchedDatas) {
       let data = await this.searchRepository.findOne({
         where: { keyword: item.value },

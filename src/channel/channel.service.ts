@@ -531,10 +531,10 @@ export class ChannelService {
   async realTimeChannelInsights(channelId: number, date: string, type: string) {
     const allPostsInsight = await this.postRepository
       .createQueryBuilder('post')
-      .select('SUM(post.viewCount)', 'totalViews')
-      .addSelect('SUM(post.likeCount)', 'totalLikes')
-      .addSelect('SUM(post.commentCount)', 'totalComments')
-      .addSelect('SUM(post.salesCount)', 'totalSales')
+      .select('SUM(post.viewCount)', 'viewCount')
+      .addSelect('SUM(post.likeCount)', 'likeCount')
+      .addSelect('SUM(post.commentCount)', 'commentCount')
+      .addSelect('SUM(post.salesCount)', 'salesCount')
       .where('post.channelId = :channelId', { channelId })
       .groupBy('post.channelId')
       .getRawOne();
