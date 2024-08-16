@@ -59,22 +59,40 @@ export class AuthService {
     );
 
     // 저장
-    const user = await this.userRepository.save({
+    const userData = this.userRepository.create({
       email,
       ...etc,
       password: hashedPassword,
     });
 
-    this.pointHistoryRepository.save({
-      userId: user.id,
-      amount: user.point,
-      type: PointHistoryType.INCOME,
-      description: '회원가입 축하금',
-    });
+    // 트랜잭션 queryRunner 세팅
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
 
-    user.password = undefined;
-    user.deletedAt = undefined;
-    return user;
+    try {
+      const user = await queryRunner.manager.save(User, userData);
+
+      await queryRunner.manager.save(PointHistory, {
+        userId: user.id,
+        amount: user.point,
+        type: PointHistoryType.INCOME,
+        description: '회원가입 축하금',
+      });
+
+      user.password = undefined;
+      user.deletedAt = undefined;
+
+      await queryRunner.commitTransaction();
+      await queryRunner.release();
+      return user;
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      await queryRunner.release();
+      throw new InternalServerErrorException(
+        '서버 에러가 발생했습니다. 문의 해주세요.'
+      );
+    }
   }
 
   /**
@@ -202,6 +220,8 @@ export class AuthService {
       await queryRunner.commitTransaction();
       // 결과 적용
       await queryRunner.release();
+
+      return true;
     } catch (error) {
       // 변경점 초기화
       await queryRunner.rollbackTransaction();
