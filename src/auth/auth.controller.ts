@@ -6,10 +6,7 @@ import {
   HttpStatus,
   Post,
   UseGuards,
-  Headers,
   Get,
-  HttpCode,
-  Req,
   Query,
   Res,
 } from '@nestjs/common';
@@ -27,6 +24,7 @@ import { NaverAuthGuard } from './guards/naver-auth.guard';
 import { Response } from 'express';
 import { ConfigService } from '@nestjs/config';
 import { KakaoAuthGuard } from './guards/kakao-auth.guard';
+import { RecoveryPasswordDto } from './dtos/recovery-password.dto';
 
 @ApiTags('01.auth')
 @Controller('auth')
@@ -212,6 +210,24 @@ export class AuthController {
     return {
       status: HttpStatus.OK,
       message: '네이버 소셜 로그인에 성공했습니다.',
+      data,
+    };
+  }
+
+  /**
+   * 비밀번호 재설정
+   * @param user
+   * @param recoveryPasswordDto
+   * @returns
+   */
+  @ApiBearerAuth()
+  @Post('recovery/password')
+  async RecoveryPassword(@Body() recoveryPasswordDto: RecoveryPasswordDto) {
+    const data = await this.authService.recoveryPassword(recoveryPasswordDto);
+
+    return {
+      status: HttpStatus.OK,
+      message: '비밀번호를 재설정했습니다.',
       data,
     };
   }

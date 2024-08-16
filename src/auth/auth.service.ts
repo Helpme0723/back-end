@@ -20,6 +20,7 @@ import { PointHistory } from 'src/point/entities/point-history.entity';
 import { PointHistoryType } from 'src/point/types/point-history.type';
 import { UtilsService } from 'src/utils/utils.service';
 import { SocialProvider } from './types/social.type';
+import { RecoveryPasswordDto } from './dtos/recovery-password.dto';
 
 @Injectable()
 export class AuthService {
@@ -127,6 +128,8 @@ export class AuthService {
     if (verification !== verificationInRedis) {
       throw new BadRequestException('인증 번호가 틀렸습니다.');
     }
+
+    await this.cacheManager.del(`verifyCode:${email}`);
 
     return true;
   }
@@ -445,5 +448,34 @@ export class AuthService {
     const data = await this.signIn(userId);
 
     return data;
+  }
+
+  // 비밀번호 재설정
+  async recoveryPassword(recoveryPasswordDto: RecoveryPasswordDto) {
+    const { email, password, passwordConfirm, verifyCode } =
+      recoveryPasswordDto;
+
+    const user = await this.userRepository.findOneBy({ email });
+
+    if (!user) {
+      throw new NotFoundException('해당하는 유저가 존재하지 않습니다.');
+    }
+
+    await this.verifyEmail(email, verifyCode);
+
+    if (password !== passwordConfirm) {
+      throw new BadRequestException(
+        '비밀번호와 비밀번호 확인이 일치하지 않습니다.'
+      );
+    }
+
+    const hashedPassword = bcrypt.hashSync(
+      password,
+      this.configService.get<number>('HASH_ROUND')
+    );
+
+    await this.userRepository.save({ ...user, password: hashedPassword });
+
+    return true;
   }
 }
