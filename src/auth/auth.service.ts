@@ -59,22 +59,40 @@ export class AuthService {
     );
 
     // 저장
-    const user = await this.userRepository.save({
+    const userData = this.userRepository.create({
       email,
       ...etc,
       password: hashedPassword,
     });
 
-    this.pointHistoryRepository.save({
-      userId: user.id,
-      amount: user.point,
-      type: PointHistoryType.INCOME,
-      description: '회원가입 축하금',
-    });
+    // 트랜잭션 queryRunner 세팅
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
 
-    user.password = undefined;
-    user.deletedAt = undefined;
-    return user;
+    try {
+      const user = await queryRunner.manager.save(User, userData);
+
+      await queryRunner.manager.save(PointHistory, {
+        userId: user.id,
+        amount: user.point,
+        type: PointHistoryType.INCOME,
+        description: '회원가입 축하금',
+      });
+
+      user.password = undefined;
+      user.deletedAt = undefined;
+
+      await queryRunner.commitTransaction();
+      await queryRunner.release();
+      return user;
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      await queryRunner.release();
+      throw new InternalServerErrorException(
+        '서버 에러가 발생했습니다. 문의 해주세요.'
+      );
+    }
   }
 
   /**
@@ -159,10 +177,12 @@ export class AuthService {
    * @param userId
    * @returns
    */
-  async reSign(userId: number) {
+  async reSign(userId: number, signInDto: SignInDto) {
+    const { email, password } = signInDto;
     // 해당 ID를 가진 유저가 있는지 조회
     const user = await this.userRepository.findOne({
       where: { id: userId },
+      select: { id: true, email: true, password: true },
       relations: {
         channels: true,
         series: true,
@@ -173,6 +193,16 @@ export class AuthService {
     // 유저가 없을 경우 예외 처리
     if (!user) {
       throw new NotFoundException('없는 회원입니다.');
+    }
+
+    if (user.email !== email) {
+      throw new BadRequestException('이메일을 확인해 주세요.');
+    }
+
+    const isMatchedPassword = bcrypt.compareSync(password, user.password);
+
+    if (!isMatchedPassword) {
+      throw new BadRequestException('비밀번호를 확인해 주세요.');
     }
 
     // 레디스에 리프레쉬 토큰 있는지 조회
@@ -195,13 +225,14 @@ export class AuthService {
       // 유저 삭제
       await queryRunner.manager.softRemove(User, user);
 
-      // TODO: queryRunner.manager 안써도 되는게 맞는지 확인해주세요.
       await this.cacheManager.del(`userId:${userId}`);
 
       // 트랜잭션 성공 시 커밋
       await queryRunner.commitTransaction();
       // 결과 적용
       await queryRunner.release();
+
+      return true;
     } catch (error) {
       // 변경점 초기화
       await queryRunner.rollbackTransaction();
@@ -212,9 +243,8 @@ export class AuthService {
         '회원 탈퇴 과정 중에 오류가 발생했습니다. 관리자에게 문의해주세요.'
       );
     }
-
-    return true;
   }
+
   /**
    * 로그아웃
    * @param userId
