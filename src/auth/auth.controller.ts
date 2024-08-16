@@ -148,9 +148,10 @@ export class AuthController {
    * @returns
    */
   @ApiBearerAuth()
+  @UseGuards(LocalAuthGuard)
   @UseGuards(AuthGuard('jwt'))
   @Delete('/re-sign')
-  async reSign(@UserInfo() user: User) {
+  async reSign(@UserInfo() user: User, @Body() signInDto: SignInDto) {
     const data = await this.authService.reSign(user.id);
     return {
       status: HttpStatus.OK,
