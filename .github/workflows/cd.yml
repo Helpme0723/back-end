@@ -63,6 +63,9 @@ jobs:
       - name: Copy file to EC2 # 뭐지....
         run: rsync -avzP -e ssh ./dist ec2:${{ env.PROJECT_DIR }}/
 
+      - name: Uninstall dev dependence
+        run: npm ci --omit=dev
+
       - name: Copy file to EC2 # 뭐지....
         run: rsync -avzP -e ssh ./node_modules ec2:${{ env.PROJECT_DIR }}/
 
