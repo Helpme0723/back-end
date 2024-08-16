@@ -242,7 +242,7 @@ export class PostService {
       throw new NotFoundException('포스트를 찾을수 없습니다.');
     }
     if (post.price > 0) {
-      post.content = '로그인후 확인하실수 있습니다..';
+      post.content = undefined;
     }
     //TODO:콘솔지우기
     post.comments = post.comments.splice(0, 5);
