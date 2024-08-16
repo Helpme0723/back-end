@@ -34,16 +34,10 @@ export class RedisService {
 
   async gatherData() {
     const keys = await this.redisClient.keys('ranking:*');
-    console.log('@@@@@', keys);
     keys.sort((a, b) => {
       return new Date(b).getTime() - new Date(a).getTime();
     });
-    console.log(
-      '$$$$$$$$',
-      keys.sort((a, b) => {
-        return new Date(b).getTime() - new Date(a).getTime();
-      })
-    );
+
     const recentKeys = keys.slice(0, 3);
     // zUnionStore를 사용하여 병합하고 결과를 'dest_key'에 저장하기.
     await this.redisClient.zUnionStore('dest_key', recentKeys);
