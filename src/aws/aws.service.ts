@@ -65,6 +65,7 @@ export class AwsService {
     // 생성된 명령을 S3 클라이언트에 전달하여 이미지 업로드를 수행합니다.
     await this.s3Client.send(command);
     // 업로드된 이미지의 URL을 반환합니다.
-    return `https://${this.configService.get<string>('AWS_BUCKET_NAME')}.s3.${this.configService.get<string>('AWS_REGION')}.amazonaws.com/images/${fileName}`;
+    //return `https://${this.configService.get<string>('AWS_BUCKET_NAME')}.s3.${this.configService.get<string>('AWS_REGION')}.amazonaws.com/images/${fileName}`;
+    return `https://${this.configService.get<string>('CDN_DOMAIN')}/images/${fileName}`;
   }
 }
