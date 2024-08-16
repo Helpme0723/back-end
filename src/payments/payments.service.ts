@@ -14,6 +14,7 @@ import { PointOrder } from 'src/point/entities/point-order.entity';
 import { PointMenu } from 'src/point/entities/point-menu-entity';
 import { PointHistory } from 'src/point/entities/point-history.entity';
 import { PointHistoryType } from 'src/point/types/point-history.type';
+import { error } from 'console';
 
 @Injectable()
 export class PaymentsService {
@@ -55,7 +56,7 @@ export class PaymentsService {
   async getPaymentsHistoryFromImpUid(impUid: string) {
     // 토큰 발급
     const token = await this.getPortoneToken();
-
+    console.log(token);
     const options: AxiosRequestConfig = {
       method: 'GET',
       url: `https://api.iamport.kr/payments/${impUid}`,
@@ -71,6 +72,30 @@ export class PaymentsService {
       return response.data;
     } catch (error) {
       console.error('Error fetching payment Info', error);
+      throw error;
+    }
+  }
+  // 결제 취소
+  async refund(impUid: string) {
+    const token = await this.getPortoneToken();
+    const options: AxiosRequestConfig = {
+      method: 'POST',
+      url: 'https://api.iamport.kr/payments/cancel',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      data: {
+        imp_uid: `${impUid}`,
+      },
+    };
+
+    try {
+      const response: AxiosResponse = await axios.request(options);
+      console.log('결제 취소 성공', response.data);
+      return response.data;
+    } catch (error) {
+      console.error(error);
       throw error;
     }
   }
@@ -129,7 +154,6 @@ export class PaymentsService {
           type: PointHistoryType.INCOME,
           description: `${paymentHistory.response.amount} 충전`,
         });
-
         await queryRunner.manager.increment(
           User,
           { id: userId },
@@ -137,9 +161,12 @@ export class PaymentsService {
           paymentHistory.response.amount
         );
       }
+      throw error;
       await queryRunner.commitTransaction();
     } catch (error) {
       await queryRunner.rollbackTransaction();
+      // 결제 취소
+      await this.refund(paymentHistory.response.imp_uid);
       throw new InternalServerErrorException(
         '결제 검증 중 문제가 발생했습니다.'
       );
