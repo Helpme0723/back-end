@@ -18,7 +18,10 @@ export class RedisService {
   }
   // sortedSet 애 추가할때 호출할 zadd
   async searchData(key: string, score: number, value: string) {
-    return this.redisClient.zIncrBy(key, score, value);
+    const ttl = 60 * 60;
+    await this.redisClient.zIncrBy(key, score, value);
+    await this.redisClient.expire(key, ttl);
+    return true;
   }
   //sortedSet 을 조회할때 사용할 zrange
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -31,10 +34,16 @@ export class RedisService {
 
   async gatherData() {
     const keys = await this.redisClient.keys('ranking:*');
-
+    console.log('@@@@@', keys);
     keys.sort((a, b) => {
       return new Date(b).getTime() - new Date(a).getTime();
     });
+    console.log(
+      '$$$$$$$$',
+      keys.sort((a, b) => {
+        return new Date(b).getTime() - new Date(a).getTime();
+      })
+    );
     const recentKeys = keys.slice(0, 3);
     // zUnionStore를 사용하여 병합하고 결과를 'dest_key'에 저장하기.
     await this.redisClient.zUnionStore('dest_key', recentKeys);
@@ -42,10 +51,6 @@ export class RedisService {
     // 'dest_key'에 저장된 병합된 결과를 점수와 함께 가져오기.
     const result = await this.redisClient.zRangeWithScores('dest_key', 0, -1);
 
-    const willDeletedKey = keys.slice(6);
-    if (willDeletedKey.length > 7) {
-      await this.redisClient.del(willDeletedKey);
-    }
     return result;
   }
 }
