@@ -136,9 +136,13 @@ export class User {
   })
   purchaseLists: PurchaseList[];
 
-  @OneToMany(() => NotificationSettings, (settings) => settings.user, { cascade: true })
+  @OneToMany(() => NotificationSettings, (settings) => settings.user, {
+    cascade: true,
+  })
   notificationSettings: NotificationSettings[];
 
-  @OneToMany(() => Notification, (notification) => notification.user, { cascade: true }) // 알림 관계 추가
+  @OneToMany(() => Notification, (notification) => notification.user, {
+    cascade: true,
+  }) // 알림 관계 추가
   notifications: Notification[];
 }
