@@ -94,6 +94,10 @@ export class SearchService {
         { match: { preview: { query: keyword, fuzziness: 'AUTO' } } },
         { match: { content: { query: keyword, fuzziness: 'AUTO' } } }
       );
+    } else if (field === 'nickname') {
+      condition.push({
+        match: { nickname: { query: keyword, fuzziness: 'AUTO' } },
+      });
     } else if (field === 'all') {
       condition.push(
         { match: { title: { query: keyword, fuzziness: 'AUTO' } } },
