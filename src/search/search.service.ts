@@ -179,8 +179,9 @@ export class SearchService {
     const roundedMinutes = Math.floor(getMinutes(now) / 10) * 10;
     const roundedTime = format(
       setMinutes(startOfMinute(now), roundedMinutes),
-      'yyyyMMdd-HH:mm:ss'
+      'yyyyMMddHHmmss'
     );
+    console.log(roundedTime);
 
     await this.redisService.searchData(`ranking:${roundedTime}`, 1, keyword);
 
@@ -224,7 +225,7 @@ export class SearchService {
     const roundedMinutes = Math.floor(getMinutes(tenMinutesAgo) / 10) * 10;
     const roundedTime = format(
       setMinutes(startOfMinute(tenMinutesAgo), roundedMinutes),
-      'yyyyMMdd-HH:mm:ss'
+      'yyyyMMddHHmmss'
     );
     const redisKey = `ranking:${roundedTime}`;
     const searchedDatas = await this.redisService.findData(redisKey);
