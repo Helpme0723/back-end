@@ -26,6 +26,7 @@ export class PaymentsController {
 
   @Post('complete')
   async verifyPayment(@UserInfo() user: User, @Body() paymentDto: PaymentDto) {
+    console.log(user.id);
     const data = await this.paymentsService.verifyPayment(user.id, paymentDto);
 
     return {
@@ -33,5 +34,12 @@ export class PaymentsController {
       message: '결제 검증 완료',
       data,
     };
+  }
+
+  @Post('refund')
+  async refund(@Body('impUid') impUid: string) {
+    console.log('!!!!!!!!!!!!!!!!!!');
+    await this.paymentsService.refund(impUid);
+    return true;
   }
 }

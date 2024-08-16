@@ -30,6 +30,10 @@ export class PointOrder {
   @Column()
   merchantUid: string;
 
+  @IsString()
+  @Column()
+  status: string;
+
   @CreateDateColumn()
   createdAt: Date;
 

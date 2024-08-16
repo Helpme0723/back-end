@@ -92,7 +92,20 @@ export class PaymentsService {
 
     try {
       const response: AxiosResponse = await axios.request(options);
-      console.log('결제 취소 성공', response.data);
+      // console.log('결제 취소 성공', response.data);
+      const merchantUid = response.data.response.merchant_uid;
+
+      const pointOrder = await this.pointOrderRepository.findOne({
+        where: {
+          merchantUid,
+        },
+      });
+
+      await this.pointOrderRepository.save({
+        ...pointOrder,
+        status: '결제취소',
+      });
+
       return response.data;
     } catch (error) {
       console.error(error);
@@ -102,7 +115,7 @@ export class PaymentsService {
 
   // 주문 정보 저장
   async createOrder(userId: number, pointMenuId: number) {
-    const merchantUid = `payment-${crypto.randomUUID()}`;
+    const merchantUid = `${crypto.randomUUID()}`;
     const pointMenu = await this.pointMenuRepository.findOneBy({
       id: pointMenuId,
     });
@@ -154,19 +167,23 @@ export class PaymentsService {
           type: PointHistoryType.INCOME,
           description: `${paymentHistory.response.amount} 충전`,
         });
+
         await queryRunner.manager.increment(
           User,
           { id: userId },
           'point',
           paymentHistory.response.amount
         );
+
+        await queryRunner.manager.save(PointOrder, {
+          ...order,
+          status: '결제 완료',
+        });
       }
-      throw error;
+      // throw error;
       await queryRunner.commitTransaction();
     } catch (error) {
       await queryRunner.rollbackTransaction();
-      // 결제 취소
-      await this.refund(paymentHistory.response.imp_uid);
       throw new InternalServerErrorException(
         '결제 검증 중 문제가 발생했습니다.'
       );
