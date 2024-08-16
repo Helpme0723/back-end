@@ -102,7 +102,7 @@ export class AuthService {
   async verifyEmail(email: string, verification: number) {
     // Redis Cloud에 담긴 인증번호와 입력한 인증번호 가져오기
     const verificationInRedis = await this.cacheManager.get<number>(
-      `인증 번호:${email}`
+      `verifyCode:${email}`
     );
 
     // 같지 않을 경우 예외 처리

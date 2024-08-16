@@ -70,7 +70,7 @@ export class SentryWebhookInterceptor implements NestInterceptor {
     // sentry에 오류 기록
     Sentry.captureException(error);
 
-    const slackWebhook = this.configService.get<string>('SLACK_WEBHOOk');
+    const slackWebhook = this.configService.get<string>('SLACK_WEBHOOK');
     const webhook = new IncomingWebhook(slackWebhook);
 
     // slack에 오류 알림
