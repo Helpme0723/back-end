@@ -9,12 +9,14 @@ import axios, { AxiosRequestConfig, AxiosResponse } from 'axios';
 import { PaymentDto } from './dtos/payment.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from 'src/user/entities/user.entity';
-import { DataSource, Repository } from 'typeorm';
+import { DataSource, LessThan, Repository } from 'typeorm';
 import { PointOrder } from 'src/point/entities/point-order.entity';
 import { PointMenu } from 'src/point/entities/point-menu-entity';
 import { PointHistory } from 'src/point/entities/point-history.entity';
 import { PointHistoryType } from 'src/point/types/point-history.type';
-import { error } from 'console';
+import { PaymentType } from './types/payment.type';
+import { sub } from 'date-fns';
+import { toZonedTime } from 'date-fns-tz';
 
 @Injectable()
 export class PaymentsService {
@@ -56,7 +58,6 @@ export class PaymentsService {
   async getPaymentsHistoryFromImpUid(impUid: string) {
     // 토큰 발급
     const token = await this.getPortoneToken();
-    console.log(token);
     const options: AxiosRequestConfig = {
       method: 'GET',
       url: `https://api.iamport.kr/payments/${impUid}`,
@@ -98,12 +99,13 @@ export class PaymentsService {
       const pointOrder = await this.pointOrderRepository.findOne({
         where: {
           merchantUid,
+          status: PaymentType.PENDING,
         },
       });
 
       await this.pointOrderRepository.save({
         ...pointOrder,
-        status: '결제취소',
+        status: PaymentType.REFUND,
       });
 
       return response.data;
@@ -127,6 +129,7 @@ export class PaymentsService {
       userId,
       amount: pointMenu.price,
       pointMenuId,
+      status: PaymentType.PENDING,
     });
 
     return { merchantUid, amount: pointMenu.price };
@@ -177,7 +180,7 @@ export class PaymentsService {
 
         await queryRunner.manager.save(PointOrder, {
           ...order,
-          status: '결제 완료',
+          status: PaymentType.COMPLETE,
         });
       }
       // throw error;
@@ -190,5 +193,17 @@ export class PaymentsService {
     } finally {
       await queryRunner.release();
     }
+  }
+
+  // status가 pending 상태이고, createdAt이 30분이 경과된 것들 삭제
+  async deletePendingOrderAfterThirty() {
+    // 시간대 맞추기
+    const now = toZonedTime(new Date(), 'America/Anchorage');
+    const afterThirty = sub(now, { minutes: 30 });
+
+    await this.pointOrderRepository.delete({
+      status: PaymentType.PENDING,
+      createdAt: LessThan(afterThirty),
+    });
   }
 }
