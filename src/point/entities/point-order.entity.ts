@@ -8,6 +8,7 @@ import {
   PrimaryGeneratedColumn,
 } from 'typeorm';
 import { PointMenu } from './point-menu-entity';
+import { PaymentType } from 'src/payments/types/payment.type';
 
 @Entity('point_order')
 export class PointOrder {
@@ -29,6 +30,10 @@ export class PointOrder {
   @IsString()
   @Column()
   merchantUid: string;
+
+  @IsString()
+  @Column({ type: 'enum', enum: PaymentType, default: PaymentType.PENDING })
+  status: PaymentType;
 
   @CreateDateColumn()
   createdAt: Date;

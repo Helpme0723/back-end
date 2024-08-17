@@ -6,10 +6,7 @@ import {
   HttpStatus,
   Post,
   UseGuards,
-  Headers,
   Get,
-  HttpCode,
-  Req,
   Query,
   Res,
 } from '@nestjs/common';
@@ -27,6 +24,7 @@ import { NaverAuthGuard } from './guards/naver-auth.guard';
 import { Response } from 'express';
 import { ConfigService } from '@nestjs/config';
 import { KakaoAuthGuard } from './guards/kakao-auth.guard';
+import { RecoveryPasswordDto } from './dtos/recovery-password.dto';
 
 @ApiTags('01.auth')
 @Controller('auth')
@@ -148,34 +146,17 @@ export class AuthController {
    * @returns
    */
   @ApiBearerAuth()
-  @UseGuards(LocalAuthGuard)
   @UseGuards(AuthGuard('jwt'))
   @Delete('/re-sign')
   async reSign(@UserInfo() user: User, @Body() signInDto: SignInDto) {
-    const data = await this.authService.reSign(user.id);
+    const data = await this.authService.reSign(user.id, signInDto);
+
     return {
       status: HttpStatus.OK,
       message: '삭제에 성공했습니다.',
       data: data,
     };
   }
-
-  // @Get('/user/login/kakao')
-  // @UseGuards(AuthGuard('kakao'))
-  // async kakaoAuth(@Req() _req: Request) {}
-
-  // /* Get kakao Auth Callback */
-  // @Get('kakao/callback')
-  // @UseGuards(AuthGuard('kakao'))
-  // async kakaoAuthCallback(
-  //   @Req() req: KakaoRequest,
-  //   // @Res({ passthrough: true }) res: Response,
-  //   @Res() res: Response // : Promise<KakaoLoginAuthOutputDto>
-  // ) {
-  //   const { user } = req;
-  //   console.log(user);
-  //   return this.authService.kakaoLogin(req, res);
-  // }
 
   /**
    * kakao
@@ -229,6 +210,24 @@ export class AuthController {
     return {
       status: HttpStatus.OK,
       message: '네이버 소셜 로그인에 성공했습니다.',
+      data,
+    };
+  }
+
+  /**
+   * 비밀번호 재설정
+   * @param user
+   * @param recoveryPasswordDto
+   * @returns
+   */
+  @ApiBearerAuth()
+  @Post('recovery/password')
+  async RecoveryPassword(@Body() recoveryPasswordDto: RecoveryPasswordDto) {
+    const data = await this.authService.recoveryPassword(recoveryPasswordDto);
+
+    return {
+      status: HttpStatus.OK,
+      message: '비밀번호를 재설정했습니다.',
       data,
     };
   }

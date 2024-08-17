@@ -9,11 +9,14 @@ import axios, { AxiosRequestConfig, AxiosResponse } from 'axios';
 import { PaymentDto } from './dtos/payment.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from 'src/user/entities/user.entity';
-import { DataSource, Repository } from 'typeorm';
+import { DataSource, LessThan, Repository } from 'typeorm';
 import { PointOrder } from 'src/point/entities/point-order.entity';
 import { PointMenu } from 'src/point/entities/point-menu-entity';
 import { PointHistory } from 'src/point/entities/point-history.entity';
 import { PointHistoryType } from 'src/point/types/point-history.type';
+import { PaymentType } from './types/payment.type';
+import { sub } from 'date-fns';
+import { toZonedTime } from 'date-fns-tz';
 
 @Injectable()
 export class PaymentsService {
@@ -55,7 +58,6 @@ export class PaymentsService {
   async getPaymentsHistoryFromImpUid(impUid: string) {
     // 토큰 발급
     const token = await this.getPortoneToken();
-
     const options: AxiosRequestConfig = {
       method: 'GET',
       url: `https://api.iamport.kr/payments/${impUid}`,
@@ -74,10 +76,48 @@ export class PaymentsService {
       throw error;
     }
   }
+  // 결제 취소
+  async refund(impUid: string) {
+    const token = await this.getPortoneToken();
+    const options: AxiosRequestConfig = {
+      method: 'POST',
+      url: 'https://api.iamport.kr/payments/cancel',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      data: {
+        imp_uid: `${impUid}`,
+      },
+    };
+
+    try {
+      const response: AxiosResponse = await axios.request(options);
+      // console.log('결제 취소 성공', response.data);
+      const merchantUid = response.data.response.merchant_uid;
+
+      const pointOrder = await this.pointOrderRepository.findOne({
+        where: {
+          merchantUid,
+          status: PaymentType.PENDING,
+        },
+      });
+
+      await this.pointOrderRepository.save({
+        ...pointOrder,
+        status: PaymentType.REFUND,
+      });
+
+      return response.data;
+    } catch (error) {
+      console.error(error);
+      throw error;
+    }
+  }
 
   // 주문 정보 저장
   async createOrder(userId: number, pointMenuId: number) {
-    const merchantUid = `payment-${crypto.randomUUID()}`;
+    const merchantUid = `${crypto.randomUUID()}`;
     const pointMenu = await this.pointMenuRepository.findOneBy({
       id: pointMenuId,
     });
@@ -89,6 +129,7 @@ export class PaymentsService {
       userId,
       amount: pointMenu.price,
       pointMenuId,
+      status: PaymentType.PENDING,
     });
 
     return { merchantUid, amount: pointMenu.price };
@@ -136,6 +177,15 @@ export class PaymentsService {
           'point',
           paymentHistory.response.amount
         );
+
+        await queryRunner.manager.save(PointOrder, {
+          ...order,
+          status: PaymentType.COMPLETE,
+        });
+      } else {
+        throw new BadRequestException(
+          '결제금액과 주문금액이 일치하지 않습니다.'
+        );
       }
       await queryRunner.commitTransaction();
     } catch (error) {
@@ -146,5 +196,17 @@ export class PaymentsService {
     } finally {
       await queryRunner.release();
     }
+  }
+
+  // status가 pending 상태이고, createdAt이 30분이 경과된 것들 삭제
+  async deletePendingOrderAfterThirty() {
+    // 시간대 맞추기
+    const now = toZonedTime(new Date(), 'America/Anchorage');
+    const afterThirty = sub(now, { minutes: 30 });
+
+    await this.pointOrderRepository.delete({
+      status: PaymentType.PENDING,
+      createdAt: LessThan(afterThirty),
+    });
   }
 }

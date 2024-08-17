@@ -90,6 +90,18 @@ export class Post {
   price: number;
 
   /**
+   * 포스트썸네일
+   * @example
+   */
+  @IsOptional()
+  @IsString()
+  @Column({
+    default:
+      'https://talentversebucket.s3.ap-northeast-2.amazonaws.com/10ebcc18-43fc-4f94-8e44-4cd95422a84d.png',
+  })
+  thumbNail: string;
+
+  /**
    * 공개여부 설정
    * @example "PUBLIC"
    */

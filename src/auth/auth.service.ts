@@ -20,6 +20,7 @@ import { PointHistory } from 'src/point/entities/point-history.entity';
 import { PointHistoryType } from 'src/point/types/point-history.type';
 import { UtilsService } from 'src/utils/utils.service';
 import { SocialProvider } from './types/social.type';
+import { RecoveryPasswordDto } from './dtos/recovery-password.dto';
 
 @Injectable()
 export class AuthService {
@@ -128,6 +129,8 @@ export class AuthService {
       throw new BadRequestException('인증 번호가 틀렸습니다.');
     }
 
+    await this.cacheManager.del(`verifyCode:${email}`);
+
     return true;
   }
 
@@ -177,10 +180,12 @@ export class AuthService {
    * @param userId
    * @returns
    */
-  async reSign(userId: number) {
+  async reSign(userId: number, signInDto: SignInDto) {
+    const { email, password } = signInDto;
     // 해당 ID를 가진 유저가 있는지 조회
     const user = await this.userRepository.findOne({
       where: { id: userId },
+      select: { id: true, email: true, password: true },
       relations: {
         channels: true,
         series: true,
@@ -191,6 +196,16 @@ export class AuthService {
     // 유저가 없을 경우 예외 처리
     if (!user) {
       throw new NotFoundException('없는 회원입니다.');
+    }
+
+    if (user.email !== email) {
+      throw new BadRequestException('이메일을 확인해 주세요.');
+    }
+
+    const isMatchedPassword = bcrypt.compareSync(password, user.password);
+
+    if (!isMatchedPassword) {
+      throw new BadRequestException('비밀번호를 확인해 주세요.');
     }
 
     // 레디스에 리프레쉬 토큰 있는지 조회
@@ -213,7 +228,6 @@ export class AuthService {
       // 유저 삭제
       await queryRunner.manager.softRemove(User, user);
 
-      // TODO: queryRunner.manager 안써도 되는게 맞는지 확인해주세요.
       await this.cacheManager.del(`userId:${userId}`);
 
       // 트랜잭션 성공 시 커밋
@@ -232,9 +246,8 @@ export class AuthService {
         '회원 탈퇴 과정 중에 오류가 발생했습니다. 관리자에게 문의해주세요.'
       );
     }
-
-    return true;
   }
+
   /**
    * 로그아웃
    * @param userId
@@ -435,5 +448,34 @@ export class AuthService {
     const data = await this.signIn(userId);
 
     return data;
+  }
+
+  // 비밀번호 재설정
+  async recoveryPassword(recoveryPasswordDto: RecoveryPasswordDto) {
+    const { email, password, passwordConfirm, verifyCode } =
+      recoveryPasswordDto;
+
+    const user = await this.userRepository.findOneBy({ email });
+
+    if (!user) {
+      throw new NotFoundException('해당하는 유저가 존재하지 않습니다.');
+    }
+
+    await this.verifyEmail(email, verifyCode);
+
+    if (password !== passwordConfirm) {
+      throw new BadRequestException(
+        '비밀번호와 비밀번호 확인이 일치하지 않습니다.'
+      );
+    }
+
+    const hashedPassword = bcrypt.hashSync(
+      password,
+      this.configService.get<number>('HASH_ROUND')
+    );
+
+    await this.userRepository.save({ ...user, password: hashedPassword });
+
+    return true;
   }
 }

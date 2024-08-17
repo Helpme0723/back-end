@@ -24,6 +24,12 @@ export class UpdatePostDto {
   preview: string;
 
   /**
+   * @example ''
+   */
+  @IsOptional()
+  @IsString()
+  thumbNail: string;
+  /**
    * @example 40000
    */
   @IsOptional()
