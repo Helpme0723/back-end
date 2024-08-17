@@ -29,7 +29,7 @@ export class SubscribeService {
     private readonly dataSource: DataSource,
     @Inject(CACHE_MANAGER) private readonly cacheManager: Cache,
     @InjectRepository(User)
-    private readonly userRepository: Repository<User>,
+    private readonly userRepository: Repository<User>
   ) {}
 
   // 채널 구독
@@ -58,10 +58,10 @@ export class SubscribeService {
     }
 
     // 사용자 정보 조회
-  const user = await this.userRepository.findOneBy({ id: userId });
-  if (!user) {
-    throw new NotFoundException('사용자를 찾을 수 없습니다.');
-  }
+    const user = await this.userRepository.findOneBy({ id: userId });
+    if (!user) {
+      throw new NotFoundException('사용자를 찾을 수 없습니다.');
+    }
 
     // 여기서부터 트랜잭션
     const queryRunner = this.dataSource.createQueryRunner();
@@ -94,6 +94,12 @@ export class SubscribeService {
           message
         );
       }
+
+      const keys = await this.cacheManager.store.keys(
+        `subscribePosts:${userId}-*-*`
+      );
+
+      await Promise.all(keys.map((key) => this.cacheManager.del(key)));
 
       await queryRunner.commitTransaction();
       await queryRunner.release();
@@ -134,6 +140,12 @@ export class SubscribeService {
 
       // subscribe에서 구독 정보 삭제
       await queryRunner.manager.delete(Subscribe, { id: subscribe.id });
+
+      const keys = await this.cacheManager.store.keys(
+        `subscribePosts:${userId}-*-*`
+      );
+
+      await Promise.all(keys.map((key) => this.cacheManager.del(key)));
 
       await queryRunner.commitTransaction();
       await queryRunner.release();
