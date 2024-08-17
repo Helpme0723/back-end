@@ -13,7 +13,6 @@ import { VisibilityType } from 'src/post/types/visibility.type';
 import { User } from 'src/user/entities/user.entity';
 import { Series } from 'src/series/entities/series.entity';
 import { Post } from 'src/post/entities/post.entity';
-import { TAKE_COUNT } from 'src/constants/page.constant';
 import { paginate } from 'nestjs-typeorm-paginate';
 import { DailyInsight } from 'src/insight/entities/daily-insight.entity';
 import { MonthlyInsight } from 'src/insight/entities/monthly-insight.entity';
@@ -25,6 +24,7 @@ import { ChannelMonthlyInsight } from 'src/insight/entities/channel-monthly-insi
 import { InsightSort } from './types/insight-sort.type';
 import { calculateInsightCount } from 'src/utils/count.util';
 import { toZonedTime } from 'date-fns-tz';
+// import { TAKE_COUNT } from 'src/constants/page.constant';
 
 @Injectable()
 export class ChannelService {
@@ -112,7 +112,7 @@ export class ChannelService {
     const series = await this.seriesRepository.find({
       where: { channelId },
       order: { createdAt: 'DESC' },
-      take: TAKE_COUNT,
+      // take: TAKE_COUNT,
     });
 
     const postsWhereCondition: FindOptionsWhere<Post> = { channelId };
@@ -128,7 +128,7 @@ export class ChannelService {
         tags: true,
       },
       order: { createdAt: 'DESC' },
-      take: TAKE_COUNT,
+      // take: TAKE_COUNT,
     });
 
     return this.mapChannelData(channel, series, posts);
