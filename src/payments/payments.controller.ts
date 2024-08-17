@@ -34,7 +34,6 @@ export class PaymentsController {
 
   @Post('complete')
   async verifyPayment(@UserInfo() user: User, @Body() paymentDto: PaymentDto) {
-    console.log(user.id);
     const data = await this.paymentsService.verifyPayment(user.id, paymentDto);
 
     return {
