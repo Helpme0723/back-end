@@ -40,6 +40,7 @@ export class NotificationsService {
         commentNotifications: true,
         commentlikeNotifications: true,
         postLikeNotifications: true,
+        subscribeNotifications: true,
       });
       await this.notificationSettingsRepository.save(settings);
     }

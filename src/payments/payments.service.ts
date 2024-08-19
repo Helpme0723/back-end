@@ -182,8 +182,11 @@ export class PaymentsService {
           ...order,
           status: PaymentType.COMPLETE,
         });
+      } else {
+        throw new BadRequestException(
+          '결제금액과 주문금액이 일치하지 않습니다.'
+        );
       }
-      // throw error;
       await queryRunner.commitTransaction();
     } catch (error) {
       await queryRunner.rollbackTransaction();
