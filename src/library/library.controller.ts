@@ -16,7 +16,7 @@ import { PaginationDto } from './dtos/pagination.dto';
 export class LibraryController {
   constructor(private readonly libraryService: LibraryService) {}
 
-  /**
+   /**
    * 내가 좋아요한 포스트 조회
    * @param user 유저정보
    * @param query 페이지네이션, 정렬 정보를 담은 값
