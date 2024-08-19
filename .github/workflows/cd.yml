@@ -1,71 +1,28 @@
 name: talentVerse CD
 
 on:
-  workflow_dispatch: # 수동 실행 
-  workflow_run: # 특정 workflow가 실행됐을 때
-    workflows: ['talentVerse CI'] # CI workflow
-    types: [completed] # 완료 되었을 때
-    branches: [main] # main 브랜치
-
-env:
-  PROJECT_DIR: /home/ubuntu/back-end # ubuntu에 접속해서 clone 받은 파일 경로..?
+  workflow_run:
+    workflows: ['talentVerse CI']
+    types: [completed]
+    branches: [main]
 
 jobs:
   deploy:
-    # workflow 완료 후 결과가 성공 일 때
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
-    # 작업을 실행 할 VM의 OS 지정
     runs-on: ubuntu-24.04
-    timeout-minutes: 3 # 3분 이상 걸리면 실패
 
-    # 작업 내의 단위 작업 정의
     steps:
-      #소스 코드 가져오기
-      - name: Checkout source code # steps 내에 있는 각각의 step의 이름 지정?
-        uses: actions/checkout@v4 # Node.js 설치를 위해 미리 정의 된 workflow를 불러와서 사용 이게 뭐지.....?
-
-      # VM에 Node.js 설치
-      - name: Setup Node.js environment # step의 이름 지정 2 cd 돌릴 때 어디서 오류나나 보려고 작성하는 건가
-        uses: actions/setup-node@v4 # Node.js 설치를 위해 미리 정의 된 workflow를 불러와서 사용 이게 뭐지.....?
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
         with:
-          node-version: 20 # 설치 할 Node.js 버전 지정
-          cache: 'npm' # 사용할 패키지 매니저를 지정해주는 건가
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
 
-      # 의존성 패키지 설치하기
-      - name: Install dependencies # step의 이름 지정 3
+      - name: Deploy updated image to ECS
         run: |
-          # package0lock.json 파일에 저장 된 버전 정보와 동일하게 설치
-          npm ci
-          npm run build
-      # SSH 접속 후 명령을 통해서 배포 진행
-      - name: Configure SSH
-        run: |
-          mkdir -p ~/.ssh/
-          echo "$SSH_KEY" > ~/.ssh/ec2.key
-          chmod 400 ~/.ssh/ec2.key
-          cat >>~/.ssh/config <<END
-          Host ec2
-            HostName $SSH_HOST
-            User $SSH_USER
-            IdentityFile ~/.ssh/ec2.key
-            StrictHostKeyChecking no
-          END
-        env:
-          SSH_USER: ${{ secrets.AWS_EC2_USERNAME }}
-          SSH_KEY: ${{ secrets.AWS_EC2_PEM_KEY }}
-          SSH_HOST: ${{ secrets.AWS_EC2_HOST }}
-
-      - name: Prepare to deploy # 프로젝트 디렉토리로 이동해서 main 브랜치로 이동, git pull 받고 env 파일 수정
-        run: ssh ec2 'cd ${{ env.PROJECT_DIR }} && git switch main && git pull && echo "${{ secrets.ENV }}" > .env'
-
-      - name: Copy file to EC2 # 뭐지....
-        run: rsync -avzP -e ssh ./dist ec2:${{ env.PROJECT_DIR }}/
-
-      - name: Uninstall dev dependence
-        run: npm ci --omit=dev
-
-      - name: Copy file to EC2 # 뭐지....
-        run: rsync -avzP -e ssh ./node_modules ec2:${{ env.PROJECT_DIR }}/
-
-      - name: Restart PM2 # 프로젝트 디렉토리로 이동하고 run.sh 파일을 실행해서 배포하는 건가
-        run: ssh ec2 'cd ${{ env.PROJECT_DIR }} && ./scripts/run.sh'
+          aws ecs update-service \
+            —cluster talentverse-cluster \
+            —service talentverse-service \
+            —force-new-deployment \
+            —region ${{ secrets.AWS_REGION }}
