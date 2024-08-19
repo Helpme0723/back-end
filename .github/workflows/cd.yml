@@ -37,7 +37,7 @@ jobs:
         with:
           task-definition: task-definition.json
           container-name: talentverse
-          image: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/${{ secrets.AWS_ECR_REPOSITORY }}:${{ secrets.IMAGE_TAG }}
+          image: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/${{ secrets.AWS_ECR_REPOSITORY }}:latest
           # 이미지를 구성할 때 Secrets를 사용합니다
 
       - name: Deploy Amazon ECS task definition
