@@ -1,47 +1,50 @@
-name: talentVerse CD
+name: talentVerse CI
 
-on:
+on: # 언제 실행 될지 정의
   workflow_dispatch: # 수동 실행
-  workflow_run: # 특정 workflow가 실행됐을 때
-    workflows: ['talentVerse CI'] # CI workflow
-    types: [completed] # 완료 되었을 때
+  push: # PUSH 됐을 때
+    branches: [main] # main 브랜치
+  pull_request: # PR
+    # opened: 새롭게 생성됐을 때
+    # reopened: close 상태에서 다시 open으로 변경 됐을 때
+    # synchronize: open 상태에서 추가 commit 등으로 갱신 됐을 때
+    types: [opened, reopened, synchronize] # (생략가능) types를 명시하지 않았을 때 적용되는 3가지 이벤트
     branches: [main] # main 브랜치
 
+env: # 워크플로우에서 사용할 환경 변수 설정
+  ECR_REGISTRY: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com # ECR 레지스트리 주소 설정
+  ECR_REPOSITORY: ${{ secrets.AWS_ECR_REPOSITORY }} # ECR 리포지토리 이름 설정
+  IMAGE_TAG: latest # 이미지 태그를 'latest'로 설정
+
 jobs:
-  deploy:
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
-    runs-on: ubuntu-latest
+  # 실행 할 작업 이름 지정 "ci-test"
+  ci-test:
+    # 작업을 실행 할 VM의 OS 지정
+    runs-on: ubuntu-24.04
 
-    steps:
-      - name: Checkout source code
-        uses: actions/checkout@v4
+    steps: # 작업 내에서 실행될 단계(step)들을 정의
+      - name: Checkout source code # 소스 코드를 체크아웃하는 단계
+        uses: actions/checkout@v4 # GitHub 리포지토리의 소스 코드를 가져오기 위해 actions/checkout 액션 사용
 
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v2
+      - name: Set environment variables  # 환경 변수를 설정하는 단계
+        run: echo "${{ secrets.ENV }}" > .env  # GitHub Secrets에 저장된 ENV 값을 .env 파일로 생성
+
+      - name: Set up Docker Buildx # Docker Buildx를 설정하는 단계
+        uses: docker/setup-buildx-action@v2 # Docker의 Buildx 기능을 사용하여 빌드 환경을 설정
+        
+      - name: Configure AWS credentials # AWS 자격 증명을 설정하는 단계
+        uses: aws-actions/configure-aws-credentials@v2 # AWS CLI를 사용하기 위해 자격 증명 설정
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ secrets.AWS_REGION }}
-
-      - name: Download task definition
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }} # AWS Access Key ID를 GitHub Secrets에서 가져옴
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }} # AWS Secret Access Key를 GitHub Secrets에서 가져옴
+          aws-region: ${{ secrets.AWS_REGION }} # AWS 리전을 GitHub Secrets에서 가져와 설정
+      
+      - name: Log in to Amazon ECR  # Amazon ECR에 로그인하는 단계
+        run: aws ecr get-login-password --region ${{ secrets.AWS_REGION }} | docker login --username AWS --password-stdin ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com
+        # AWS CLI를 사용하여 ECR에 로그인하고 Docker 자격 증명을 설정합니다.
+  
+      - name: Build and Push Docker image to ECR # Docker 이미지를 빌드하고 ECR에 푸시하는 단계
         run: |
-          aws ecs describe-task-definition \
-            --task-definition talentverse-task \
-            --query taskDefinition \
-            --region ${{ secrets.AWS_REGION }} > task-definition.json
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .  # Docker 이미지를 빌드하고 태그 설정
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG  # 빌드된 이미지를 ECR에 푸시
 
-      - name: Fill in the new image ID in the Amazon ECS task definition
-        id: setting-task-definition
-        uses: aws-actions/amazon-ecs-render-task-definition@v1
-        with:
-          task-definition: task-definition.json
-          container-name: talentverse
-          image: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/${{ secrets.AWS_ECR_REPOSITORY }}:latest
-          
-      - name: Deploy Amazon ECS task definition
-        uses: aws-actions/amazon-ecs-deploy-task-definition@v1
-        with:
-          task-definition: ${{ steps.setting-task-definition.outputs.task-definition }}
-          service: talentverse-service-2
-          cluster: talentverse-cluster
-          wait-for-service-stability: true
