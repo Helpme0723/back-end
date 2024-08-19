@@ -162,7 +162,7 @@ export class PostService {
         createdAt: item.createdAt,
         userName: item.user.nickname,
         userImage: item.user.profileUrl,
-        // isPurchased: await this.purchaseCheck(item.id),
+        isPurchased: await this.purchaseCheck(item.id),
       }))
     );
 
