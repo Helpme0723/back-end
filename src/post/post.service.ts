@@ -25,6 +25,7 @@ import { createClient, RedisClientType } from 'redis';
 import { ConfigService } from '@nestjs/config';
 import { User } from 'src/user/entities/user.entity';
 import { NotificationsService } from 'src/notification/notification.service';
+import { UserInfo } from 'src/auth/decorators/user-info.decorator';
 
 @Injectable()
 export class PostService {
@@ -58,6 +59,21 @@ export class PostService {
     this.redisClient.connect().catch(console.error);
   }
 
+  private async purchaseCheck(postId: number) {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const post = await this.postRepository.findOne({
+      where: { id: postId },
+    });
+    const purchasedPost = await this.purchaseListRepository.find({
+      where: { postId: post.id },
+    });
+    if (purchasedPost.length > 0) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+
   async create(userId: number, createPostDto: CreatePostDto) {
     const { channelId, seriesId, price, ...postData } = createPostDto;
     const channel = await this.channelRepository.findOne({
@@ -79,6 +95,7 @@ export class PostService {
       userId,
       channelId,
       seriesId,
+      price,
       ...postData,
     });
     await this.postRepository.save(post);
@@ -97,6 +114,61 @@ export class PostService {
     await this.findAll(findAllPostDto);
 
     return post;
+  }
+
+  async findAllLogin(userId: number, findAllPostDto: FindAllPostDto) {
+    const { channelId, page, limit, sort, categoryId } = findAllPostDto;
+
+    const channel = await this.channelRepository.findOne({
+      where: { id: channelId },
+    });
+
+    if (channelId && !channel) {
+      throw new NotFoundException('존재하지 않은 채널입니다.');
+    }
+
+    const { items, meta } = await paginate<Post>(
+      this.postRepository,
+      { page, limit },
+      {
+        where: {
+          visibility: VisibilityType.PUBLIC,
+          ...(channelId && { channelId }),
+          ...(categoryId && { categoryId }),
+          deletedAt: null,
+        },
+        order: {
+          createdAt: sort,
+        },
+        relations: { user: true, purchaseLists: true },
+      }
+    );
+
+    const posts = await Promise.all(
+      items.map(async (item) => ({
+        id: item.id,
+        userId: item.userId,
+        channelId: item.channelId,
+        seriesId: item.seriesId,
+        categoryId: item.categoryId,
+        title: item.title,
+        thumbNail: item.thumbNail,
+        preview: item.preview,
+        price: item.price,
+        visibility: item.visibility,
+        viewCount: item.viewCount,
+        likeCount: item.likeCount,
+        commentCount: item.commentCount,
+        createdAt: item.createdAt,
+        userName: item.user.nickname,
+        userImage: item.user.profileUrl,
+        isPurchased: await this.purchaseCheck(item.id),
+      }))
+    );
+
+    const returnValue = { posts, meta };
+
+    return returnValue;
   }
 
   async findAll(findAllPostDto: FindAllPostDto) {
@@ -152,7 +224,6 @@ export class PostService {
       userName: item.user.nickname,
       userImage: item.user.profileUrl,
     }));
-    console.log(posts);
     const returnValue = { posts, meta };
 
     const ttl = 60 * 5;
