@@ -58,21 +58,6 @@ export class PostService {
     this.redisClient.connect().catch(console.error);
   }
 
-  private async purchaseCheck(postId: number) {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const post = await this.postRepository.findOne({
-      where: { id: postId },
-    });
-    const purchasedPost = await this.purchaseListRepository.find({
-      where: { postId: post.id },
-    });
-    if (purchasedPost.length > 0) {
-      return true;
-    } else {
-      return false;
-    }
-  }
-
   async create(userId: number, createPostDto: CreatePostDto) {
     const { channelId, seriesId, price, ...postData } = createPostDto;
     const channel = await this.channelRepository.findOne({
@@ -134,6 +119,7 @@ export class PostService {
           visibility: VisibilityType.PUBLIC,
           ...(channelId && { channelId }),
           ...(categoryId && { categoryId }),
+          //purchaseLists: { userId },
           deletedAt: null,
         },
         order: {
@@ -142,9 +128,12 @@ export class PostService {
         relations: { user: true, purchaseLists: true },
       }
     );
-
-    const posts = await Promise.all(
-      items.map(async (item) => ({
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const posts = items.map((item) => {
+      const isPurchased = item.purchaseLists
+        .map((purchased) => purchased.userId === userId)
+        .includes(true);
+      const post = {
         id: item.id,
         userId: item.userId,
         channelId: item.channelId,
@@ -161,12 +150,12 @@ export class PostService {
         createdAt: item.createdAt,
         userName: item.user.nickname,
         userImage: item.user.profileUrl,
-        isPurchased: await this.purchaseCheck(item.id),
-      }))
-    );
+        isPurchased,
+      };
 
-    const returnValue = { posts, meta };
-
+      return post;
+    });
+    const returnValue = { items: posts, meta };
     return returnValue;
   }
 
@@ -571,5 +560,14 @@ export class PostService {
 
       throw new InternalServerErrorException('서버에 에러가 발생햇습니다.');
     }
+  }
+
+  // 내가 좋아요한 포스트인지 확인
+  async getPostLikeCheck(userId: number, postId: number) {
+    const data = await this.postLikeRepository.findOne({
+      where: { userId, postId },
+    });
+
+    return data ? true : false;
   }
 }
