@@ -25,7 +25,6 @@ import { createClient, RedisClientType } from 'redis';
 import { ConfigService } from '@nestjs/config';
 import { User } from 'src/user/entities/user.entity';
 import { NotificationsService } from 'src/notification/notification.service';
-import { UserInfo } from 'src/auth/decorators/user-info.decorator';
 
 @Injectable()
 export class PostService {
@@ -526,7 +525,9 @@ export class PostService {
         // likeNotifications 설정 확인
         this.notificationsService.sendNotification(
           post.user.id,
-          `사용자 "${user.nickname}"님이 당신의 포스트 "${post.title}"에 좋아요를 눌렀습니다.`
+          `사용자 "${user.nickname}"님이 당신의 포스트 "${post.title}"에 좋아요를 눌렀습니다.`,
+          post.id,
+          undefined,
         );
       }
 

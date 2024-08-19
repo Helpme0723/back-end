@@ -91,7 +91,9 @@ export class SubscribeService {
         const message = `${user.nickname}님이 당신의 채널 "${channel.title}"을 구독했습니다.`;
         await this.notificationsService.sendNotification(
           channel.userId,
-          message
+          message,
+          undefined,
+          channel.id
         );
       }
 

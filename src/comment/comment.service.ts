@@ -84,7 +84,9 @@ export class CommentService {
         // 알림 전송
         this.notificationsService.sendNotification(
           post.user.id,
-          `당신의 포스트 "${post.title}"에 새로운 댓글이 달렸습니다: ${fullComment.content}`
+          `당신의 포스트 "${post.title}"에 새로운 댓글이 달렸습니다: ${fullComment.content}`,
+          post.id,
+          undefined,
         );
       }
     }
@@ -268,7 +270,9 @@ export class CommentService {
       if (notificationSettings?.commentlikeNotifications) { // likeNotifications 설정 확인
         this.notificationsService.sendNotification(
           comment.user.id,
-          `사용자 "${user.nickname}"님이 당신의 댓글 "${comment.content}"에 좋아요를 눌렀습니다.`
+          `사용자 "${user.nickname}"님이 당신의 댓글 "${comment.content}"에 좋아요를 눌렀습니다.`,
+          comment.postId,
+          undefined,
         );
       }
 
