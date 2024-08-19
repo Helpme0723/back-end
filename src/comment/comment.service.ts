@@ -345,15 +345,17 @@ export class CommentService {
   // 포스트의 댓글 중에 내가 좋아요한 댓글이 있는지 확인
   async getCommentLikeCheck(userId: number, postId: number) {
     const comments = await this.commentRepository.find({
-      where: { postId },
+      where: {
+        postId,
+        commentLikes: {
+          userId,
+        },
+      },
+      relations: { commentLikes: true },
     });
 
-    const commentIds = comments.map((comment) => comment.id);
-
-    const data = await this.commentLikeRepository.find({
-      where: { userId, commentId: In(commentIds) },
-    });
-
-    return data;
+    return comments.map((comment) => ({
+      commentId: comment.id,
+    }));
   }
 }
