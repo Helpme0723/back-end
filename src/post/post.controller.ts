@@ -58,6 +58,25 @@ export class PostController {
   }
 
   /**
+   * 로그인한유저의 전체조회
+   * @param user
+   * @param findAllPostDto
+   * @returns
+   */
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard('jwt'))
+  @Get('login')
+  async LoginFindAll(
+    @UserInfo() user: User,
+    @Query() findAllPostDto: FindAllPostDto
+  ) {
+    const userId = user.id;
+    const data = await this.postService.findAllLogin(userId, findAllPostDto);
+
+    return data;
+  }
+
+  /**
    * 내 포스트조회
    * @param user
    * @param findAllPostDto
