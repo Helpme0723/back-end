@@ -82,6 +82,20 @@ export class PostService {
       ...postData,
     });
     await this.postRepository.save(post);
+
+    const keys = await this.cacheManager.store.keys(`posts:undefined-*`);
+
+    await Promise.all(keys.map((key) => this.cacheManager.del(key)));
+
+    const keys2 = await this.cacheManager.store.keys(`posts:${channelId}-*`);
+
+    await Promise.all(keys2.map((key) => this.cacheManager.del(key)));
+
+    const findAllPostDto = new FindAllPostDto();
+    await this.findAll(findAllPostDto);
+    findAllPostDto.channelId = channelId;
+    await this.findAll(findAllPostDto);
+
     return post;
   }
 
@@ -138,6 +152,7 @@ export class PostService {
       userName: item.user.nickname,
       userImage: item.user.profileUrl,
     }));
+    console.log(posts);
     const returnValue = { posts, meta };
 
     const ttl = 60 * 5;
