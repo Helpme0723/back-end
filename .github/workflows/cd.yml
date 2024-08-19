@@ -1,7 +1,7 @@
 name: talentVerse CD
 
 on:
-  workflow_dispatch: # 수동 실행 
+  workflow_dispatch: # 수동 실행
   workflow_run: # 특정 workflow가 실행됐을 때
     workflows: ['talentVerse CI'] # CI workflow
     types: [completed] # 완료 되었을 때
@@ -21,7 +21,7 @@ jobs:
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ secrets.AWS_REGION }} # 리전을 GitHub Secrets에서 가져옵니다
+          aws-region: ${{ secrets.AWS_REGION }}
 
       - name: Download task definition
         run: |
@@ -29,7 +29,6 @@ jobs:
             --task-definition talentverse-task \
             --query taskDefinition \
             --region ${{ secrets.AWS_REGION }} > task-definition.json
-          # 리전도 Secrets에서 가져옵니다
 
       - name: Fill in the new image ID in the Amazon ECS task definition
         id: setting-task-definition
@@ -37,13 +36,12 @@ jobs:
         with:
           task-definition: task-definition.json
           container-name: talentverse
-          image: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/${{ secrets.AWS_ECR_REPOSITORY }}:${{ secrets.IMAGE_TAG }}
-          # 이미지를 구성할 때 Secrets를 사용합니다
-
+          image: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/${{ secrets.AWS_ECR_REPOSITORY }}:latest
+          
       - name: Deploy Amazon ECS task definition
         uses: aws-actions/amazon-ecs-deploy-task-definition@v1
         with:
           task-definition: ${{ steps.setting-task-definition.outputs.task-definition }}
-          service: talentverse-service-2 # 서비스 이름을 직접 명시
-          cluster: talentverse-cluster   # 클러스터 이름을 직접 명시
+          service: talentverse-service-2
+          cluster: talentverse-cluster
           wait-for-service-stability: true
