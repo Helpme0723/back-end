@@ -15,5 +15,6 @@ import { PointHistory } from 'src/point/entities/point-history.entity';
   ],
   controllers: [PaymentsController],
   providers: [PaymentsService],
+  exports: [PaymentsService],
 })
 export class PaymentsModule {}

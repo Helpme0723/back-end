@@ -29,6 +29,6 @@ import { Search } from './entities/search.entity';
 
   controllers: [SearchController],
   providers: [SearchService, RedisService],
-  exports: [ElasticsearchModule],
+  exports: [ElasticsearchModule, SearchService],
 })
 export class SearchModule {}
