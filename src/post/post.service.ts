@@ -95,6 +95,7 @@ export class PostService {
       userId,
       channelId,
       seriesId,
+      price,
       ...postData,
     });
     await this.postRepository.save(post);
