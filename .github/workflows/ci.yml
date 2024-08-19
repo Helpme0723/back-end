@@ -11,38 +11,40 @@ on: # 언제 실행 될지 정의
     types: [opened, reopened, synchronize] # (생략가능) types를 명시하지 않았을 때 적용되는 3가지 이벤트
     branches: [main] # main 브랜치
 
+env: # 워크플로우에서 사용할 환경 변수 설정
+  ECR_REGISTRY: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com # ECR 레지스트리 주소 설정
+  ECR_REPOSITORY: ${{ secrets.AWS_ECR_REPOSITORY }} # ECR 리포지토리 이름 설정
+  IMAGE_TAG: latest # 이미지 태그를 'latest'로 설정
+
 jobs:
   # 실행 할 작업 이름 지정 "ci-test"
   ci-test:
     # 작업을 실행 할 VM의 OS 지정
     runs-on: ubuntu-24.04
 
-    # 작업 내의 단위 작업(step)을 정의
-    steps:
-      # 소스 코드 가져오기
-      - name: Checkout source code # step의 이름 지정 (선택 사항)
-        uses: actions/checkout@v4 # 소스 복사를 위해 미리 정의 된 workflow를 불러와서 사용
+    steps: # 작업 내에서 실행될 단계(step)들을 정의
+      - name: Checkout source code # 소스 코드를 체크아웃하는 단계
+        uses: actions/checkout@v4 # GitHub 리포지토리의 소스 코드를 가져오기 위해 actions/checkout 액션 사용
 
-      # VM에 Node.js 설치하기
-      - name: Setup Node.js environment # step의 이름 지정 (선택 사항)
-        uses: actions/setup-node@v4 # Node.js 설치를 위해 미리 정의 된 workflow를 불러와서 사용
+      - name: Set environment variables  # 환경 변수를 설정하는 단계
+        run: echo "${{ secrets.ENV }}" > .env  # GitHub Secrets에 저장된 ENV 값을 .env 파일로 생성
+
+      - name: Set up Docker Buildx # Docker Buildx를 설정하는 단계
+        uses: docker/setup-buildx-action@v2 # Docker의 Buildx 기능을 사용하여 빌드 환경을 설정
+        
+      - name: Configure AWS credentials # AWS 자격 증명을 설정하는 단계
+        uses: aws-actions/configure-aws-credentials@v2 # AWS CLI를 사용하기 위해 자격 증명 설정
         with:
-          node-version: 20 # 설치 할 Node.js 버전 지정
-          cache: 'npm' # npm 사용 시 'npm'
-
-      # 의존성 패키지 설치하기
-      - name: Install dependencies # step의 이름 지정 (선택 사항)
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }} # AWS Access Key ID를 GitHub Secrets에서 가져옴
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }} # AWS Secret Access Key를 GitHub Secrets에서 가져옴
+          aws-region: ${{ secrets.AWS_REGION }} # AWS 리전을 GitHub Secrets에서 가져와 설정
+      
+      - name: Log in to Amazon ECR  # Amazon ECR에 로그인하는 단계
+        run: aws ecr get-login-password --region ${{ secrets.AWS_REGION }} | docker login --username AWS --password-stdin ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com
+        # AWS CLI를 사용하여 ECR에 로그인하고 Docker 자격 증명을 설정합니다.
+  
+      - name: Build and Push Docker image to ECR # Docker 이미지를 빌드하고 ECR에 푸시하는 단계
         run: |
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .  # Docker 이미지를 빌드하고 태그 설정
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG  # 빌드된 이미지를 ECR에 푸시
 
-          # yarn.lock 파일에 저장 된 버전 정보와 동일하게 설치
-          npm ci
-
-          # package-lock.json 파일에 저장 된 버전 정보와 동일하게 설치
-          # npm ci
-
-      # 테스트 코드 실행
-      - name: Run test # step의 이름 지정 (선택 사항)
-        run: |
-
-          npm run test
-          # npm run test
