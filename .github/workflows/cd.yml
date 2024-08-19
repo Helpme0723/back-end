@@ -44,6 +44,6 @@ jobs:
         uses: aws-actions/amazon-ecs-deploy-task-definition@v1
         with:
           task-definition: ${{ steps.task-def.outputs.task-definition }}
-          service: talentverse-service
+          service: talentverse-service-2
           cluster: talentverse-cluster
           wait-for-service-stability: true
