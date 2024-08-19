@@ -25,7 +25,7 @@ import { RedisModule } from '@nestjs-modules/ioredis';
 import { APP_INTERCEPTOR } from '@nestjs/core';
 import { SentryWebhookInterceptor } from './webhook.interceptor';
 import { PaymentsModule } from './payments/payments.module';
-
+import { ScheduleTaskModule } from './schedule-task/schedule-task.module';
 
 @Module({
   imports: [
@@ -53,6 +53,7 @@ import { PaymentsModule } from './payments/payments.module';
     NotificationsModule,
     RedisModule,
     PaymentsModule,
+    ScheduleTaskModule,
   ],
   controllers: [AppController],
   providers: [
