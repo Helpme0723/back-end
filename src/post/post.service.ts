@@ -514,7 +514,9 @@ export class PostService {
         // likeNotifications 설정 확인
         this.notificationsService.sendNotification(
           post.user.id,
-          `사용자 "${user.nickname}"님이 당신의 포스트 "${post.title}"에 좋아요를 눌렀습니다.`
+          `사용자 "${user.nickname}"님이 당신의 포스트 "${post.title}"에 좋아요를 눌렀습니다.`,
+          post.id,
+          undefined,
         );
       }
 
