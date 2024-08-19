@@ -2,16 +2,16 @@ name: talentVerse CD
 
 on:
   workflow_run:
-    workflows: ['talentVerse CI'] # CI workflow 이름
+    workflows: ['talentVerse CI']
     types:
-      - completed # CI가 완료되었을 때
+      - completed
     branches:
-      - main # main 브랜치에서만 실행
+      - main
 
 jobs:
   deploy:
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
 
     steps:
       - name: Checkout source code
@@ -30,20 +30,25 @@ jobs:
             --task-definition talentverse-task \
             --query taskDefinition \
             --region ${{ secrets.AWS_REGION }} > task-definition.json
+        # AWS에서 기존 태스크 정의를 다운로드하여 `task-definition.json` 파일로 저장
 
-      - name: Fill in the new image ID in the Amazon ECS task definition
-        id: task-def
-        uses: aws-actions/amazon-ecs-render-task-definition@v1
-        with:
-          task-definition: task-definition.json
-          container-name: talentverse
-          image: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/${{ secrets.AWS_ECR_REPOSITORY }}:latest
-          # CI에서 푸시된 latest 이미지 사용
+      - name: Update task definition with new image
+        run: |
+          jq '.containerDefinitions[0].image = "${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/${{ secrets.AWS_ECR_REPOSITORY }}:latest"' task-definition.json > new-task-definition.json
+        # jq 명령을 사용하여 이미지 필드를 업데이트하고 새로운 태스크 정의 파일을 생성
 
-      - name: Deploy Amazon ECS task definition
-        uses: aws-actions/amazon-ecs-deploy-task-definition@v1
-        with:
-          task-definition: ${{ steps.task-def.outputs.task-definition }}
-          service: talentverse-service-2
-          cluster: talentverse-cluster
-          wait-for-service-stability: true
+      - name: Register new task definition
+        run: |
+          aws ecs register-task-definition \
+            --cli-input-json file://new-task-definition.json \
+            --region ${{ secrets.AWS_REGION }}
+        # 수정된 태스크 정의를 등록하여 새로운 리비전을 생성
+
+      - name: Deploy updated task definition to ECS
+        run: |
+          aws ecs update-service \
+            --cluster talentverse-cluster \
+            --service talentverse-service \
+            --task-definition talentverse-task \
+            --region ${{ secrets.AWS_REGION }}
+        # ECS 서비스에 새로운 태스크 정의를 적용하여 배포
