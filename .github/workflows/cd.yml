@@ -7,48 +7,52 @@ on:
     types: [completed] # 완료 되었을 때
     branches: [main] # main 브랜치
 
-env: 
-  AWS_REGION: ${{ secrets.AWS_REGION }} 
+env:
+  AWS_REGION: ${{ secrets.AWS_REGION }}
+  AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION }}
   ECR_REGISTRY: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com
-  ECR_REPOSITORY: ${{ secrets.AWS_ECR_REPOSITORY }} 
-  IMAGE_TAG: latest # CI 워크플로우에서 푸시한 이미지 태그와 동일하게 설정
+  ECR_REPOSITORY: ${{ secrets.AWS_ECR_REPOSITORY }}
+  IMAGE_TAG: latest
+  AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+  AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
 
 jobs:
   deploy:
-    # workflow 완료 후 결과가 성공 일 때
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout source code # 소스 코드를 체크아웃하는 단계
-        uses: actions/checkout@v4 # GitHub 리포지토리의 소스 코드를 가져오기 위해 actions/checkout 액션 사용
+      - name: Checkout source code
+        uses: actions/checkout@v4
 
-      - name: Configure AWS credentials # AWS 자격 증명을 설정하는 단계
-        uses: aws-actions/configure-aws-credentials@v2 # AWS CLI를 사용하기 위해 자격 증명 설정
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }} # AWS Access Key ID를 GitHub Secrets에서 가져옴
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }} # AWS Secret Access Key를 GitHub Secrets에서 가져옴
-          aws-region: ${{ secrets.AWS_REGION }} # AWS 리전을 GitHub Secrets에서 가져와 설정
-      
-      - name: Download task definition # 기존 ECS 태스크 정의 다운로드
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Download task definition
         run: |
           aws ecs describe-task-definition \
             --task-definition talentverse-task \
             --query taskDefinition \
             --region $AWS_REGION > task-definition.json
-  
-      - name: Fill in the new image ID in the Amazon ECS task definition # 새로운 이미지 ID로 ECS 태스크 정의 업데이트
+        env:
+          AWS_REGION: ${{ secrets.AWS_REGION }}
+
+      - name: Fill in the new image ID in the Amazon ECS task definition
         id: setting-task-definition
         uses: aws-actions/amazon-ecs-render-task-definition@v1
         with:
-            task-definition: task-definition.json
-            container-name: talentverse # 컨테이너 이름
-            image: $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
-    
-      - name: Deploy Amazon ECS task definition # ECS에 배포
+          task-definition: task-definition.json
+          container-name: talentverse
+          image: $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+
+      - name: Deploy Amazon ECS task definition
         uses: aws-actions/amazon-ecs-deploy-task-definition@v1
         with:
           task-definition: ${{ steps.setting-task-definition.outputs.task-definition }}
-          service: talentverse-service-2 # ECS 서비스 이름
-          cluster: talentverse-cluster # ECS 클러스터 이름
+          service: talentverse-service-2
+          cluster: talentverse-cluster
           wait-for-service-stability: true
