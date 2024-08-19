@@ -218,4 +218,27 @@ export class PostController {
       data,
     };
   }
+
+  /**
+   * 내가 좋아요한 포스트인지 확인
+   * @param user
+   * @param postId
+   * @returns
+   */
+  // 내가 좋아요한 포스트인지 확인
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard('jwt'))
+  @Get(':postId/like/check')
+  async getPostLikeCheck(
+    @UserInfo() user: User,
+    @Param('postId', ParseIntPipe) postId: number
+  ) {
+    const data = await this.postService.getPostLikeCheck(user.id, postId);
+
+    return {
+      status: HttpStatus.OK,
+      message: '포스트 좋아요 여부를 조회했습니다.',
+      data,
+    };
+  }
 }
