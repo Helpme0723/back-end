@@ -25,7 +25,7 @@ export class RedisService {
   }
   //sortedSet 을 조회할때 사용할 zrange
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  async zrange(key: string, max: number) {
+  async zRange(key: string, max: number) {
     return this.redisClient.zRange(key, 0, 2, { REV: true });
   }
   async findData(key: string) {
@@ -40,7 +40,9 @@ export class RedisService {
 
     const recentKeys = keys.slice(0, 3);
     // zUnionStore를 사용하여 병합하고 결과를 'dest_key'에 저장하기.
-    await this.redisClient.zUnionStore('dest_key', recentKeys);
+    if (recentKeys.length > 0) {
+      await this.redisClient.zUnionStore('dest_key', recentKeys);
+    }
 
     // 'dest_key'에 저장된 병합된 결과를 점수와 함께 가져오기.
     const result = await this.redisClient.zRangeWithScores('dest_key', 0, -1);

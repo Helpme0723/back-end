@@ -37,7 +37,7 @@ export class SearchController {
    */
   @Get('ranking')
   async getsearchRanking() {
-    const data = await this.searchService.getsearchRankings();
+    const data = await this.searchService.getSearchRankings();
     return data;
   }
 
@@ -47,7 +47,7 @@ export class SearchController {
    */
   @Cron('*/10 * * * *')
   @Post('ranking')
-  async addsearchRanking() {
+  async addSearchRanking() {
     console.log('*****검색랭킹 데이터 업데이트*****');
     const data = await this.searchService.saveDataAtDateBase();
     return data;

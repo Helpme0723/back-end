@@ -138,6 +138,7 @@ export class PostService {
       userName: item.user.nickname,
       userImage: item.user.profileUrl,
     }));
+    console.log(posts);
     const returnValue = { posts, meta };
 
     const ttl = 60 * 5;
