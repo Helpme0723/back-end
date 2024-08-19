@@ -8,7 +8,7 @@ import {
   Inject,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, DataSource } from 'typeorm';
+import { Repository, DataSource, In } from 'typeorm';
 import { Comment } from './entities/comment.entity';
 import { CreateCommentDto } from './dto/create-comment.dto';
 import { Post } from 'src/post/entities/post.entity';
@@ -33,6 +33,8 @@ export class CommentService {
     private readonly notificationsService: NotificationsService, // 알림 서비스 주입
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
+    @InjectRepository(CommentLike)
+    private readonly commentLikeRepository: Repository<CommentLike>
   ) {}
 
   // 댓글 생성 API
@@ -41,69 +43,77 @@ export class CommentService {
       where: { id: createCommentDto.postId },
       relations: ['user'], // 포스트 작성자 정보 가져오기
     });
-  
+
     if (!post) {
       throw new NotFoundException('포스트를 찾을 수 없습니다.');
     }
-  
+
     if (post.visibility === VisibilityType.PRIVATE) {
-      throw new BadRequestException('비공개 포스트에는 댓글을 작성 할 수 없습니다.');
+      throw new BadRequestException(
+        '비공개 포스트에는 댓글을 작성 할 수 없습니다.'
+      );
     }
-  
+
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
-  
+
     try {
       // 트랜잭션 시작
       await queryRunner.startTransaction();
-  
+
       // 댓글 수 증가
-      await queryRunner.manager.increment(Post, { id: post.id }, 'commentCount', 1);
-  
+      await queryRunner.manager.increment(
+        Post,
+        { id: post.id },
+        'commentCount',
+        1
+      );
+
       // 댓글 생성
       const commentData = this.commentRepository.create(createCommentDto);
       const comment = await queryRunner.manager.save(Comment, commentData);
-  
+
       // 댓글에 대한 유저 정보 포함하여 재조회
       const fullComment = await queryRunner.manager.findOne(Comment, {
         where: { id: comment.id },
         relations: ['user'], // 유저 정보를 포함하여 조회
       });
-  
+
       if (!fullComment) {
         throw new InternalServerErrorException('댓글 로드 실패');
       }
-  
+
       // 트랜잭션 커밋
       await queryRunner.commitTransaction();
-  
-       // 알림 설정 확인 및 본인 포스트 여부 확인
-    if (post.user.id !== createCommentDto.userId) {
-      const notificationSettings = await this.notificationsService.getSettingsForUser(post.user.id);
-      if (notificationSettings?.commentNotifications) {
-        // 알림 전송
-        this.notificationsService.sendNotification(
-          post.user.id,
-          `당신의 포스트 "${post.title}"에 새로운 댓글이 달렸습니다: ${fullComment.content}`
-        );
+
+      // 알림 설정 확인 및 본인 포스트 여부 확인
+      if (post.user.id !== createCommentDto.userId) {
+        const notificationSettings =
+          await this.notificationsService.getSettingsForUser(post.user.id);
+        if (notificationSettings?.commentNotifications) {
+          // 알림 전송
+          this.notificationsService.sendNotification(
+            post.user.id,
+            `당신의 포스트 "${post.title}"에 새로운 댓글이 달렸습니다: ${fullComment.content}`
+          );
+        }
       }
-    }
-  
+
       return {
         ...fullComment,
       };
     } catch (error) {
-      console.error("Error in transaction:", error);
+      console.error('Error in transaction:', error);
       // 트랜잭션 롤백
       if (queryRunner.isTransactionActive) {
         await queryRunner.rollbackTransaction();
-        console.log("Transaction rolled back");
+        console.log('Transaction rolled back');
       }
       throw new InternalServerErrorException('인터넷 서버 에러');
     } finally {
       // queryRunner 해제
       await queryRunner.release();
-      console.log("QueryRunner released");
+      console.log('QueryRunner released');
     }
   }
 
@@ -257,15 +267,19 @@ export class CommentService {
       // 좋아요를 누른 사용자 정보 조회
       const user = await this.userRepository.findOne({ where: { id: userId } });
       if (!user) {
-        throw new NotFoundException(`사용자를 찾을 수 없습니다. userId: ${userId}`);
+        throw new NotFoundException(
+          `사용자를 찾을 수 없습니다. userId: ${userId}`
+        );
       }
 
       // 트랜잭션 커밋
       await queryRunner.commitTransaction();
 
       // 알림 전송 로직 추가 (좋아요 알림 설정 확인)
-      const notificationSettings = await this.notificationsService.getSettingsForUser(comment.user.id);
-      if (notificationSettings?.commentlikeNotifications) { // likeNotifications 설정 확인
+      const notificationSettings =
+        await this.notificationsService.getSettingsForUser(comment.user.id);
+      if (notificationSettings?.commentlikeNotifications) {
+        // likeNotifications 설정 확인
         this.notificationsService.sendNotification(
           comment.user.id,
           `사용자 "${user.nickname}"님이 당신의 댓글 "${comment.content}"에 좋아요를 눌렀습니다.`
@@ -326,5 +340,20 @@ export class CommentService {
       }
       throw new InternalServerErrorException(`서버 에러: ${error.message}`);
     }
+  }
+
+  // 포스트의 댓글 중에 내가 좋아요한 댓글이 있는지 확인
+  async getCommentLikeCheck(userId: number, postId: number) {
+    const comments = await this.commentRepository.find({
+      where: { postId },
+    });
+
+    const commentIds = comments.map((comment) => comment.id);
+
+    const data = await this.commentLikeRepository.find({
+      where: { userId, commentId: In(commentIds) },
+    });
+
+    return data;
   }
 }

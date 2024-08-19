@@ -155,4 +155,27 @@ export class CommentController {
       message: '좋아요를 취소하였습니다.',
     };
   }
+
+  /**
+   * 포스트의 댓글 중에 내가 좋아요한 댓글이 있는지 확인
+   * @param user
+   * @param postId
+   * @returns
+   */
+  // 포스트의 댓글 중에 내가 좋아요한 댓글이 있는지 확인
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard('jwt'))
+  @Get('like/check')
+  async getCommentLikeCheck(
+    @UserInfo() user: User,
+    @Query('postId') postId: number
+  ) {
+    const data = await this.commentService.getCommentLikeCheck(user.id, postId);
+
+    return {
+      status: HttpStatus.OK,
+      message: '댓글 좋아요 여부를 조회했습니다.',
+      data,
+    };
+  }
 }
