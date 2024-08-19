@@ -94,7 +94,9 @@ export class CommentService {
           // 알림 전송
           this.notificationsService.sendNotification(
             post.user.id,
-            `당신의 포스트 "${post.title}"에 새로운 댓글이 달렸습니다: ${fullComment.content}`
+            `당신의 포스트 "${post.title}"에 새로운 댓글이 달렸습니다: ${fullComment.content}`,
+             post.id,
+             undefined,
           );
         }
       }
@@ -282,7 +284,9 @@ export class CommentService {
         // likeNotifications 설정 확인
         this.notificationsService.sendNotification(
           comment.user.id,
-          `사용자 "${user.nickname}"님이 당신의 댓글 "${comment.content}"에 좋아요를 눌렀습니다.`
+          `사용자 "${user.nickname}"님이 당신의 댓글 "${comment.content}"에 좋아요를 눌렀습니다.`,
+          comment.postId,
+          undefined,
         );
       }
 
@@ -345,15 +349,17 @@ export class CommentService {
   // 포스트의 댓글 중에 내가 좋아요한 댓글이 있는지 확인
   async getCommentLikeCheck(userId: number, postId: number) {
     const comments = await this.commentRepository.find({
-      where: { postId },
+      where: {
+        postId,
+        commentLikes: {
+          userId,
+        },
+      },
+      relations: { commentLikes: true },
     });
 
-    const commentIds = comments.map((comment) => comment.id);
-
-    const data = await this.commentLikeRepository.find({
-      where: { userId, commentId: In(commentIds) },
-    });
-
-    return data;
+    return comments.map((comment) => ({
+      commentId: comment.id,
+    }));
   }
 }

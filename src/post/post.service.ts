@@ -25,7 +25,6 @@ import { createClient, RedisClientType } from 'redis';
 import { ConfigService } from '@nestjs/config';
 import { User } from 'src/user/entities/user.entity';
 import { NotificationsService } from 'src/notification/notification.service';
-import { UserInfo } from 'src/auth/decorators/user-info.decorator';
 
 @Injectable()
 export class PostService {
@@ -57,21 +56,6 @@ export class PostService {
       password: configService.get<string>('REDIS_PASSWORD'),
     });
     this.redisClient.connect().catch(console.error);
-  }
-
-  private async purchaseCheck(postId: number) {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const post = await this.postRepository.findOne({
-      where: { id: postId },
-    });
-    const purchasedPost = await this.purchaseListRepository.find({
-      where: { postId: post.id },
-    });
-    if (purchasedPost.length > 0) {
-      return true;
-    } else {
-      return false;
-    }
   }
 
   async create(userId: number, createPostDto: CreatePostDto) {
@@ -135,6 +119,7 @@ export class PostService {
           visibility: VisibilityType.PUBLIC,
           ...(channelId && { channelId }),
           ...(categoryId && { categoryId }),
+          //purchaseLists: { userId },
           deletedAt: null,
         },
         order: {
@@ -143,9 +128,12 @@ export class PostService {
         relations: { user: true, purchaseLists: true },
       }
     );
-
-    const posts = await Promise.all(
-      items.map(async (item) => ({
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const posts = items.map((item) => {
+      const isPurchased = item.purchaseLists
+        .map((purchased) => purchased.userId === userId)
+        .includes(true);
+      const post = {
         id: item.id,
         userId: item.userId,
         channelId: item.channelId,
@@ -162,12 +150,12 @@ export class PostService {
         createdAt: item.createdAt,
         userName: item.user.nickname,
         userImage: item.user.profileUrl,
-        // isPurchased: await this.purchaseCheck(item.id),
-      }))
-    );
+        isPurchased,
+      };
 
-    const returnValue = { posts, meta };
-
+      return post;
+    });
+    const returnValue = { items: posts, meta };
     return returnValue;
   }
 
@@ -526,7 +514,9 @@ export class PostService {
         // likeNotifications 설정 확인
         this.notificationsService.sendNotification(
           post.user.id,
-          `사용자 "${user.nickname}"님이 당신의 포스트 "${post.title}"에 좋아요를 눌렀습니다.`
+          `사용자 "${user.nickname}"님이 당신의 포스트 "${post.title}"에 좋아요를 눌렀습니다.`,
+          post.id,
+          undefined,
         );
       }
 

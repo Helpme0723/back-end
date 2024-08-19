@@ -22,6 +22,12 @@ export class Notification {
   @Column()
   message: string;
 
+  @Column({ nullable: true })  // 포스트 ID를 저장하는 컬럼
+  postId?: number;
+
+  @Column({ nullable: true })
+  channelId?: number;
+
   @Column({ default: false })
   isRead: boolean;
 
