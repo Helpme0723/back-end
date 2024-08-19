@@ -25,7 +25,7 @@ jobs:
         run: echo "${{ secrets.ENV }}" > .env # GitHub Secrets에 저장된 ENV 값을 .env 파일로 생성
 
       - name: Configure AWS credentials # AWS 자격 증명을 설정하는 단계
-        uses: aws-actions/configure-aws-credentials@v2 # AWS CLI를 사용하기 위해 자격 증명 설정
+        uses: aws-actions/configure-aws-credentials@v3 # AWS CLI를 사용하기 위해 자격 증명 설정
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }} # AWS Access Key ID를 GitHub Secrets에서 가져옴
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }} # AWS Secret Access Key를 GitHub Secrets에서 가져옴
