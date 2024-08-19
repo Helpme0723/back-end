@@ -128,9 +128,6 @@ export class Post {
   @Column({ default: 0 })
   salesCount: number;
 
-  @Column({ default: false })
-  isPurchased: boolean;
-
   @CreateDateColumn()
   createdAt: Date;
 
