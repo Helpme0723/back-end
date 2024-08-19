@@ -11,7 +11,7 @@ on:
 jobs:
   deploy:
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     steps:
       - name: Checkout source code
@@ -27,7 +27,7 @@ jobs:
       - name: Download task definition
         run: |
           aws ecs describe-task-definition \
-            --task-definition your-task-definition-name \
+            --task-definition talentverse-task \
             --query taskDefinition \
             --region ${{ secrets.AWS_REGION }} > task-definition.json
 
@@ -36,7 +36,7 @@ jobs:
         uses: aws-actions/amazon-ecs-render-task-definition@v1
         with:
           task-definition: task-definition.json
-          container-name: your-container-name
+          container-name: talentverse
           image: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/${{ secrets.AWS_ECR_REPOSITORY }}:latest
           # CI에서 푸시된 latest 이미지 사용
 
@@ -44,6 +44,6 @@ jobs:
         uses: aws-actions/amazon-ecs-deploy-task-definition@v1
         with:
           task-definition: ${{ steps.task-def.outputs.task-definition }}
-          service: your-service-name
-          cluster: your-cluster-name
+          service: talentverse-service
+          cluster: talentverse-cluster
           wait-for-service-stability: true
