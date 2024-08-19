@@ -162,7 +162,7 @@ export class PostService {
         createdAt: item.createdAt,
         userName: item.user.nickname,
         userImage: item.user.profileUrl,
-        isPurchased: await this.purchaseCheck(item.id),
+        // isPurchased: await this.purchaseCheck(item.id),
       }))
     );
 
@@ -570,5 +570,14 @@ export class PostService {
 
       throw new InternalServerErrorException('서버에 에러가 발생햇습니다.');
     }
+  }
+
+  // 내가 좋아요한 포스트인지 확인
+  async getPostLikeCheck(userId: number, postId: number) {
+    const data = await this.postLikeRepository.findOne({
+      where: { userId, postId },
+    });
+
+    return data ? true : false;
   }
 }
