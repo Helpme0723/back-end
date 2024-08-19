@@ -223,7 +223,13 @@ export class PostService {
   async findOne(userId: number, id: number) {
     // 해당 포스트 찾기
     const post = await this.postRepository.findOne({
-      relations: { comments: true, user: true, channel: true, series: true },
+      relations: {
+        comments: true,
+        user: true,
+        channel: true,
+        series: true,
+        category: true,
+      },
       where: { id },
       withDeleted: true,
     });
@@ -238,6 +244,8 @@ export class PostService {
       userId: post.userId,
       userName: post.user.nickname,
       userImage: post.user.profileUrl,
+      categoryId: post.category.id,
+      categoryTitle: post.category.category,
       channelId: post.channelId,
       channelTitle: post.channel ? post.channel.title : null,
       seriesId: post.seriesId,
@@ -516,7 +524,7 @@ export class PostService {
           post.user.id,
           `사용자 "${user.nickname}"님이 당신의 포스트 "${post.title}"에 좋아요를 눌렀습니다.`,
           post.id,
-          undefined,
+          undefined
         );
       }
 
