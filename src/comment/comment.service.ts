@@ -8,7 +8,7 @@ import {
   Inject,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, DataSource, In } from 'typeorm';
+import { Repository, DataSource } from 'typeorm';
 import { Comment } from './entities/comment.entity';
 import { CreateCommentDto } from './dto/create-comment.dto';
 import { Post } from 'src/post/entities/post.entity';
@@ -346,7 +346,7 @@ export class CommentService {
     }
   }
 
-  // 포스트의 댓글 중에 내가 좋아요한 댓글이 있는지 확인
+   // 포스트의 댓글 중에 내가 좋아요한 댓글이 있는지 확인
   async getCommentLikeCheck(userId: number, postId: number) {
     const comments = await this.commentRepository.find({
       where: {

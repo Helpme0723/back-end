@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Query } from '@nestjs/common';
+import { Controller, Get, Query } from '@nestjs/common';
 import { SearchService } from './search.service';
 import { SearchDto } from './dtos/search.dto';
 
@@ -23,7 +23,7 @@ export class SearchController {
    * @returns
    */
   @Get('ranking')
-  async getsearchRanking() {
+  async getSearchRanking() {
     const data = await this.searchService.getSearchRankings();
     return data;
   }
