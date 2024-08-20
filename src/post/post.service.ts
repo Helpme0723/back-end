@@ -101,7 +101,7 @@ export class PostService {
   }
 
   async findAllLogin(userId: number, findAllPostDto: FindAllPostDto) {
-    const { channelId, page, limit, sort, categoryId } = findAllPostDto;
+    const { channelId, page, limit, sort, categoryId, sortBy } = findAllPostDto;
 
     const channel = await this.channelRepository.findOne({
       where: { id: channelId },
@@ -111,6 +111,7 @@ export class PostService {
       throw new NotFoundException('존재하지 않은 채널입니다.');
     }
 
+    const orderColumn = sortBy || 'createdAt';
     const { items, meta } = await paginate<Post>(
       this.postRepository,
       { page, limit },
@@ -123,7 +124,7 @@ export class PostService {
           deletedAt: null,
         },
         order: {
-          createdAt: sort,
+          [orderColumn]: sort,
         },
         relations: { user: true, purchaseLists: true },
       }
@@ -160,9 +161,9 @@ export class PostService {
   }
 
   async findAll(findAllPostDto: FindAllPostDto) {
-    const { channelId, page, limit, sort, categoryId } = findAllPostDto;
+    const { channelId, page, limit, sort, categoryId, sortBy } = findAllPostDto;
 
-    const cacheKey = `posts:${channelId}-${page}-${limit}-${sort}-${categoryId}`;
+    const cacheKey = `posts:${channelId}-${page}-${limit}-${sort}-${categoryId}-${sortBy}`;
 
     const cachedPosts = await this.cacheManager.get<string>(cacheKey);
 
@@ -177,6 +178,8 @@ export class PostService {
     if (channelId && !channel) {
       throw new NotFoundException('존재하지 않은 채널입니다.');
     }
+
+    const orderColumn = sortBy || 'createdAt';
     const { items, meta } = await paginate<Post>(
       this.postRepository,
       { page, limit },
@@ -188,7 +191,7 @@ export class PostService {
           deletedAt: null,
         },
         order: {
-          createdAt: sort,
+          [orderColumn]: sort,
         },
         relations: { user: true },
       }
@@ -419,6 +422,8 @@ export class PostService {
       ...updatePostDto,
     };
     const data = await this.postRepository.save(newPost);
+    const cacheKey = `posts:*`;
+    await this.deleteKeysByPattern(cacheKey);
     return data;
   }
 

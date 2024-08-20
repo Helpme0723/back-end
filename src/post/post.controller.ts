@@ -43,7 +43,7 @@ export class PostController {
     };
   }
   /**
-   * 전체포스트 조회
+   * 전체조회
    * @param findAllPostDto
    * @returns
    */

@@ -1,6 +1,7 @@
 import { Type } from 'class-transformer';
 import { IsEnum, IsNumber, IsOptional } from 'class-validator';
 import { OrderType } from 'src/library/types/order.types';
+import { SortType } from '../types/sort.type';
 
 export class FindAllPostDto {
   @IsOptional()
@@ -26,4 +27,8 @@ export class FindAllPostDto {
   @IsNumber()
   @Type(() => Number)
   categoryId?: number;
+
+  @IsOptional()
+  @IsEnum(SortType)
+  sortBy?: SortType = SortType.CREATED_AT;
 }
