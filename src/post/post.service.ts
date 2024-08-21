@@ -316,7 +316,13 @@ export class PostService {
 
   async readOne(id: number) {
     const post = await this.postRepository.findOne({
-      relations: { comments: true, user: true },
+      relations: {
+        comments: true,
+        user: true,
+        channel: true,
+        series: true,
+        category: true,
+      },
       where: { id, deletedAt: null, visibility: VisibilityType.PUBLIC },
     });
     if (!post) {
@@ -325,10 +331,36 @@ export class PostService {
     if (post.price > 0) {
       post.content = undefined;
     }
-    //TODO:콘솔지우기
-    post.comments = post.comments.splice(0, 5);
 
-    return post;
+    const returnValue = {
+      postId: post.id,
+      userId: post.userId,
+      userName: post.user.nickname,
+      userImage: post.user.profileUrl,
+      categoryId: post.category.id,
+      categoryTitle: post.category.category,
+      channelId: post.channelId,
+      channelTitle: post.channel ? post.channel.title : null,
+      seriesId: post.seriesId,
+      seriesTitle: post.series ? post.series.title : null,
+      title: post.title,
+      thumbNail: post.thumbNail,
+      preview: post.preview,
+      content: post.content,
+      price: post.price,
+      viewCount: post.viewCount,
+      likeCount: post.likeCount,
+      commentCount: post.commentCount,
+      createdAt: post.createdAt,
+      comments: post.comments.splice(0, 5).map((comment) => ({
+        id: comment.id,
+        content: comment.content,
+        likeCount: comment.likeCount,
+        createdAt: comment.createdAt,
+      })),
+    };
+
+    return returnValue;
   }
 
   async incrementViewCount(id: number) {
