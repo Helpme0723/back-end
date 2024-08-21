@@ -1,28 +1,56 @@
-name: talentVerse CD
+name: talentVerse CD  # 워크플로우의 이름을 정의합니다.
 
 on:
-  workflow_run:
-    workflows: ['talentVerse CI']
-    types: [completed]
-    branches: [main]
+  workflow_run:  # 다른 워크플로우의 실행 결과에 따라 이 워크플로우가 트리거됩니다.
+    workflows: ['talentVerse CI']  # 이 워크플로우는 'talentVerse CI' 워크플로우가 완료된 후에 실행됩니다.
+    types: [completed]  # 'talentVerse CI' 워크플로우가 완료되었을 때만 실행됩니다.
+    branches: [main]  # 'main' 브랜치에서만 이 워크플로우가 실행됩니다.
+
+env: # 워크플로우에서 사용할 환경 변수 설정
+  ECR_REGISTRY: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com # ECR 레지스트리 주소 설정
+  ECR_REPOSITORY: ${{ secrets.AWS_ECR_REPOSITORY }} # ECR 리포지토리 이름 설정
+  IMAGE_TAG: latest # 이미지 태그를 'latest'로 설정
 
 jobs:
   deploy:
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
-    runs-on: ubuntu-24.04
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}  # 'talentVerse CI'가 성공적으로 완료되었을 때만 실행합니다.
+    runs-on: ubuntu-24.04  # 이 작업이 실행될 환경으로 Ubuntu 24.04를 지정합니다.
 
     steps:
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v2
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ secrets.AWS_REGION }}
+      - name: Checkout source code  # 소스 코드를 리포지토리에서 체크아웃하는 단계입니다.
+        uses: actions/checkout@v4  # GitHub Actions에서 제공하는 checkout 액션을 사용하여 소스 코드를 가져옵니다.
 
-      - name: Deploy updated image to ECS
+      - name: Configure AWS credentials  # AWS 자격 증명을 설정하는 단계입니다.
+        uses: aws-actions/configure-aws-credentials@v2  # AWS CLI를 사용하기 위해 자격 증명을 설정하는 액션을 사용합니다.
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}  # AWS Access Key ID를 GitHub Secrets에서 가져옵니다.
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}  # AWS Secret Access Key를 GitHub Secrets에서 가져옵니다.
+          aws-region: ${{ secrets.AWS_REGION }}  # AWS 리전을 GitHub Secrets에서 가져와 설정합니다.
+
+      - name: Set environment variables  # 환경 변수를 설정하는 단계입니다.
+        run: echo "${{ secrets.ENV }}" > .env  # GitHub Secrets에 저장된 ENV 값을 사용하여 .env 파일을 생성합니다.
+        
+      - name: Build and Push Docker image to ECR  # Docker 이미지를 빌드하고, ECR에 푸시하는 단계입니다.
         run: |
-          aws ecs update-service \
-            --cluster talentverse-cluster \
-            --service talentverse-service-1 \
+          docker build --env-file .env -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .  # Docker 이미지를 빌드하고 .env 파일을 사용하여 환경 변수를 전달합니다.
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG  # 빌드된 Docker 이미지를 ECR에 푸시합니다.
+
+      - name: Log in to Amazon ECR  # Amazon ECR에 로그인하는 단계입니다.
+        run: aws ecr get-login-password --region ${{ secrets.AWS_REGION }} | docker login --username AWS --password-stdin ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com
+        # AWS CLI를 사용하여 ECR에 로그인하고 Docker 자격 증명을 설정합니다.
+
+      - name: Deploy updated image to ECS  # ECS 서비스에 업데이트된 이미지를 배포하는 단계입니다.
+        run: |
+          aws ecs update-service \ 
+            --cluster ${{ secrets.AWS_ECS_CLUSTER }} \  
+            --service ${{ secrets.AWS_ECS_SERVICE }} \ 
             --force-new-deployment \
             --region ${{ secrets.AWS_REGION }}
+
+      # AWS CLI를 사용하여 ECS 서비스 업데이트를 수행합니다.
+      # 업데이트할 ECS 클러스터의 이름을 지정합니다.
+      # 업데이트할 ECS 서비스의 이름을 지정합니다.
+      # 강제로 새로운 배포를 트리거하여, 모든 태스크를 최신 이미지로 교체합니다.
+      # AWS 리전을 지정합니다.
+
+
