@@ -95,8 +95,8 @@ export class CommentService {
           this.notificationsService.sendNotification(
             post.user.id,
             `당신의 포스트 "${post.title}"에 새로운 댓글이 달렸습니다: ${fullComment.content}`,
-             post.id,
-             undefined,
+            post.id,
+            undefined
           );
         }
       }
@@ -109,13 +109,11 @@ export class CommentService {
       // 트랜잭션 롤백
       if (queryRunner.isTransactionActive) {
         await queryRunner.rollbackTransaction();
-        console.log('Transaction rolled back');
       }
       throw new InternalServerErrorException('인터넷 서버 에러');
     } finally {
       // queryRunner 해제
       await queryRunner.release();
-      console.log('QueryRunner released');
     }
   }
 
@@ -286,7 +284,7 @@ export class CommentService {
           comment.user.id,
           `사용자 "${user.nickname}"님이 당신의 댓글 "${comment.content}"에 좋아요를 눌렀습니다.`,
           comment.postId,
-          undefined,
+          undefined
         );
       }
 
@@ -346,7 +344,7 @@ export class CommentService {
     }
   }
 
-   // 포스트의 댓글 중에 내가 좋아요한 댓글이 있는지 확인
+  // 포스트의 댓글 중에 내가 좋아요한 댓글이 있는지 확인
   async getCommentLikeCheck(userId: number, postId: number) {
     const comments = await this.commentRepository.find({
       where: {
