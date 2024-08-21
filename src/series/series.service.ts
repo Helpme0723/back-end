@@ -12,6 +12,7 @@ import { UpdateSeriesDto } from './dtos/update-series-dto';
 import { Channel } from 'src/channel/entities/channel.entity';
 import { FindAllSeriesDto } from './dtos/find-all-series.dto';
 import { paginate } from 'nestjs-typeorm-paginate';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class SeriesService {
@@ -19,7 +20,8 @@ export class SeriesService {
     @InjectRepository(Series)
     private readonly seriesRepository: Repository<Series>,
     @InjectRepository(Channel)
-    private readonly channelRepository: Repository<Channel>
+    private readonly channelRepository: Repository<Channel>,
+    private readonly configService: ConfigService
   ) {}
 
   async findAll(findAllSeriesDto: FindAllSeriesDto) {
@@ -35,14 +37,16 @@ export class SeriesService {
       this.seriesRepository,
       { page, limit },
       {
-        where: {
-          deletedAt: null,
-        },
         order: {
           createdAt: sort,
         },
+        relations: {
+          posts: true,
+          user: true,
+        },
       }
     );
+    const defaultImage = this.configService.get<string>('DEFAULT_IMAGE');
     return {
       series: items.map((item) => ({
         id: item.id,
@@ -52,6 +56,11 @@ export class SeriesService {
         description: item.description,
         createdAt: item.createdAt,
         updatedAt: item.updatedAt,
+        author: item.user.nickname,
+        thumbNail:
+          item.posts && item.posts.length > 0
+            ? item.posts[0].thumbNail // 첫 번째 포스트의 썸네일
+            : defaultImage,
       })),
       meta,
     };
