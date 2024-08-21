@@ -13,13 +13,13 @@ env:
 
 jobs:
   deploy:
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}  
-    runs-on: ubuntu-24.04  
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-24.04
 
     steps:
       - name: Checkout source code 
-        uses: actions/checkout@v4  
-        
+        uses: actions/checkout@v4
+
       - name: Set environment variables
         run: echo "${{ secrets.ENV }}" > .env
       
@@ -38,14 +38,13 @@ jobs:
       
       - name: Build and Push Docker image to ECR
         run: |
-          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .  # Docker 이미지를 빌드하고 태그 설정
-          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG  # 빌드된 이미지를 ECR에 푸시
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
 
       - name: Deploy updated image to ECS
         run: |
-          aws ecs update-service \ 
-            --cluster talentverse-cluster \  
-            --service talentverse-service-1  \ 
+          aws ecs update-service \
+            --cluster talentverse-cluster \
+            --service talentverse-service-1 \
             --force-new-deployment \
             --region ${{ secrets.AWS_REGION }}
-
