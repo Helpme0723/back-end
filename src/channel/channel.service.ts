@@ -24,7 +24,6 @@ import { ChannelMonthlyInsight } from 'src/insight/entities/channel-monthly-insi
 import { InsightSort } from './types/insight-sort.type';
 import { calculateInsightCount } from 'src/utils/count.util';
 import { toZonedTime } from 'date-fns-tz';
-// import { TAKE_COUNT } from 'src/constants/page.constant';
 
 @Injectable()
 export class ChannelService {
@@ -112,7 +111,6 @@ export class ChannelService {
     const series = await this.seriesRepository.find({
       where: { channelId },
       order: { createdAt: 'DESC' },
-      // take: TAKE_COUNT,
     });
 
     const postsWhereCondition: FindOptionsWhere<Post> = { channelId };
@@ -128,7 +126,6 @@ export class ChannelService {
         tags: true,
       },
       order: { createdAt: 'DESC' },
-      // take: TAKE_COUNT,
     });
 
     return this.mapChannelData(channel, series, posts);
