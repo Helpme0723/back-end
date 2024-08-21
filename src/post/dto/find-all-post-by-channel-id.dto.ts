@@ -9,6 +9,11 @@ export class FindAllPostDto {
   @Type(() => Number)
   channelId?: number;
 
+  @IsOptional()
+  @IsNumber()
+  @Type(() => Number)
+  seriesId?: number;
+
   @IsNumber()
   @IsOptional()
   @Type(() => Number)

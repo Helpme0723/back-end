@@ -161,22 +161,15 @@ export class PostService {
   }
 
   async findAll(findAllPostDto: FindAllPostDto) {
-    const { channelId, page, limit, sort, categoryId, sortBy } = findAllPostDto;
+    const { channelId, seriesId, page, limit, sort, categoryId, sortBy } =
+      findAllPostDto;
 
-    const cacheKey = `posts:${channelId}-${page}-${limit}-${sort}-${categoryId}-${sortBy}`;
+    const cacheKey = `posts:${channelId}-${seriesId}-${page}-${limit}-${sort}-${categoryId}-${sortBy}`;
 
     const cachedPosts = await this.cacheManager.get<string>(cacheKey);
 
     if (cachedPosts) {
       return cachedPosts;
-    }
-
-    const channel = await this.channelRepository.findOne({
-      where: { id: channelId },
-    });
-
-    if (channelId && !channel) {
-      throw new NotFoundException('존재하지 않은 채널입니다.');
     }
 
     const orderColumn = sortBy || 'createdAt';
@@ -187,6 +180,7 @@ export class PostService {
         where: {
           visibility: VisibilityType.PUBLIC,
           ...(channelId && { channelId }),
+          ...(seriesId && { seriesId }),
           ...(categoryId && { categoryId }),
           deletedAt: null,
         },
