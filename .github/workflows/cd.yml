@@ -44,8 +44,8 @@ jobs:
       - name: Deploy updated image to ECS
         run: |
           aws ecs update-service \ 
-            --cluster ${{ secrets.AWS_ECS_CLUSTER }} \  
-            --service ${{ secrets.AWS_ECS_SERVICE }} \ 
+            --cluster talentverse-cluster \  
+            --service talentverse-service-1  \ 
             --force-new-deployment \
             --region ${{ secrets.AWS_REGION }}
 
