@@ -47,117 +47,29 @@ _TalentVerse BE Repository_
 
 ```
 📦src
- ┣ 📂auth
- ┃ ┣ 📂strategies
- ┃ ┃ ┣ kakao.strategy.ts
- ┃ ┃ ┗ naver.strategy.ts
- ┃ ┣ auth.controller.ts
- ┃ ┣ auth.module.ts
- ┃ ┗ auth.service.ts
- ┣ 📂channel
- ┃ ┣ 📂entities
- ┃ ┃ ┗ channel.entity.ts
- ┃ ┣ channel.controller.ts
- ┃ ┣ channel.module.ts
- ┃ ┗ channel.service.ts
- ┣ 📂comment
- ┃ ┣ 📂entities
- ┃ ┃ ┣ comment-like.entity.ts
- ┃ ┃ ┗ comment.entity.ts
- ┃ ┣ comment.controller.ts
- ┃ ┣ comment.module.ts
- ┃ ┗ comment.service.ts
- ┣ 📂configs
- ┃ ┣ cache.config.ts
- ┃ ┣ database.config.ts
- ┃ ┗ env-validation.config.ts
- ┣ 📂insight
- ┃ ┣ 📂entities
- ┃ ┃ ┣ channel-daily-insight.entity.ts
- ┃ ┃ ┣ channel-monthly-insight.entity.ts
- ┃ ┃ ┣ daily-insight.entity.ts
- ┃ ┃ ┗ monthly-insight.entity.ts
- ┃ ┣ insight.module.ts
- ┃ ┗ insight.service.ts
- ┣ 📂library
- ┃ ┣ library.controller.ts
- ┃ ┣ library.module.ts
- ┃ ┗ library.service.ts
- ┣ 📂mail
- ┃ ┣ mail.controller.ts
- ┃ ┣ mail.module.ts
- ┃ ┗ mail.service.ts
- ┣ 📂notification
- ┃ ┣ 📂entities
- ┃ ┃ ┣ notification-settings.entity.ts
- ┃ ┃ ┗ notification.entity.ts
- ┃ ┣ notification.controller.ts
- ┃ ┣ notification.module.ts
- ┃ ┗ notification.service.ts
- ┣ 📂payments
- ┃ ┣ payments.controller.ts
- ┃ ┣ payments.module.ts
- ┃ ┗ payments.service.ts
- ┣ 📂point
- ┃ ┣ 📂entities
- ┃ ┃ ┣ point-history.entity.ts
- ┃ ┃ ┣ point-menu-entity.ts
- ┃ ┃ ┗ point-order.entity.ts
- ┃ ┣ point.controller.ts
- ┃ ┣ point.module.ts
- ┃ ┗ point.service.ts
- ┣ 📂post
- ┃ ┣ 📂entities
- ┃ ┃ ┣ category.entity.ts
- ┃ ┃ ┣ post-like.entity.ts
- ┃ ┃ ┗ post.entity.ts
- ┃ ┣ post.controller.ts
- ┃ ┣ post.module.ts
- ┃ ┗ post.service.ts
- ┣ 📂purchase
- ┃ ┣ 📂entities
- ┃ ┃ ┗ purchase-list.entity.ts
- ┃ ┣ purchase.controller.ts
- ┃ ┣ purchase.module.ts
- ┃ ┗ purchase.service.ts
- ┣ 📂redis
- ┃ ┗ redis.service.ts
- ┣ 📂schedule-task
- ┃ ┣ schedule-task.controller.ts
- ┃ ┗ schedule-task.module.ts
- ┣ 📂search
- ┃ ┣ 📂entities
- ┃ ┃ ┗ search.entity.ts
- ┃ ┣ search.controller.ts
- ┃ ┣ search.module.ts
- ┃ ┗ search.service.ts
- ┣ 📂series
- ┃ ┣ 📂entities
- ┃ ┃ ┗ series.entity.ts
- ┃ ┣ series.controller.ts
- ┃ ┣ series.module.ts
- ┃ ┗ series.service.ts
- ┣ 📂subscribe
- ┃ ┣ 📂entities
- ┃ ┃ ┗ subscribe.entity.ts
- ┃ ┣ subscribe.controller.ts
- ┃ ┣ subscribe.module.ts
- ┃ ┗ subscribe.service.ts
- ┣ 📂user
- ┃ ┣ 📂entities
- ┃ ┃ ┗ user.entity.ts
- ┃ ┣ user.controller.ts
- ┃ ┣ user.module.ts
- ┃ ┗ user.service.ts
- ┣ 📂utils
- ┃ ┣ count.util.ts // 통계 계산
- ┃ ┣ utils.module.ts
- ┃ ┗ utils.service.ts
+ ┣ 📂auth // 인증 및 인가
+ ┣ 📂aws // 이미지 업로드
+ ┣ 📂channel // 채널 생성 및 관리
+ ┣ 📂comment // 댓글 생성 및 관리
+ ┣ 📂configs // DB 연결 및 환경 변수 검증
+ ┣ 📂insight // 통계 관리
+ ┣ 📂library // 보관함
+ ┣ 📂mail // 인증 이메일 발송
+ ┣ 📂notification // 알림 및 알림 설정
+ ┣ 📂payments // 포인트 결제
+ ┣ 📂point // 포인트 사용 내역 조회
+ ┣ 📂purchase // 포스트 구매
+ ┣ 📂redis // 검색어 랭킹 데이터 관리
+ ┣ 📂schedule-task // Cron 관리
+ ┣ 📂search // 검색
+ ┣ 📂series // 시리즈 생성 및 관리
+ ┣ 📂subscribe // 구독
+ ┣ 📂user // 유저 정보 관리
+ ┣ 📂utils // 유틸리티 함수
  ┣ app.controller.ts
  ┣ app.module.ts
  ┣ main.ts
- ┣ sample.service.ts
- ┗ webhook.interceptor.ts
+ ┗ webhook.interceptor.ts // Sentry 및 슬랙 알림
 ```
 
 </details>
