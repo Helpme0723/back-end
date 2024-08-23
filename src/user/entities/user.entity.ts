@@ -72,7 +72,7 @@ export class User {
 
   @Column({
     default:
-      'https://talentversebucket.s3.ap-northeast-2.amazonaws.com/ba21f7f8-226f-4307-8e8b-a2dba2e848c7.webp',
+      'https://d2uok5v3sm5rr4.cloudfront.net/images/02a029aa-caa2-48c8-8196-bd60f4366383.webp',
   })
   profileUrl: string;
 
