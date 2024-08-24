@@ -49,7 +49,6 @@ export class PaymentsService {
       const { data } = await axios.request(options);
       return data.response.access_token;
     } catch (error) {
-      console.log(error);
       throw error;
     }
   }
@@ -93,7 +92,6 @@ export class PaymentsService {
 
     try {
       const response: AxiosResponse = await axios.request(options);
-      // console.log('결제 취소 성공', response.data);
       const merchantUid = response.data.response.merchant_uid;
 
       const pointOrder = await this.pointOrderRepository.findOne({

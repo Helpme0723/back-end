@@ -43,7 +43,6 @@ export class MailService {
 				인증 번호: ${randomNumber}`, // 메일의 내용 설정
       });
 
-      console.log('메일이 전송되었습니다.');
       this.cacheManager.set(`verifyCode:${to}`, randomNumber, { ttl });
       return {
         보낸사람: this.configService.get<string>('NODEMAILER_USER'),
@@ -53,7 +52,6 @@ export class MailService {
 				인증 번호: ${randomNumber}`,
       };
     } catch (error) {
-      console.log('메일 전송 중 오류가 발생했습니다.', error);
       throw new BadRequestException();
     }
   }

@@ -13,8 +13,8 @@ import { FindAllNotificationsDto } from './dtos/FindAllNotifications-dto';
 interface NotificationMessage {
   userId: number;
   message: string;
-  postId : number;
-  channelId : number;
+  postId: number;
+  channelId: number;
 }
 
 @Injectable()
@@ -99,9 +99,12 @@ export class NotificationsService {
   }
 
   // 알림 전송 및 저장 메서드
-  async sendNotification(userId: number, message: string, postId?: number,  channelId?: number) {
-    console.log(`Sending notification to user ${userId}: ${message}`);
-
+  async sendNotification(
+    userId: number,
+    message: string,
+    postId?: number,
+    channelId?: number
+  ) {
     // 모든 알림을 데이터베이스에 저장, postId 포함
     await this.notificationRepository.save({
       user: { id: userId },
@@ -113,7 +116,6 @@ export class NotificationsService {
 
     // 실시간 알림 전송
     this.notifications.next({ userId, message, postId, channelId });
-    console.log(`Notification sent to user ${userId}`);
   }
 
   // 사용자의 읽지 않은 알림 조회
@@ -154,7 +156,6 @@ export class NotificationsService {
 
   // 사용자 SSE 연결 해제 시 호출
   disconnectUser(userId: number) {
-    console.log(`Disconnecting user: ${userId}`);
     this.activeConnections.delete(userId);
   }
 }

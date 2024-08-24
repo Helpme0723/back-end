@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/ban-types */
 import { Injectable } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { Strategy } from 'passport-naver';
@@ -21,7 +22,6 @@ export class NaverStrategy extends PassportStrategy(Strategy) {
     accessToken: string,
     refreshToken: string,
     profile: any,
-    // eslint-disable-next-line @typescript-eslint/ban-types
     done: Function
   ) {
     const userEmail = profile._json.email;

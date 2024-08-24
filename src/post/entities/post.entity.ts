@@ -97,7 +97,7 @@ export class Post {
   @IsString()
   @Column({
     default:
-      'https://talentversebucket.s3.ap-northeast-2.amazonaws.com/10ebcc18-43fc-4f94-8e44-4cd95422a84d.png',
+      'https://d2uok5v3sm5rr4.cloudfront.net/images/6c1adff4-8270-44f6-bc8e-38fbbb7911f8.png',
   })
   thumbNail: string;
 

@@ -161,22 +161,15 @@ export class PostService {
   }
 
   async findAll(findAllPostDto: FindAllPostDto) {
-    const { channelId, page, limit, sort, categoryId, sortBy } = findAllPostDto;
+    const { channelId, seriesId, page, limit, sort, categoryId, sortBy } =
+      findAllPostDto;
 
-    const cacheKey = `posts:${channelId}-${page}-${limit}-${sort}-${categoryId}-${sortBy}`;
+    const cacheKey = `posts:${channelId}-${seriesId}-${page}-${limit}-${sort}-${categoryId}-${sortBy}`;
 
     const cachedPosts = await this.cacheManager.get<string>(cacheKey);
 
     if (cachedPosts) {
       return cachedPosts;
-    }
-
-    const channel = await this.channelRepository.findOne({
-      where: { id: channelId },
-    });
-
-    if (channelId && !channel) {
-      throw new NotFoundException('존재하지 않은 채널입니다.');
     }
 
     const orderColumn = sortBy || 'createdAt';
@@ -187,6 +180,7 @@ export class PostService {
         where: {
           visibility: VisibilityType.PUBLIC,
           ...(channelId && { channelId }),
+          ...(seriesId && { seriesId }),
           ...(categoryId && { categoryId }),
           deletedAt: null,
         },
@@ -322,7 +316,13 @@ export class PostService {
 
   async readOne(id: number) {
     const post = await this.postRepository.findOne({
-      relations: { comments: true, user: true },
+      relations: {
+        comments: true,
+        user: true,
+        channel: true,
+        series: true,
+        category: true,
+      },
       where: { id, deletedAt: null, visibility: VisibilityType.PUBLIC },
     });
     if (!post) {
@@ -331,10 +331,36 @@ export class PostService {
     if (post.price > 0) {
       post.content = undefined;
     }
-    //TODO:콘솔지우기
-    post.comments = post.comments.splice(0, 5);
 
-    return post;
+    const returnValue = {
+      postId: post.id,
+      userId: post.userId,
+      userName: post.user.nickname,
+      userImage: post.user.profileUrl,
+      categoryId: post.category.id,
+      categoryTitle: post.category.category,
+      channelId: post.channelId,
+      channelTitle: post.channel ? post.channel.title : null,
+      seriesId: post.seriesId,
+      seriesTitle: post.series ? post.series.title : null,
+      title: post.title,
+      thumbNail: post.thumbNail,
+      preview: post.preview,
+      content: post.content,
+      price: post.price,
+      viewCount: post.viewCount,
+      likeCount: post.likeCount,
+      commentCount: post.commentCount,
+      createdAt: post.createdAt,
+      comments: post.comments.splice(0, 5).map((comment) => ({
+        id: comment.id,
+        content: comment.content,
+        likeCount: comment.likeCount,
+        createdAt: comment.createdAt,
+      })),
+    };
+
+    return returnValue;
   }
 
   async incrementViewCount(id: number) {
@@ -377,7 +403,7 @@ export class PostService {
         content: item.content,
         price: item.price,
         visibility: item.visibility,
-        viewCount: item.visibility,
+        viewCount: item.viewCount,
         likeCount: item.likeCount,
         commentCount: item.commentCount,
         salesCount: item.salesCount,
