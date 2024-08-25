@@ -14,6 +14,7 @@ import {
   startOfMinute,
   subMinutes,
 } from 'date-fns';
+import { toZonedTime } from 'date-fns-tz';
 
 @Injectable()
 export class SearchService {
@@ -142,7 +143,7 @@ export class SearchService {
 
     // 총 데이터 개수
     const totalCount = data.body.hits.total.value;
-    const now = new Date();
+    const now = toZonedTime(new Date(), 'Asia/Seoul');
     const roundedMinutes = Math.floor(getMinutes(now) / 10) * 10;
     const roundedTime = format(
       setMinutes(startOfMinute(now), roundedMinutes),

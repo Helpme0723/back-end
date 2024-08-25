@@ -47,7 +47,7 @@ export class User {
 
   /**
    * 비밀번호
-   * @example "qwer1234"
+   * @example "Qwer1234!"
    */
   @IsString()
   @IsNotEmpty({ message: '비밀번호를 입력해주세요.' })
