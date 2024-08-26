@@ -207,10 +207,9 @@ export class SubscribeService {
 
     const subscribes = await this.subscribeRepository.find({
       where: { userId },
-      relations: { channel: true },
     });
 
-    const channelIds = subscribes.map((subscribe) => subscribe.channel.id);
+    const channelIds = subscribes.map((subscribe) => subscribe.channelId);
 
     const { items, meta } = await paginate<Post>(
       this.postRepository,

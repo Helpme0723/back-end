@@ -116,8 +116,9 @@ export class SearchService {
       index: 'posts',
       body: {
         query: {
+          // should를 쓰려면 사용
           bool: {
-            should: condition,
+            should: condition, // 검색 조건 중 하나라도 일치하면 반환
           },
         },
         sort: [{ createdAt: { order: sort } }],
